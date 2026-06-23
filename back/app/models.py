@@ -14,18 +14,25 @@ class StatusEnum(enum.Enum):
 
 class User(db.Model):
     __tablename__ = 'users'
+
     user_id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(100), unique=True, nullable=False)
     password = db.Column(db.String(200), nullable=False)
     nickname = db.Column(db.String(50), unique=True, nullable=False)
     manner_score = db.Column(db.Float, default=36.5)
-    preferences = db.Column(db.JSON)  # 선호 메뉴 (JSON)
+    preferences = db.Column(db.JSON)  # 선호 메뉴
     allergies = db.Column(db.Text)
     role = db.Column(db.Enum(RoleEnum), default=RoleEnum.USER)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
+    # 관계
+    parties_hosted = db.relationship('Party', backref='host', lazy=True)
+    party_members = db.relationship('PartyMember', backref='user', lazy=True)
+    rec_logs = db.relationship('RecommendationLog', backref='user', lazy=True)
+
 class Restaurant(db.Model):
     __tablename__ = 'restaurants'
+
     restaurant_id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
     address = db.Column(db.String(200), nullable=False)
@@ -35,8 +42,13 @@ class Restaurant(db.Model):
     description = db.Column(db.Text)
     avg_rating = db.Column(db.Float, default=0.0)
 
+    # 관계
+    parties = db.relationship('Party', backref='restaurant', lazy=True)
+    rec_logs = db.relationship('RecommendationLog', backref='restaurant', lazy=True)
+
 class Party(db.Model):
     __tablename__ = 'parties'
+
     party_id = db.Column(db.Integer, primary_key=True)
     restaurant_id = db.Column(db.Integer, db.ForeignKey('restaurants.restaurant_id'), nullable=False)
     host_id = db.Column(db.Integer, db.ForeignKey('users.user_id'), nullable=False)
@@ -45,30 +57,31 @@ class Party(db.Model):
     max_people = db.Column(db.Integer, nullable=False)
     status = db.Column(db.Enum(StatusEnum), default=StatusEnum.RECRUITING)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    
-    # 관계 설정
+
+    # 관계
     members = db.relationship('PartyMember', backref='party', cascade="all, delete-orphan")
+    messages = db.relationship('ChatMessage', backref='party', cascade="all, delete-orphan")
 
 class PartyMember(db.Model):
     __tablename__ = 'party_members'
+
     member_id = db.Column(db.Integer, primary_key=True)
     party_id = db.Column(db.Integer, db.ForeignKey('parties.party_id'), nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('users.user_id'), nullable=False)
-    is_host = db.Column(db.Boolean, default=False)
-    joined_at = db.Column(db.DateTime, default=datetime.utcnow)
 
 class ChatMessage(db.Model):
     __tablename__ = 'chat_messages'
+
     message_id = db.Column(db.Integer, primary_key=True)
     party_id = db.Column(db.Integer, db.ForeignKey('parties.party_id'), nullable=False)
-    sender_id = db.Column(db.Integer, db.ForeignKey('users.user_id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.user_id'), nullable=False)
     content = db.Column(db.Text, nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
 class RecommendationLog(db.Model):
     __tablename__ = 'recommendation_logs'
+
     log_id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.user_id'), nullable=False)
-    input_context = db.Column(db.JSON)  # 상황 입력 데이터
-    recommended_restaurant_id = db.Column(db.Integer, db.ForeignKey('restaurants.restaurant_id'), nullable=False)
-    is_liked = db.Column(db.Boolean, default=False)
+    restaurant_id = db.Column(db.Integer, db.ForeignKey('restaurants.restaurant_id'), nullable=False)
+    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
