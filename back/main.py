@@ -60,4 +60,3 @@ def get_restaurants(lat: float = Query(None), lng: float = Query(None)):
         {"name": "마라탕집", "lat": 37.5651, "lng": 126.9895},
         {"name": "초밥집", "lat": 37.5700, "lng": 126.9820},
     ]
-
