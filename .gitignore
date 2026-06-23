@@ -19,7 +19,7 @@ logs/
 *.log
 *.csv
 *.zip
-*.txt
+
 
 # ===== Frontend =====
 node_modules/
