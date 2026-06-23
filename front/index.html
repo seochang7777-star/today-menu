@@ -1,143 +1,16 @@
 <!DOCTYPE html>
 <html lang="ko">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>오늘 뭐 먹지? - 통합 플랫폼</title>
 
-    <!-- Tailwind CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
-
-    <!-- 분리된 CSS -->
-    <link rel="stylesheet" href="style.css">
-</head>
-<script src="//dapi.kakao.com/v2/maps/sdk.js?appkey=YOUR_API_KEY"></script>
-
-
-<body class="bg-gray-50 text-gray-800 font-sans">
-
-<!-- ✅ HEADER -->
-<header class="bg-white border-b border-gray-200 sticky top-0 z-40">
-    <div class="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
-
-        <!-- 로고 -->
-        <div class="text-2xl font-black text-orange-500 cursor-pointer"
-             onclick="location.reload()">LOGO</div>
-
-        <!-- 검색 -->
-        <div class="flex-1 max-w-md mx-8">
-            <input type="text" placeholder="SEARCH"
-                   class="w-full border border-gray-300 rounded-lg px-4 py-1.5 text-sm focus:outline-none focus:border-orange-500">
-        </div>
-
-        <!-- 사용자 -->
-        <div class="flex items-center gap-4 text-sm font-medium text-gray-600">
-            <select id="roleSelector"
-                    onchange="switchRole(this.value)"
-                    class="border border-orange-400 rounded px-2 py-1 text-xs bg-orange-50 text-orange-700 font-bold">
-                <option value="GUEST">비회원</option>
-                <option value="USER">회원</option>
-                <option value="ADMIN">관리자</option>
-            </select>
-
-            <span id="navAuthBtn"
-                  class="cursor-pointer text-orange-600"
-                  onclick="openAuthModal()">로그인</span>
-        </div>
-    </div>
-
-    <!-- 네비 -->
-    <nav class="bg-gray-100 border-t border-gray-200">
-        <div class="max-w-7xl mx-auto px-4 py-2.5 flex gap-8 text-sm font-semibold">
-            <a href="#" class="text-orange-500">Home</a>
-            <a href="#" onclick="alertUser('JOIN')" class="hover:text-orange-500">밥친구</a>
-        </div>
-    </nav>
-</header>
-
-
-<!-- ✅ MAIN -->
-<main class="max-w-7xl mx-auto px-4 py-6 space-y-8">
-
-    <!-- 트렌드 + 배너 -->
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
-
-        <!-- 트렌드 -->
-        <div class="bg-white p-6 border rounded-xl">
-            <h3 class="font-bold mb-3">TREND</h3>
-            <p>1. 냉면</p>
-            <p>2. 삼겹살</p>
-            <p>3. 마라탕</p>
-        </div>
-
-        <!-- 배너 -->
-        <div class="md:col-span-3 bg-orange-400 rounded-xl p-6 text-white">
-            <h2 class="text-2xl font-bold">AI 추천 서비스</h2>
-        </div>
-    </div>
-
-    <!-- ✅ 카테고리 -->
-    <div class="flex gap-4 overflow-x-auto py-2">
-        <div class="cate-box">한식</div>
-        <div class="cate-box">중식</div>
-        <div class="cate-box">일식</div>
-        <div class="cate-box">양식</div>
-        <div class="cate-box">분식</div>
-    </div>
-
-    <!-- ✅ 식당 영역 -->
-    <div class="bg-white border rounded-xl p-6">
-        <button onclick="getCurrentLocation()"
-                class="bg-orange-500 text-white px-3 py-2 rounded mb-4">
-            주변 식당 불러오기
-        </button>
-
-        <div id="restaurantList" class="grid grid-cols-2 gap-4">
-            <p class="text-gray-400">여기에 식당 표시</p>
-        </div>
-    </div>
-    <div id="map" style="width:100%;height:300px;" class="mt-4 rounded-xl"></div>
-
-</main>
-
-
-<!-- ✅ 챗봇 -->
-<div class="fixed bottom-6 right-6">
-
-    <!-- 버튼 -->
-    <button onclick="toggleChat()"
-            class="bg-orange-500 text-white p-4 rounded-full">
-        🍳
-    </button>
-
-    <!-- 박스 -->
-    <div id="chatBox"
-         class="hidden w-80 h-96 bg-white border rounded-xl shadow fixed bottom-20 right-6 flex flex-col">
-
-        <div class="bg-orange-500 text-white p-2 flex justify-between">
-            <span>AI 추천</span>
-            <button onclick="toggleChat()">✖</button>
-        </div>
-
-        <div id="recommendChatMessages"
-             class="flex-1 p-2 overflow-y-auto text-sm"></div>
-
-        <div class="p-2 flex gap-2">
-            <input id="recommendChatInput"
-                   class="border flex-1 p-1 rounded">
-
-            <button onclick="sendChatMessage()"
-                    class="bg-orange-500 text-white px-3 rounded">
-                전송
-            </button>
-        </div>
-    </div>
-
-</div>
-
-
-<!-- ✅ JS -->
-<script src="script.js"></script>
-
-</body>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>오늘의 메뉴</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🍽️</text></svg>" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet" />
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
 </html>
