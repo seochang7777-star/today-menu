@@ -30,3 +30,8 @@ dist/
 .vscode/
 .idea/
 .DS_Store
+
+
+.env
+back/.env
+front/.env

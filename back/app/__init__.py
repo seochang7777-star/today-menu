@@ -1,3 +1,5 @@
+import os
+import sys
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
@@ -7,23 +9,27 @@ import sys, os
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-db = SQLAlchemy()
+db      = SQLAlchemy()
 migrate = Migrate()
-jwt = JWTManager()
+jwt     = JWTManager()
 
 def create_app():
+
     app = Flask(__name__,
+
             template_folder='../../front/templates',
             static_folder='../../front/static')
 
     app.config.from_object('config.Config')
 
     db.init_app(app)
-    migrate.init_app(app, db)  # DB 마이그레이션 연결
+    migrate.init_app(app, db)
     jwt.init_app(app)
-    CORS(app)  # 프론트엔드 통신
 
-    # 블루프린트 등록
+    # React 개발 서버(:5173)와 통신 허용
+    CORS(app, resources={r'/*': {'origins': ['http://localhost:5173', 'http://127.0.0.1:5173']}},
+         supports_credentials=True)
+
     from app.routes import main_bp, auth_bp, menu_bp, party_bp, mypage_bp, api_bp
     app.register_blueprint(main_bp)
     app.register_blueprint(auth_bp)
