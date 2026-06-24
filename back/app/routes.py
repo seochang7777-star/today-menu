@@ -1,5 +1,6 @@
 import os
 import math
+import requests as req_lib
 from datetime import datetime
 from functools import wraps
 
@@ -23,7 +24,6 @@ menu_bp   = Blueprint('menu',   __name__, url_prefix='/menu')
 party_bp  = Blueprint('party',  __name__, url_prefix='/party')
 mypage_bp = Blueprint('mypage', __name__, url_prefix='/mypage')
 api_bp    = Blueprint('api',    __name__, url_prefix='/api')
-
 
 CATEGORIES = ['전체', '한식', '일식', '중식', '양식', '분식', '치킨', '피자', '카페', '술집']
 
@@ -100,7 +100,6 @@ def serialize_message(m):
         'created_at': m.created_at.isoformat() if m.created_at else None,
     }
 
-
 # ══════════════════════════════════════════════════════════════════════════════
 # MAIN
 # ══════════════════════════════════════════════════════════════════════════════
@@ -109,18 +108,15 @@ def index():
     trending     = Restaurant.query.order_by(Restaurant.avg_rating.desc()).limit(8).all()
     open_parties = Party.query.filter_by(status=StatusEnum.RECRUITING)\
                               .order_by(Party.created_at.desc()).limit(4).all()
-
     return jsonify({
         'trending':     [serialize_restaurant(r) for r in trending],
         'open_parties': [serialize_party(p) for p in open_parties],
         'categories':   CATEGORIES,
     })
-  
 
 # ══════════════════════════════════════════════════════════════════════════════
 # AUTH
 # ══════════════════════════════════════════════════════════════════════════════
-
 @auth_bp.route('/register', methods=['POST'])
 def register():
     data      = request.get_json()
@@ -207,10 +203,98 @@ def update_me():
     return jsonify(serialize_user(user)), 200
 
 
+# ── 소셜 로그인 공통 헬퍼 ─────────────────────────────────────────────────────
+def _social_login_or_register(email, nickname, provider):
+    """
+    소셜 계정으로 로그인 or 최초 가입 처리.
+    email 이 이미 있으면 로그인, 없으면 자동 회원가입 후 로그인.
+    """
+    user = User.query.filter_by(email=email).first()
+    if not user:
+        # 닉네임 중복 방지
+        base_nick = nickname or email.split('@')[0]
+        nick      = base_nick
+        suffix    = 1
+        while User.query.filter_by(nickname=nick).first():
+            nick = f"{base_nick}{suffix}"
+            suffix += 1
+
+        user = User(
+            email=email,
+            password=generate_password_hash(os.urandom(32).hex()),  # 랜덤 비번
+            nickname=nick,
+            allergies='',
+            preferences={'likes': [], 'dislikes': [], 'provider': provider},
+        )
+        db.session.add(user)
+        db.session.commit()
+
+    access_token  = create_access_token(identity=str(user.user_id))
+    refresh_token = create_refresh_token(identity=str(user.user_id))
+    return access_token, refresh_token, user
+
+
+# ── 카카오 로그인 ─────────────────────────────────────────────────────────────
+@auth_bp.route('/kakao', methods=['POST'])
+def kakao_login():
+    """
+    프론트에서 카카오 SDK로 받은 access_token 을 전달받아 유저 정보 조회 후 JWT 발급.
+    Body: { "access_token": "kakao_oauth_token" }
+    """
+    kakao_token = request.get_json().get('access_token', '')
+    if not kakao_token:
+        return jsonify({'message': 'access_token required'}), 400
+
+    # 카카오 유저 정보 조회
+    resp = req_lib.get(
+        'https://kapi.kakao.com/v2/user/me',
+        headers={'Authorization': f'Bearer {kakao_token}'},
+        timeout=5,
+    )
+    if resp.status_code != 200:
+        return jsonify({'message': '카카오 인증 실패'}), 401
+
+    info     = resp.json()
+    kakao_id = info.get('id')
+    profile  = info.get('kakao_account', {})
+    email    = profile.get('email') or f'kakao_{kakao_id}@kakao.social'
+    nickname = profile.get('profile', {}).get('nickname', '') or f'카카오유저{kakao_id}'
+
+    access_token, refresh_token, user = _social_login_or_register(email, nickname, 'kakao')
+    return jsonify({'access_token': access_token, 'refresh_token': refresh_token, **serialize_user(user)}), 200
+
+
+# ── 네이버 로그인 ─────────────────────────────────────────────────────────────
+@auth_bp.route('/naver', methods=['POST'])
+def naver_login():
+    """
+    프론트에서 네이버 SDK로 받은 access_token 을 전달받아 유저 정보 조회 후 JWT 발급.
+    Body: { "access_token": "naver_oauth_token" }
+    """
+    naver_token = request.get_json().get('access_token', '')
+    if not naver_token:
+        return jsonify({'message': 'access_token required'}), 400
+
+    # 네이버 유저 정보 조회
+    resp = req_lib.get(
+        'https://openapi.naver.com/v1/nid/me',
+        headers={'Authorization': f'Bearer {naver_token}'},
+        timeout=5,
+    )
+    if resp.status_code != 200:
+        return jsonify({'message': '네이버 인증 실패'}), 401
+
+    info     = resp.json().get('response', {})
+    naver_id = info.get('id', '')
+    email    = info.get('email') or f'naver_{naver_id}@naver.social'
+    nickname = info.get('nickname') or info.get('name', '') or f'네이버유저{naver_id}'
+
+    access_token, refresh_token, user = _social_login_or_register(email, nickname, 'naver')
+    return jsonify({'access_token': access_token, 'refresh_token': refresh_token, **serialize_user(user)}), 200
+
 # ══════════════════════════════════════════════════════════════════════════════
 # MENU / RESTAURANT
 # ══════════════════════════════════════════════════════════════════════════════
-
 @menu_bp.route('/', methods=['GET'])
 def list_restaurants():
     cat        = request.args.get('cat', '전체')
@@ -221,7 +305,6 @@ def list_restaurants():
         query = query.filter_by(category=cat)
     if q:
         query = query.filter(Restaurant.name.ilike(f'%{q}%'))
-
     pagination = query.paginate(page=page, per_page=12, error_out=False)
     return jsonify({
         'items': [serialize_restaurant(r) for r in pagination.items],
@@ -264,11 +347,9 @@ def delete_restaurant(rest_id):
     db.session.commit()
     return jsonify({'message': '삭제되었습니다.'}), 200
 
-
 # ══════════════════════════════════════════════════════════════════════════════
 # PARTY
 # ══════════════════════════════════════════════════════════════════════════════
-
 @party_bp.route('/', methods=['GET'])
 def list_parties():
     status_str = request.args.get('status', 'RECRUITING')
@@ -383,11 +464,9 @@ def update_party_status(party_id):
     db.session.commit()
     return jsonify(serialize_party(party))
 
-
 # ══════════════════════════════════════════════════════════════════════════════
 # MYPAGE
 # ══════════════════════════════════════════════════════════════════════════════
-
 @mypage_bp.route('/', methods=['GET'])
 @jwt_login_required
 def mypage():
@@ -442,6 +521,7 @@ def like_rec(log_id):
     db.session.commit()
     return jsonify({'liked': log.is_liked})
 
+
 # ── 관리자 전용 ───────────────────────────────────────────────────────────────
 @api_bp.route('/admin/users', methods=['GET'])
 @admin_required
@@ -460,60 +540,256 @@ def admin_delete_user(user_id):
 
 
 # ── OpenAI 챗봇 ───────────────────────────────────────────────────────────────
+# ── 챗봇 공통: DB에서 유저 컨텍스트 빌드 ──────────────────────────────────────
+def _build_user_context(user_id):
+    """JWT 인증된 유저의 DB 정보를 챗봇 프롬프트용으로 조립"""
+    user = User.query.get_or_404(user_id)
+
+    # 알러지 / 기피 / 선호
+    allergies = user.allergies or '없음'
+    likes     = ', '.join((user.preferences or {}).get('likes',    [])) or '없음'
+    dislikes  = ', '.join((user.preferences or {}).get('dislikes', [])) or '없음'
+
+    # 유저가 찜(is_liked)한 식당 목록
+    liked_logs = RecommendationLog.query.filter_by(user_id=user_id, is_liked=True).limit(20).all()
+    liked_rests = []
+    for log in liked_logs:
+        r = Restaurant.query.get(log.recommended_restaurant_id)
+        if r:
+            liked_rests.append(f"{r.name}({r.category})")
+    wishlist = ', '.join(liked_rests) or '없음'
+
+    # 유저가 등록한 장소 (preferences.locations)
+    saved_locs = ', '.join((user.preferences or {}).get('locations', [])) or '없음'
+
+    return user, {
+        'allergies':  allergies,
+        'likes':      likes,
+        'dislikes':   dislikes,
+        'wishlist':   wishlist,
+        'saved_locs': saved_locs,
+    }
+
+
+# ── /api/chat  ─  메뉴 추천 챗봇 (회원 전용) ────────────────────────────────
 @api_bp.route('/chat', methods=['POST'])
 @jwt_login_required
 def chatbot():
+    """
+    Body:
+      message  str   사용자 입력
+      history  list  이전 대화 [{role, content}, ...]
+      mode     str   'recommend' | 'qna'  (기본값 recommend)
+      lat      float 현재 위치 위도 (optional)
+      lng      float 현재 위치 경도 (optional)
+    """
     from openai import OpenAI
 
-    user_id  = int(get_jwt_identity())
-    user     = User.query.get_or_404(user_id)
-    data     = request.get_json(force=True)
-    message  = data.get('message', '').strip()
-    history  = data.get('history', [])
+    user_id = int(get_jwt_identity())
+    body    = request.get_json(force=True)
+    message = body.get('message', '').strip()
+    history = body.get('history', [])
+    mode    = body.get('mode', 'recommend')   # 'recommend' | 'qna'
+    lat     = body.get('lat')
+    lng     = body.get('lng')
 
     if not message:
         return jsonify({'error': 'message is required'}), 400
 
-    allergies  = user.allergies or '없음'
-    likes      = ', '.join((user.preferences or {}).get('likes',    [])) or '없음'
-    dislikes   = ', '.join((user.preferences or {}).get('dislikes', [])) or '없음'
-    rest_names = ', '.join(
-        [f"{r.name}({r.category})" for r in Restaurant.query.limit(20).all()]
-    ) or '등록된 식당 없음'
+    user, ctx = _build_user_context(user_id)
 
-    system_prompt = f"""당신은 '오늘의 메뉴' 앱의 AI 음식 추천 챗봇입니다.
-사용자 정보:
+    # ── 위치 기반 식당 조회 ──────────────────────────────────────────────────
+    nearby_list = []
+    if lat and lng:
+        for r in Restaurant.query.all():
+            if r.latitude and r.longitude:
+                dist = haversine(lat, lng, float(r.latitude), float(r.longitude))
+                if dist <= 1000:   # 1km 이내
+                    nearby_list.append(f"{r.name}({r.category}, {round(dist)}m)")
+        nearby_list = nearby_list[:15]
+
+    nearby_str = ', '.join(nearby_list) if nearby_list else None
+
+    # ── 등록된 장소 주변 식당 (위치 미제공 시 fallback) ─────────────────────
+    all_rests = [f"{r.name}({r.category})" for r in Restaurant.query.limit(30).all()]
+    all_rests_str = ', '.join(all_rests) or '등록된 식당 없음'
+
+    # ── System Prompt 분기 ──────────────────────────────────────────────────
+    if mode == 'recommend':
+        location_section = (
+            f"- 현재 위치 반경 1km 식당: {nearby_str}"
+            if nearby_str
+            else f"- 전체 등록 식당: {all_rests_str}"
+        )
+        system_prompt = f"""당신은 '오늘의 메뉴' 앱의 AI 메뉴 추천 챗봇입니다.
+아래 사용자 정보를 기반으로 메뉴 또는 식당을 추천해주세요.
+
+[사용자 DB 정보]
 - 닉네임: {user.nickname}
-- 알러지/제외: {allergies}
-- 좋아하는 음식: {likes}
-- 싫어하는 음식: {dislikes}
-등록 식당: {rest_names}
-규칙: 알러지/싫어하는 음식 추천 금지. 등록 식당 있으면 이름 언급. 짧고 친근한 한국어."""
+- 좋아하는 음식: {ctx['likes']}
+- 싫어하는 음식(기피): {ctx['dislikes']}
+- 알러지/제외 재료: {ctx['allergies']}
+- 찜한 식당(즐겨찾기): {ctx['wishlist']}
+- 등록된 장소: {ctx['saved_locs']}
+{location_section}
 
-    messages = [{'role': 'system', 'content': system_prompt}]
-    messages += history[-20:]
-    messages.append({'role': 'user', 'content': message})
+[추천 규칙]
+1. 알러지 재료가 포함된 음식은 절대 추천하지 마세요.
+2. 기피 음식(싫어하는 음식)도 추천에서 제외하세요.
+3. 찜한 식당과 좋아하는 음식을 우선 고려하세요.
+4. 위치 기반 식당 목록이 있으면 해당 식당 위주로 추천하세요.
+5. 위치 정보가 없으면 등록된 장소 기준으로 추천하고, 처음 대화 시 등록된 장소(집/직장 등)를 먼저 물어보세요.
+6. 식당명·카테고리·거리 정보를 포함해 구체적으로 추천하세요.
+7. 짧고 친근한 한국어로 답변하세요 (3~5문장 이내).
+8. 여러 선택지를 줄 때는 번호 목록으로 제시하세요."""
+
+    else:  # qna
+        system_prompt = f"""당신은 '오늘의 메뉴' 앱의 고객지원 Q&A 챗봇입니다.
+앱 사용법, 기능, 회원 정보 관련 질문에 친절하게 답변해주세요.
+
+[현재 사용자]
+- 닉네임: {user.nickname}
+- 등록된 장소: {ctx['saved_locs']}
+- 알러지 설정: {ctx['allergies']}
+
+[앱 주요 기능]
+- 메뉴 추천: AI가 취향 기반으로 추천
+- 밥친구 매칭: 파티 생성 & 참여
+- 게임창: 질문을 통한 메뉴 추천
+- 마이페이지: 취향/찜목록/활동내역 관리
+- 내 위치 기반 반경 내 식당 검색
+
+짧고 친절한 한국어로 답변하세요."""
+
+    messages_to_send = [{'role': 'system', 'content': system_prompt}]
+    messages_to_send += history[-20:]
+    messages_to_send.append({'role': 'user', 'content': message})
 
     try:
         client   = OpenAI(api_key=os.environ.get('OPENAI_API_KEY'))
         response = client.chat.completions.create(
-            model='gpt-4o-mini', messages=messages, max_tokens=500, temperature=0.8,
+            model='gpt-4o-mini',
+            messages=messages_to_send,
+            max_tokens=600,
+            temperature=0.7,
         )
         reply = response.choices[0].message.content
 
-        for r in Restaurant.query.limit(20).all():
-            if r.name in reply:
-                db.session.add(RecommendationLog(
-                    user_id=user_id,
-                    input_context={'message': message},
-                    recommended_restaurant_id=r.restaurant_id,
-                    is_liked=False,
-                ))
-                db.session.commit()
-                break
+        # 추천 로그 저장 (식당 이름이 응답에 포함된 경우)
+        if mode == 'recommend':
+            for r in Restaurant.query.limit(30).all():
+                if r.name in reply:
+                    db.session.add(RecommendationLog(
+                        user_id=user_id,
+                        input_context={'message': message, 'mode': mode},
+                        recommended_restaurant_id=r.restaurant_id,
+                        is_liked=False,
+                    ))
+                    db.session.commit()
+                    break
 
         return jsonify({'reply': reply}), 200
 
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+# ══════════════════════════════════════════════════════════════════════════════
+# 카카오 로컬 API 연동
+# ══════════════════════════════════════════════════════════════════════════════
+
+
+@api_bp.route('/kakao/search', methods=['GET'])
+def kakao_search():
+    print(" DEBUG:", request.args)
+    print(" DEBUG q:", request.args.get('q'))
+    """
+    카카오 로컬 API — 키워드로 음식점 검색
+    GET /api/kakao/search?q=삼겹살&lat=37.5&lng=126.9&radius=1000
+    """
+    q      = request.args.get('q', '').strip()
+    lat    = request.args.get('lat', type=float)
+    lng    = request.args.get('lng', type=float)
+    radius = request.args.get('radius', 1000, type=int)   # 미터
+
+    if not q:
+        return jsonify({'error': 'q(검색어) is required'}), 400
+
+    kakao_key = os.environ.get('KAKAO_REST_API_KEY', '')
+    if not kakao_key:
+        return jsonify({'error': 'KAKAO_REST_API_KEY not set'}), 500
+
+    params = {
+        'query':    q,
+        'category_group_code': 'FD6',   # 음식점
+        'size':     15,
+    }
+    if lat and lng:
+        params['x']      = lng        # 카카오는 x=경도, y=위도
+        params['y']      = lat
+        params['radius'] = radius
+
+    try:
+        resp = req_lib.get(
+            'https://dapi.kakao.com/v2/local/search/keyword.json',
+            headers={'Authorization': f'KakaoAK {kakao_key}'},
+            params=params,
+            timeout=5,
+        )
+        resp.raise_for_status()
+        data = resp.json()
+
+        # 필요한 필드만 추출
+        places = [
+            {
+                'id':           p['id'],
+                'name':         p['place_name'],
+                'category':     p['category_name'],
+                'address':      p['road_address_name'] or p['address_name'],
+                'phone':        p['phone'],
+                'lat':          float(p['y']),
+                'lng':          float(p['x']),
+                'url':          p['place_url'],
+                'dist':         int(p.get('distance') or 0),
+            }
+            for p in data.get('documents', [])
+        ]
+        return jsonify({'places': places, 'total': data['meta']['total_count']}), 200
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@api_bp.route('/kakao/register', methods=['POST'])
+@jwt_login_required
+def kakao_register_restaurant():
+    """
+    카카오 검색 결과 → DB에 식당 등록
+    POST /api/kakao/register
+    Body: { name, address, lat, lng, category, phone }
+    """
+    data = request.get_json(force=True)
+
+    # 이미 같은 이름 + 주소로 등록된 식당인지 확인
+    existing = Restaurant.query.filter_by(
+        name=data.get('name'), address=data.get('address')
+    ).first()
+
+    if existing:
+        return jsonify({'message': '이미 등록된 식당입니다.', 'id': existing.restaurant_id}), 200
+
+    # 카테고리 정제 (카카오 카테고리는 "음식점 > 한식 > 삼겹살" 형태)
+    raw_cat = data.get('category', '')
+    category = raw_cat.split(' > ')[1] if ' > ' in raw_cat else raw_cat[:10]
+
+    rest = Restaurant(
+        name=data.get('name', ''),
+        address=data.get('address', ''),
+        latitude=data.get('lat'),
+        longitude=data.get('lng'),
+        category=category,
+        description=data.get('phone', ''),
+        avg_rating=0.0,
+    )
+    db.session.add(rest)
+    db.session.commit()
+    return jsonify({'message': '식당이 등록되었습니다.', 'id': rest.restaurant_id}), 201

@@ -1,33 +1,62 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
+import { Link } from 'react-router-dom'
 import { useAuth } from '../App'
 import { sendChat } from '../api/services'
 
-const QUICK_MSGS = ['점심 추천해줘', '매운 거 먹고 싶어', '가볍게 먹고 싶어', '혼밥 메뉴 추천']
+const QUICK = {
+  recommend: ['점심 뭐 먹을까요?', '매운 거 먹고 싶어요', '가볍게 먹고 싶어요', '혼밥 추천해줘'],
+  qna:       ['찜 목록은 어떻게 쓰나요?', '파티 참여는 어떻게 하나요?', '취향 설정하고 싶어요', '매너점수가 뭔가요?'],
+}
+
+function getLocation() {
+  return new Promise((resolve) => {
+    if (!navigator.geolocation) return resolve(null)
+    navigator.geolocation.getCurrentPosition(
+      ({ coords }) => resolve({ lat: coords.latitude, lng: coords.longitude }),
+      () => resolve(null),
+      { timeout: 5000 },
+    )
+  })
+}
 
 export default function ChatBot() {
   const { user } = useAuth()
-  const [open,     setOpen]     = useState(false)
+
+  const [open, setOpen] = useState(false)
+  const [mode, setMode] = useState('recommend')
   const [messages, setMessages] = useState([])
-  const [input,    setInput]    = useState('')
-  const [loading,  setLoading]  = useState(false)
-  const endRef   = useRef(null)
+  const [histories, setHistories] = useState({ recommend: [], qna: [] })
+  const [input, setInput] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [userLoc, setUserLoc] = useState(null)
+  const [locStatus, setLocStatus] = useState('idle')
+
+  const endRef = useRef(null)
   const inputRef = useRef(null)
 
-  // 새 메시지 오면 스크롤
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages, loading])
 
-  // 챗봇 열면 입력창 포커스
   useEffect(() => {
     if (open) setTimeout(() => inputRef.current?.focus(), 100)
   }, [open])
 
-  // 비회원이면 렌더 안 함
-  if (!user) return null
+  const addMsg = (role, content, extra = {}) =>
+    setMessages((p) => [...p, { role, content, ...extra }])
 
-  const addMsg = (role, content) =>
-    setMessages((prev) => [...prev, { role, content }])
+  const requestLocation = async () => {
+    setLocStatus('asking')
+    const loc = await getLocation()
+    if (loc) {
+      setUserLoc(loc)
+      setLocStatus('granted')
+      return loc
+    } else {
+      setLocStatus('denied')
+      return null
+    }
+  }
 
   const send = useCallback(async (text) => {
     const msg = (text ?? input).trim()
@@ -37,15 +66,44 @@ export default function ChatBot() {
     setInput('')
     setLoading(true)
 
+    let loc = userLoc
+    if (mode === 'recommend' && !loc && locStatus === 'idle') {
+      loc = await requestLocation()
+    }
+
     try {
-      const data = await sendChat(msg, messages)
+      const data = await sendChat(
+        msg,
+        messages.filter((m) => m.role === 'user' || m.role === 'assistant'),
+        mode,
+        loc?.lat ?? null,
+        loc?.lng ?? null,
+      )
       addMsg('assistant', data.reply)
     } catch (e) {
-      addMsg('assistant', e.response?.data?.error ?? '오류가 발생했습니다. 다시 시도해주세요.')
+      const errMsg =
+        e.response?.status === 401
+          ? '로그인이 필요합니다.'
+          : e.response?.data?.error ?? '오류가 발생했습니다.'
+      addMsg('assistant', errMsg, { isError: true })
     } finally {
       setLoading(false)
     }
-  }, [input, loading, messages])
+  }, [input, loading, messages, mode, userLoc, locStatus])
+
+  const switchMode = (newMode) => {
+    if (newMode === mode) return
+    setHistories((h) => ({ ...h, [mode]: messages }))
+    setMessages(histories[newMode])
+    setMode(newMode)
+    setInput('')
+  }
+
+  const resetChat = () => {
+    setMessages([])
+    setHistories((h) => ({ ...h, [mode]: [] }))
+    setInput('')
+  }
 
   const handleKeyDown = (e) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -54,123 +112,66 @@ export default function ChatBot() {
     }
   }
 
-  const handleReset = () => {
-    setMessages([])
-    setInput('')
-  }
+  // ✅ ✅ ✅ 중요: Hook 다 선언된 후에 조건 return
+  if (!user) return null
+
+  const locColor =
+    locStatus === 'granted' ? '#68D391'
+    : locStatus === 'denied'  ? '#FC8181'
+    : 'rgba(255,255,255,.5)'
+
+  const welcomeText =
+    mode === 'recommend'
+      ? `안녕하세요 ${user.nickname}님! 🍽️`
+      : `안녕하세요 ${user.nickname}님! 💬`
 
   return (
     <>
-      {/* FAB 버튼 */}
-      <button
-        onClick={() => setOpen((o) => !o)}
-        className="fixed bottom-6 right-6 w-14 h-14 rounded-full bg-gray-900 text-white
-                   text-2xl shadow-xl hover:scale-105 active:scale-95
-                   transition-transform duration-150 z-50
-                   flex items-center justify-center"
-        aria-label={open ? '챗봇 닫기' : 'AI 메뉴 추천 열기'}
-      >
+      <button className="chat-fab" onClick={() => setOpen((o) => !o)}>
         {open ? '✕' : '💬'}
       </button>
 
-      {/* 챗봇 창 */}
       {open && (
-        <div
-          className="fixed bottom-24 right-6 z-50
-                     w-80 h-[460px] flex flex-col
-                     bg-white rounded-2xl shadow-2xl
-                     border border-gray-200 overflow-hidden"
-          role="dialog"
-          aria-label="AI 메뉴 추천 챗봇"
-        >
-          {/* 헤더 */}
-          <div className="bg-gray-900 text-white px-4 py-3 flex items-center justify-between flex-shrink-0">
-            <div className="flex items-center gap-2.5">
-              <div className="w-7 h-7 rounded-full bg-white/10 flex items-center justify-center text-base">
-                🤖
-              </div>
-              <div>
-                <p className="font-bold text-sm leading-tight">AI 메뉴 추천</p>
-                <p className="text-[11px] text-white/50 leading-tight">
-                  GPT · {user.nickname}님 맞춤
-                </p>
-              </div>
-            </div>
-            <button
-              onClick={handleReset}
-              className="text-[11px] bg-white/10 hover:bg-white/20 px-2.5 py-1 rounded-md transition-colors"
-            >
-              초기화
-            </button>
+        <div className="chat-window">
+
+          <div className="chat-header">
+            🤖 {mode === 'recommend' ? 'AI 메뉴 추천' : 'Q&A'}
           </div>
 
-          {/* 대화 영역 */}
-          <div className="flex-1 overflow-y-auto p-3 flex flex-col gap-2 min-h-0">
-            {/* 웰컴 메시지 */}
+          <div>
+
             {messages.length === 0 && (
-              <div className="bg-gray-50 rounded-xl p-3 text-xs text-gray-600 leading-relaxed">
-                안녕하세요 {user.nickname}님! 🍽️<br />
-                오늘 뭐 드시고 싶으세요?
-                <div className="flex flex-wrap gap-1.5 mt-2">
-                  {QUICK_MSGS.map((q) => (
-                    <button
-                      key={q}
-                      onClick={() => send(q)}
-                      className="bg-blue-50 text-blue-700 hover:bg-blue-100
-                                 text-[11px] px-2.5 py-1 rounded-full transition-colors"
-                    >
-                      {q}
-                    </button>
-                  ))}
-                </div>
+              <div>
+                <div>{welcomeText}</div>
+                {QUICK[mode].map((q) => (
+                  <button key={q} onClick={() => send(q)}>
+                    {q}
+                  </button>
+                ))}
               </div>
             )}
 
-            {/* 메시지 목록 */}
             {messages.map((m, i) => (
-              <div
-                key={i}
-                className={`max-w-[85%] px-3 py-2 rounded-xl text-sm whitespace-pre-wrap leading-relaxed
-                  ${m.role === 'user'
-                    ? 'self-end bg-gray-900 text-white rounded-br-sm'
-                    : 'self-start bg-gray-100 text-gray-800 rounded-bl-sm'
-                  }`}
-              >
+              <div key={i}>
                 {m.content}
               </div>
             ))}
 
-            {/* 로딩 인디케이터 */}
-            {loading && (
-              <div className="self-start bg-gray-100 text-gray-400 px-3 py-2 rounded-xl text-sm rounded-bl-sm">
-                생각 중... 🤔
-              </div>
-            )}
+            {loading && <div>로딩중...</div>}
 
             <div ref={endRef} />
           </div>
 
-          {/* 입력 */}
-          <div className="p-2.5 border-t border-gray-100 flex gap-2 flex-shrink-0">
+          <div>
             <input
               ref={inputRef}
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder="메시지 입력..."
-              disabled={loading}
-              className="flex-1 border border-gray-200 rounded-full px-4 py-2
-                         text-sm outline-none focus:border-gray-400 transition-colors
-                         disabled:opacity-50"
             />
-            <button
-              onClick={() => send()}
-              disabled={loading || !input.trim()}
-              className="btn-dark rounded-full px-4 py-2 text-sm"
-            >
-              전송
-            </button>
+            <button onClick={() => send()}>전송</button>
           </div>
+
         </div>
       )}
     </>

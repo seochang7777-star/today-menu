@@ -1,130 +1,266 @@
-import { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
+import { useState, useEffect, useRef } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
 import { getRestaurants, getNearby } from '../api/services'
-import RestaurantCard from '../components/RestaurantCard'
+import { useAuth } from '../App'
+import KakaoMap from '../components/KakaoMap'
+import RestaurantSearch from '../components/RestaurantSearch'
 
-const CAT_LIST = [
-  { name: '한식', icon: '🍚' }, { name: '일식', icon: '🍣' },
-  { name: '중식', icon: '🥟' }, { name: '양식', icon: '🥩' },
-  { name: '분식', icon: '🍜' }, { name: '치킨', icon: '🍗' },
-  { name: '피자', icon: '🍕' }, { name: '카페', icon: '☕' },
-]
+const CAT_ICON = { 한식:'🍚', 일식:'🍣', 중식:'🥟', 양식:'🥩', 분식:'🍜', 치킨:'🍗', 피자:'🍕', 카페:'☕' }
+const TREND_FOODS = ['삼겹살','치킨','짜장면','순대국','초밥','파스타','비빔밥','떡볶이']
+const POPULAR = [['🍚','김치찌개'],['🍜','짬뽕'],['🥩','스테이크'],['🍣','초밥'],['🍗','치킨'],['🍕','피자']]
+const NEWS = ['AI 기반 메뉴 추천 서비스 시작','밥친구 매칭 기능 출시','신규 식당 300곳 추가','이벤트 진행 중']
+
+function catIcon(c) { return CAT_ICON[c] ?? '🍴' }
 
 export default function Home() {
-  const [trending,   setTrending]   = useState([])
-  const [nearby,     setNearby]     = useState([])
-  const [locStatus,  setLocStatus]  = useState('idle') // idle | loading | done | error
+  const { user } = useAuth()
+  const navigate = useNavigate()
+  const [trending,  setTrending]  = useState([])
+  const [nearby,    setNearby]    = useState([])
+  const [userLoc,   setUserLoc]   = useState(null)
+  const [locStatus, setLocStatus] = useState('idle')
+  const [bannerIdx, setBannerIdx] = useState(0)
+  const [showSearch, setShowSearch] = useState(false)
+  const bannerTimer = useRef(null)
 
   useEffect(() => {
-    getRestaurants({ cat: '전체', page: 1 })
-      .then((d) => setTrending(d.items?.slice(0, 8) ?? []))
-      .catch(() => {})
+    getRestaurants({ cat: '전체', page: 1 }).then((d) => setTrending(d.items ?? [])).catch(() => {})
+  }, [])
+
+  // 배너 자동 슬라이드
+  useEffect(() => {
+    bannerTimer.current = setInterval(() => setBannerIdx((i) => (i + 1) % 2), 4500)
+    return () => clearInterval(bannerTimer.current)
   }, [])
 
   const findNearby = () => {
-    if (!navigator.geolocation) return alert('위치 서비스를 지원하지 않는 브라우저입니다.')
+    if (!navigator.geolocation) return alert('위치 서비스 미지원')
     setLocStatus('loading')
-    navigator.geolocation.getCurrentPosition(
-      async ({ coords }) => {
-        try {
-          const data = await getNearby({ lat: coords.latitude, lng: coords.longitude })
-          setNearby(data)
-          setLocStatus('done')
-        } catch {
-          setLocStatus('error')
-        }
-      },
-      () => setLocStatus('error'),
-    )
+    navigator.geolocation.getCurrentPosition(async ({ coords }) => {
+      const loc = { lat: coords.latitude, lng: coords.longitude }
+      setUserLoc(loc)
+      try {
+        const data = await getNearby({ lat: loc.lat, lng: loc.lng })
+        setNearby(data); setLocStatus('done')
+      } catch { setLocStatus('error') }
+    }, () => setLocStatus('error'))
   }
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-8 space-y-12">
-
-      {/* 히어로 */}
-      <section className="bg-gray-900 rounded-2xl px-8 py-12 text-white">
-        <h1 className="text-3xl md:text-4xl font-black mb-3">오늘 뭐 먹지? 🤔</h1>
-        <p className="text-gray-300 text-lg mb-7">AI가 내 취향에 맞는 메뉴를 찾아드려요</p>
-        <div className="flex flex-wrap gap-3">
-          <button
-            onClick={findNearby}
-            disabled={locStatus === 'loading'}
-            className="btn-primary"
-          >
-            {locStatus === 'loading' ? '📡 위치 확인 중...' : '📍 내 주변 식당'}
-          </button>
-          <Link to="/menu"  className="btn-outline text-white border-white/30 hover:bg-white/10">
-            🍽️ 전체 메뉴
-          </Link>
-          <Link to="/party" className="btn-outline text-white border-white/30 hover:bg-white/10">
-            👥 밥친구 찾기
-          </Link>
+    <>
+      {/* TITLE BAR */}
+      <div className="flex-between mb-16">
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+          <h2 style={{ fontSize: '1rem', fontWeight: 700 }}>오늘의 메뉴</h2>
+          <span style={{ fontSize: '.8rem', color: 'var(--text-muted)' }}>AI가 추천하는 오늘의 최적 식사</span>
         </div>
-      </section>
+        <div style={{ display: 'flex', gap: 8 }}>
+          <button id="locBtn" className="btn btn-sm btn-secondary"
+            disabled={locStatus === 'loading'} onClick={findNearby}>
+            {locStatus === 'loading' ? '📡 확인 중...' : '📍 내 주변 찾기'}
+          </button>
+          {user && <Link to="/party/create" className="btn btn-sm btn-primary">+ 파티 만들기</Link>}
+        </div>
+      </div>
 
-      {/* 카테고리 */}
-      <section>
-        <h2 className="text-lg font-bold mb-4">카테고리</h2>
-        <div className="flex gap-3 overflow-x-auto pb-1">
-          {CAT_LIST.map(({ name, icon }) => (
-            <Link
-              key={name}
-              to={`/menu?cat=${name}`}
-              className="flex-shrink-0 flex flex-col items-center gap-1.5"
-            >
-              <div className="w-14 h-14 rounded-full bg-white border border-gray-200 hover:border-gray-400
-                              flex items-center justify-center text-2xl transition-colors shadow-sm">
-                {icon}
+      {/* TREND + MAIN BANNER */}
+      <div className="top-section">
+        <div className="trend-card">
+          <h4>TREND</h4>
+          <div className="trend-list">
+            {TREND_FOODS.map((food, i) => (
+              <div className="trend-item" key={food}>
+                <span className="trend-rank">{i + 1}</span>
+                <span>{food}</span>
+                {i < 3 && <span style={{ color: 'var(--color-primary)', fontSize: '.7rem' }}>↑</span>}
               </div>
-              <span className="text-xs font-semibold text-gray-600">{name}</span>
+            ))}
+          </div>
+        </div>
+
+        <div className="main-banner">
+          <div className={`banner-slide${bannerIdx === 0 ? ' active' : ''}`}
+            style={{ background: 'linear-gradient(135deg,#E53E3E,#C05621)', color: '#fff', gap: 10 }}>
+            <div style={{ fontSize: '2.5rem' }}>🍽️</div>
+            <div style={{ fontSize: '1.3rem', fontWeight: 800 }}>오늘의 특가 식당</div>
+            <div style={{ fontSize: '.9rem', opacity: .8 }}>AI가 추천하는 오늘의 베스트 맛집</div>
+            <Link to="/menu" className="btn btn-sm" style={{ background: '#fff', color: '#E53E3E', marginTop: 6 }}>더 보기 →</Link>
+          </div>
+          <div className={`banner-slide${bannerIdx === 1 ? ' active' : ''}`}
+            style={{ background: 'linear-gradient(135deg,#1A202C,#2D3748)', color: '#fff', gap: 10 }}>
+            <div style={{ fontSize: '2.5rem' }}>👥</div>
+            <div style={{ fontSize: '1.3rem', fontWeight: 800 }}>밥친구 매칭</div>
+            <div style={{ fontSize: '.9rem', opacity: .8 }}>혼밥은 이제 그만! 함께 먹어요</div>
+            <Link to="/party" className="btn btn-sm" style={{ background: '#fff', color: '#1A202C', marginTop: 6 }}>파티 찾기 →</Link>
+          </div>
+        </div>
+      </div>
+
+      {/* INDEX i1~i8 */}
+      <div className="index-scroll mb-16">
+        {Object.entries(CAT_ICON).map(([name, icon]) => (
+          <Link to={`/menu?cat=${name}`} className="index-item" key={name}>
+            <div className="index-thumb">{icon}</div>
+            <div className="index-label">{name}</div>
+          </Link>
+        ))}
+      </div>
+
+      {/* POPULAR + CATEGORY */}
+      <div className="popular-section mb-16">
+        <div className="popular-left">
+          <h3>음식 인기순위</h3>
+          <p style={{ fontSize: '.82rem', opacity: .65, lineHeight: 1.6 }}>실시간 주문 데이터<br />기반 인기 메뉴</p>
+          <Link to="/menu">+ 메뉴카테고리</Link>
+        </div>
+        <div className="popular-right">
+          {POPULAR.map(([icon, name]) => (
+            <Link to={`/menu?q=${name}`} className="popular-food-card" key={name}>
+              <div className="popular-food-thumb">{icon}</div>
+              <div className="popular-food-name">{name}</div>
             </Link>
           ))}
         </div>
-      </section>
+      </div>
 
-      {/* 내 주변 */}
-      {locStatus === 'error' && (
-        <p className="text-red-500 text-sm bg-red-50 rounded-lg px-4 py-3">
-          위치 권한을 허용해주세요
-        </p>
-      )}
-      {locStatus === 'done' && (
-        <section>
-          <h2 className="text-lg font-bold mb-4">
-            📍 내 주변 500m
-            <span className="ml-2 text-sm font-normal text-gray-400">({nearby.length}개)</span>
-          </h2>
-          {nearby.length === 0 ? (
-            <p className="text-gray-400 text-sm">주변 500m 내 등록된 식당이 없습니다</p>
-          ) : (
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {nearby.slice(0, 8).map((r) => (
-                <RestaurantCard key={r.id} rest={r} showDist />
-              ))}
+      {/* NEARBY GRID */}
+      {user && (
+        <section style={{ marginBottom: 32 }}>
+          <div className="section-title">
+            <span>📍 내 주변 추천</span>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button className="btn btn-sm btn-secondary" onClick={() => setShowSearch((s) => !s)}>
+                🔍 식당 검색/등록
+              </button>
+              <button className="btn btn-sm btn-secondary" onClick={findNearby}>
+                {locStatus === 'loading' ? '📡 확인 중...' : '위치 불러오기'}
+              </button>
+            </div>
+          </div>
+
+          {/* 카카오 식당 검색 패널 */}
+          {showSearch && (
+            <div style={{ background: 'var(--bg-white)', border: '1px solid var(--border-color)', borderRadius: 'var(--border-radius-lg)', padding: 20, marginBottom: 16 }}>
+              <h4 style={{ marginBottom: 14, fontSize: '.95rem' }}>🔍 카카오 식당 검색 & DB 등록</h4>
+              <RestaurantSearch
+                userLoc={userLoc}
+                onRegister={() => {
+                  // 등록 후 목록 새로고침
+                  if (userLoc) findNearby()
+                }}
+              />
+            </div>
+          )}
+
+          {/* 위치 기반 카카오맵 + 카드 */}
+          {locStatus === 'error' && (
+            <div className="empty-state" style={{ gridColumn: '1/-1' }}>
+              <div className="empty-icon">⚠️</div><p>위치 권한을 허용해주세요</p>
+            </div>
+          )}
+          {locStatus === 'done' && (
+            <>
+              {/* 카카오맵 */}
+              {userLoc && (
+                <div style={{ marginBottom: 16 }}>
+                  <KakaoMap
+                    center={userLoc}
+                    markers={nearby.map((r) => ({ lat: r.latitude ?? r.lat, lng: r.longitude ?? r.lng, name: r.name, category: r.category, dist: r.dist, id: r.id }))}
+                    height="280px"
+                  />
+                </div>
+              )}
+              {nearby.length === 0 ? (
+                <div className="empty-state"><div className="empty-icon">📍</div><p>주변 500m 내 식당이 없습니다</p></div>
+              ) : (
+                <div className="grid-4" id="nearbyGrid">
+                  {nearby.slice(0, 4).map((r) => (
+                    <Link to={`/menu/${r.id}`} className="card rest-card" key={r.id}>
+                      <div className="card-img">{catIcon(r.category)}</div>
+                      <div className="card-body">
+                        <span className="badge badge-primary">{r.category || '기타'}</span>
+                        <div className="card-title mt-8">{r.name}</div>
+                        <div className="rest-meta">
+                          <span className="stars">★</span>
+                          <span className="rest-rating">{(r.avg_rating ?? 0).toFixed(1)}</span>
+                          <span className="rest-dist">🚶 {r.dist}m</span>
+                        </div>
+                        <div className="rest-addr">{r.address}</div>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </>
+          )}
+          {locStatus === 'idle' && !showSearch && (
+            <div className="empty-state">
+              <div className="empty-icon">📍</div>
+              <p>위치를 불러오면 주변 식당을 보여드려요</p>
             </div>
           )}
         </section>
       )}
 
-      {/* 인기 맛집 */}
-      <section>
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-bold">🔥 인기 맛집 TOP 8</h2>
-          <Link to="/menu" className="text-sm text-blue-500 hover:underline">전체 보기 →</Link>
+      {/* 인기 맛집 TOP 8 */}
+      <section style={{ marginBottom: 32 }}>
+        <div className="section-title">
+          <span>🔥 인기 맛집 TOP 8</span>
+          <Link to="/menu">전체보기 →</Link>
         </div>
-        {trending.length === 0 ? (
-          <div className="text-center py-16 text-gray-400">
-            <p className="text-4xl mb-3">🍴</p>
-            <p className="text-sm">등록된 식당이 없습니다</p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {trending.map((r) => (
-              <RestaurantCard key={r.id} rest={r} />
-            ))}
-          </div>
-        )}
+        <div className="grid-4">
+          {trending.length === 0 ? (
+            <div className="empty-state" style={{ gridColumn: '1/-1' }}>
+              <div className="empty-icon">🍴</div>
+              <p>등록된 식당이 없습니다. 관리자에게 문의하세요.</p>
+            </div>
+          ) : trending.map((r) => (
+            <Link to={`/menu/${r.id}`} className="card rest-card" key={r.id}>
+              <div className="card-img">{catIcon(r.category)}</div>
+              <div className="card-body">
+                <span className="badge badge-primary">{r.category || '기타'}</span>
+                <div className="card-title mt-8">{r.name}</div>
+                <div className="rest-meta">
+                  <span className="stars">★★★★</span>
+                  <span className="rest-rating">{(r.avg_rating ?? 0).toFixed(1)}</span>
+                </div>
+                <div className="rest-addr">{r.address}</div>
+              </div>
+            </Link>
+          ))}
+        </div>
       </section>
-    </div>
+
+      {/* PROMO BANNER */}
+      <div className="promo-banner">
+        🎉 신규 가입 시 AI 추천 쿠폰 증정! —{' '}
+        <Link to="/register" style={{ color: 'var(--color-info)' }}>지금 가입하기 →</Link>
+      </div>
+
+      {/* NEWS */}
+      <div className="section-title mt-24">
+        <span>📰 최신 소식</span><a href="#">전체보기 →</a>
+      </div>
+      <div className="news-grid">
+        <div className="news-card news-main">
+          <div className="news-thumb" style={{ aspectRatio: 1, fontSize: '3rem' }}>📰</div>
+          <div className="news-body">
+            <div className="news-tag">STATUS</div>
+            <div className="news-title">오늘의 메뉴 앱 업데이트 소식 — AI 추천 알고리즘 개선</div>
+            <div className="news-date">2025.08.22</div>
+          </div>
+        </div>
+        {NEWS.map((title, i) => (
+          <div className="news-card" key={i}>
+            <div className="news-thumb">📄</div>
+            <div className="news-body">
+              <div className="news-tag">NEWS{i + 1}</div>
+              <div className="news-title">{title}</div>
+              <div className="news-date">2025.08.{20 - i}</div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </>
   )
 }
