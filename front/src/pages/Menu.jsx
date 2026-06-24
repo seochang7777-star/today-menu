@@ -1,135 +1,142 @@
-import { useState, useEffect, useCallback } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { useState, useEffect } from 'react'
+import { Link, useSearchParams } from 'react-router-dom'
 import { getRestaurants } from '../api/services'
-import RestaurantCard from '../components/RestaurantCard'
+import { useAuth } from '../App'
 
-const CATEGORIES = ['전체', '한식', '일식', '중식', '양식', '분식', '치킨', '피자', '카페', '술집']
+const CAT_ICON = { 한식:'🍚', 일식:'🍣', 중식:'🥟', 양식:'🥩', 분식:'🍜', 치킨:'🍗', 피자:'🍕', 카페:'☕' }
+const CATEGORIES = ['전체','한식','일식','중식','양식','분식','치킨','피자','카페','술집']
 
 export default function Menu() {
+  const { user } = useAuth()
   const [searchParams, setSearchParams] = useSearchParams()
+  const activeCat = searchParams.get('cat') ?? '전체'
+  const page      = Number(searchParams.get('page') ?? 1)
+  const q         = searchParams.get('q') ?? ''
 
-  const cat  = searchParams.get('cat')  ?? '전체'
-  const page = Number(searchParams.get('page') ?? 1)
-  const q    = searchParams.get('q')   ?? ''
-
-  const [items,      setItems]      = useState([])
-  const [pagination, setPagination] = useState({ total: 0, pages: 1, page: 1 })
-  const [loading,    setLoading]    = useState(false)
+  const [restaurants, setRestaurants] = useState([])
+  const [pagination,  setPagination]  = useState({ total: 0, pages: 1, page: 1, has_prev: false, has_next: false })
+  const [loading,     setLoading]     = useState(false)
   const [searchInput, setSearchInput] = useState(q)
 
-  const fetchData = useCallback(() => {
+  useEffect(() => {
     setLoading(true)
-    getRestaurants({ cat, q, page })
-      .then((d) => {
-        setItems(d.items ?? [])
-        setPagination({ total: d.total, pages: d.pages, page: d.page })
-      })
+    getRestaurants({ cat: activeCat, q, page })
+      .then((d) => { setRestaurants(d.items ?? []); setPagination(d) })
       .catch(() => {})
       .finally(() => setLoading(false))
-  }, [cat, q, page])
+  }, [activeCat, q, page])
 
-  useEffect(() => { fetchData() }, [fetchData])
+  const go = (params) => setSearchParams((prev) => {
+    const next = new URLSearchParams(prev)
+    Object.entries(params).forEach(([k, v]) => v == null ? next.delete(k) : next.set(k, String(v)))
+    return next
+  })
 
-  const go = (params) =>
-    setSearchParams((prev) => {
-      const next = new URLSearchParams(prev)
-      Object.entries(params).forEach(([k, v]) => {
-        if (v == null) next.delete(k)
-        else next.set(k, String(v))
-      })
-      return next
-    })
-
-  const handleSearch = () => go({ q: searchInput, page: 1 })
+  // 페이지 번호 배열 생성
+  const pageRange = () => {
+    const pages = []
+    for (let i = 1; i <= pagination.pages; i++) pages.push(i)
+    return pages
+  }
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-8">
-      <h1 className="text-2xl font-black mb-6">🍽️ 메뉴 찾기</h1>
+    <>
+      <h1 style={{ fontSize: '2.2rem', fontWeight: 900, marginBottom: 24 }}>글쓰기</h1>
 
-      {/* 검색 */}
-      <div className="flex gap-2 mb-5">
-        <input
-          className="input flex-1"
-          placeholder="식당명 검색..."
-          value={searchInput}
-          onChange={(e) => setSearchInput(e.target.value)}
-          onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-        />
-        <button onClick={handleSearch} className="btn-dark">검색</button>
+      {/* 상단 배너 */}
+      <div style={{ background: 'var(--bg-surface)', borderRadius: 'var(--border-radius-lg)', height: 80, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)', marginBottom: 20, fontWeight: 600 }}>
+        광고 배너 영역
       </div>
 
-      {/* 카테고리 필터 */}
-      <div className="flex gap-2 overflow-x-auto pb-2 mb-5">
-        {CATEGORIES.map((c) => (
-          <button
-            key={c}
-            onClick={() => go({ cat: c, page: 1, q: '' })}
-            className={`flex-shrink-0 px-4 py-1.5 rounded-full text-sm font-bold transition-colors
-              ${cat === c
-                ? 'bg-gray-900 text-white'
-                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-              }`}
-          >
-            {c}
-          </button>
-        ))}
+      {/* 필터 바 */}
+      <div className="menu-filter-bar">
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+          <span style={{ fontSize: '.9rem', fontWeight: 600 }}>카테고리</span>
+          <div className="cat-scroll">
+            {CATEGORIES.map((c) => (
+              <button key={c} className={`cat-pill${activeCat === c ? ' active' : ''}`}
+                onClick={() => go({ cat: c, page: 1, q: '' })}>
+                {c}
+              </button>
+            ))}
+          </div>
+        </div>
       </div>
 
-      {/* 결과 수 */}
-      <p className="text-sm text-gray-400 mb-4">총 {pagination.total}개</p>
+      <div className="flex-between mb-16" style={{ flexWrap: 'wrap', gap: 10 }}>
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+          <div className="search-bar">
+            <input type="text" className="form-control" placeholder="식당명 검색..."
+              value={searchInput} onChange={(e) => setSearchInput(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && go({ q: searchInput, page: 1 })}
+              style={{ borderRadius: 24, minWidth: 200 }} />
+            <button className="btn btn-dark btn-sm" style={{ borderRadius: 24 }}
+              onClick={() => go({ q: searchInput, page: 1 })}>검색</button>
+          </div>
+        </div>
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+          <span className="filter-count">총 {pagination.total}개</span>
+          <select className="sort-select">
+            <option value="rating">평점순</option>
+            <option value="name">이름순</option>
+            <option value="new">최신순</option>
+          </select>
+        </div>
+      </div>
 
       {/* 카드 그리드 */}
       {loading ? (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="grid-4">
           {Array.from({ length: 8 }).map((_, i) => (
-            <div key={i} className="rounded-xl bg-gray-100 aspect-[3/4] animate-pulse" />
+            <div key={i} className="card" style={{ height: 220, background: 'var(--bg-surface)', animation: 'pulse 1.5s infinite' }} />
           ))}
         </div>
-      ) : items.length === 0 ? (
-        <div className="text-center py-20 text-gray-400">
-          <p className="text-5xl mb-3">🍴</p>
-          <p className="text-sm">
-            {q ? `"${q}" 검색 결과가 없습니다` : '등록된 식당이 없습니다'}
-          </p>
-          {q && (
-            <button onClick={() => { setSearchInput(''); go({ q: '', page: 1 }) }}
-              className="btn-secondary mt-4 text-sm">
-              전체 보기
-            </button>
-          )}
+      ) : restaurants.length === 0 ? (
+        <div className="empty-state">
+          <div className="empty-icon">🍴</div>
+          <p>{q ? `「${q}」 검색 결과가 없습니다` : '등록된 식당이 없습니다'}</p>
+          {q && <button className="btn btn-secondary btn-sm" style={{ marginTop: 12 }} onClick={() => go({ q: '', page: 1 })}>전체 보기</button>}
         </div>
       ) : (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {items.map((r) => <RestaurantCard key={r.id} rest={r} />)}
+        <div className="grid-4" id="menuGrid">
+          {restaurants.map((r) => (
+            <Link to={`/menu/${r.id}`} className="card rest-card" key={r.id}>
+              <div className="card-img">{CAT_ICON[r.category] ?? '🍴'}</div>
+              <div className="card-body">
+                <span className="badge badge-primary">{r.category || '기타'}</span>
+                <div className="card-title mt-8">{r.name}</div>
+                <div className="rest-meta" style={{ marginTop: 6 }}>
+                  <span className="stars">{'★'.repeat(Math.round(r.avg_rating ?? 0)).padEnd(5, '☆')}</span>
+                  <span className="rest-rating">{(r.avg_rating ?? 0).toFixed(1)}</span>
+                </div>
+                <div className="rest-addr">{r.address}</div>
+                <div style={{ display: 'flex', gap: 6, marginTop: 8, flexWrap: 'wrap' }}>
+                  <span className="badge badge-muted" style={{ fontSize: '.7rem' }}>리뷰 {Math.floor((r.avg_rating ?? 0) * 10)}</span>
+                  {user && <span className="badge badge-success" style={{ fontSize: '.7rem' }}>파티 참여 가능</span>}
+                </div>
+              </div>
+            </Link>
+          ))}
         </div>
       )}
 
       {/* 페이지네이션 */}
       {pagination.pages > 1 && (
-        <div className="flex justify-center gap-1.5 mt-8 flex-wrap">
-          {page > 1 && (
-            <button onClick={() => go({ page: page - 1 })}
-              className="btn-outline px-3 py-1.5 text-sm">‹</button>
+        <div className="pagination">
+          {pagination.has_prev && (
+            <button className="page-btn" onClick={() => go({ page: page - 1 })}>‹</button>
           )}
-          {Array.from({ length: pagination.pages }, (_, i) => i + 1).map((p) => (
-            <button
-              key={p}
-              onClick={() => go({ page: p })}
-              className={`px-3 py-1.5 rounded-lg text-sm font-semibold transition-colors
-                ${p === page
-                  ? 'bg-gray-900 text-white'
-                  : 'border border-gray-200 hover:bg-gray-100'
-                }`}
-            >
+          {pageRange().map((p) => (
+            <button key={p} className={`page-btn${p === pagination.page ? ' active' : ''}`}
+              onClick={() => go({ page: p })}>
               {p}
             </button>
           ))}
-          {page < pagination.pages && (
-            <button onClick={() => go({ page: page + 1 })}
-              className="btn-outline px-3 py-1.5 text-sm">›</button>
+          {pagination.has_next && (
+            <button className="page-btn" onClick={() => go({ page: page + 1 })}>›</button>
           )}
         </div>
       )}
-    </div>
+    </>
   )
 }

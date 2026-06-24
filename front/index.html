@@ -1,16 +1,30 @@
 <!DOCTYPE html>
 <html lang="ko">
-
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>오늘의 메뉴</title>
+
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🍽️</text></svg>" />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet" />
+
+    <!-- ✅ 카카오 지도 SDK -->
+    <script
+      type="text/javascript"
+      src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=074ab0b682d82aa7fa0767cf0e9ac77f&libraries=services">
+    </script>
+
+    <!-- ✅ 네이버 SDK -->
+    <script
+      type="text/javascript"
+      src="https://static.nid.naver.com/js/naveridlogin_js_sdk_2.0.2.js"
+      charset="utf-8">
+    </script>
+
   </head>
+
   <body>
     <div id="root"></div>
+
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>
