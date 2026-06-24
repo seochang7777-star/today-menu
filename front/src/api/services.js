@@ -1,25 +1,3 @@
-/**
- * services.js
- * ─────────────────────────────────────────────────────────────────────────────
- * Flask 백엔드 엔드포인트별 함수 모음
- * axiosInstance를 import해 사용하므로 JWT 처리 자동
- *
- * 사용 예시:
- *
- *   // 로그인
- *   const data = await login({ email: 'a@b.com', password: '1234' })
- *   // → { access_token, refresh_token, nickname, role, ... }
- *
- *   // 식당 목록 (카테고리 + 검색 + 페이지)
- *   const data = await getRestaurants({ cat: '한식', q: '삼겹', page: 1 })
- *   // → { items: [...], total, pages, page }
- *
- *   // JWT 필요한 API (axiosInstance가 자동으로 헤더 주입)
- *   const data = await joinParty(3)
- *
- *   // 401 발생 시 axiosInstance가 자동으로 /auth/refresh 호출 후 재시도
- * ─────────────────────────────────────────────────────────────────────────────
- */
 import api, { TokenStore } from './axiosInstance'
 
 // ── AUTH ──────────────────────────────────────────────────────────────────────
@@ -67,10 +45,10 @@ export async function fetchMe() {
   return data
 }
 
-export async function updateMe(payload) {
-  const { data } = await api.put('/auth/me', payload)
-  return data
-}
+// export async function updateMe(payload) {
+//   const { data } = await api.put('/auth/me', payload)
+//   return data
+// }
 
 // ── RESTAURANT ────────────────────────────────────────────────────────────────
 export async function getRestaurants(params = {}) {
@@ -136,10 +114,15 @@ export async function getMyPage() {
   return data   // { user, my_parties, rec_logs }
 }
 
+// 🏠 임시 변경: 백엔드 API가 준비될 때까지 에러가 안 나도록 프론트에서만 가상 처리!
+export async function updateMyPageProfile(payload) {
+  return { user: payload }
+}
+
 // ── CHATBOT ───────────────────────────────────────────────────────────────────
 /**
- * @param {string} message       사용자 입력
- * @param {Array}  history       이전 대화 [{role, content}, ...]
+ * @param {string} message      사용자 입력
+ * @param {Array}  history      이전 대화 [{role, content}, ...]
  * @param {'recommend'|'qna'} mode  탭 모드
  * @param {number|null} lat      현재 위도 (위치 허용 시)
  * @param {number|null} lng      현재 경도 (위치 허용 시)
