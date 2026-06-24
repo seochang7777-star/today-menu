@@ -1,61 +1,80 @@
 import { Link, NavLink, useNavigate } from 'react-router-dom'
 import { useAuth } from '../App'
 import { logout } from '../api/services'
+import { useState } from 'react'
 
 export default function Header() {
   const { user, logout: ctxLogout } = useAuth()
   const navigate = useNavigate()
+  const [q, setQ] = useState('')
 
-  const handleLogout = () => {
-    logout()
-    ctxLogout()
-    navigate('/')
+  const handleLogout = () => { logout(); ctxLogout(); navigate('/') }
+  const handleSearch = (e) => {
+    e.preventDefault()
+    navigate(`/menu?q=${encodeURIComponent(q)}`)
   }
 
-  const navCls = ({ isActive }) =>
-    `px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
-      isActive
-        ? 'bg-gray-100 text-gray-900 font-bold'
-        : 'text-gray-500 hover:text-gray-900 hover:bg-gray-50'
-    }`
-
   return (
-    <header className="bg-white border-b border-gray-200 sticky top-0 z-50 shadow-sm">
-      <div className="max-w-6xl mx-auto px-4 h-14 flex items-center gap-4">
-        {/* 로고 */}
-        <Link to="/" className="text-lg font-black text-gray-900 flex items-center gap-1.5 flex-shrink-0">
-          🍽️ <span>오늘의 메뉴</span>
-        </Link>
+    <>
+      {/* ── 헤더 ── */}
+      <header className="site-header">
+        <div className="container">
+          <Link to="/" className="site-logo">
+            🍽️ <span>오늘의 메뉴</span>
+          </Link>
 
-        {/* 네비 */}
-        <nav className="hidden md:flex items-center gap-0.5 flex-1">
-          <NavLink to="/"      end className={navCls}>홈</NavLink>
-          <NavLink to="/menu"     className={navCls}>메뉴 찾기</NavLink>
-          <NavLink to="/party"    className={navCls}>밥친구</NavLink>
-        </nav>
+          <div className="header-search">
+            <span className="search-icon">🔍</span>
+            <form onSubmit={handleSearch}>
+              <input
+                type="text"
+                placeholder="매번 같은 메뉴, 더 새로운 음식을 찾아봐"
+                value={q}
+                onChange={(e) => setQ(e.target.value)}
+              />
+            </form>
+          </div>
 
-        {/* 유저 */}
-        <div className="flex items-center gap-2 ml-auto flex-shrink-0">
-          {user ? (
-            <>
-              <NavLink to="/mypage" className={navCls}>
-                <span className="w-5 h-5 rounded-full bg-gray-900 text-white text-[10px] flex items-center justify-center font-black mr-1">
-                  {user.nickname?.[0]}
-                </span>
-                {user.nickname}
-              </NavLink>
-              <button onClick={handleLogout} className="btn-secondary text-sm py-1.5 px-3">
-                로그아웃
-              </button>
-            </>
-          ) : (
-            <>
-              <Link to="/login"    className="btn-secondary text-sm py-1.5 px-3">로그인</Link>
-              <Link to="/register" className="btn-primary  text-sm py-1.5 px-3">회원가입</Link>
-            </>
+          <div className="header-actions">
+            {user ? (
+              <>
+                <Link to="/mypage" className="header-user-btn">
+                  <div className="avatar-sm">{user.nickname?.[0]}</div>
+                  {user.nickname}
+                </Link>
+                <button onClick={handleLogout} className="btn btn-sm btn-secondary">로그아웃</button>
+              </>
+            ) : (
+              <>
+                <Link to="/login"    className="btn btn-sm btn-secondary">로그인</Link>
+                <Link to="/register" className="btn btn-sm btn-primary">회원가입</Link>
+              </>
+            )}
+          </div>
+        </div>
+      </header>
+
+      {/* ── 네비 ── */}
+      <nav className="site-nav">
+        <div className="container">
+          <NavLink to="/"      end className={({ isActive }) => 'nav-link' + (isActive ? ' active' : '')}>≡ 전체</NavLink>
+          <NavLink to="/menu"     className={({ isActive }) => 'nav-link' + (isActive ? ' active' : '')}>직식솔루션</NavLink>
+          <NavLink to="/menu"     className="nav-link">글식솔루션</NavLink>
+          <NavLink to="/menu"     className="nav-link">솔루션제품</NavLink>
+          <NavLink to="/"         className="nav-link">메뉴서비지치</NavLink>
+          <NavLink to="/"         className="nav-link">서포트</NavLink>
+          <NavLink to="/party"    className={({ isActive }) => 'nav-link' + (isActive ? ' active' : '')}>이벤트/기획전</NavLink>
+          <NavLink to="/game"     className={({ isActive }) => 'nav-link' + (isActive ? ' active' : '')}
+            style={{ marginLeft: 'auto', color: 'var(--color-primary)', fontWeight: 700 }}>
+            🎲 게임창
+          </NavLink>
+          {user && (
+            <span style={{ color: 'var(--text-muted)', fontSize: '.82rem' }}>
+              🌿 {user.nickname}
+            </span>
           )}
         </div>
-      </div>
-    </header>
+      </nav>
+    </>
   )
 }
