@@ -1,4 +1,4 @@
-@echo off
+bat@echo off
 chcp 65001 > nul
 title 오늘의 메뉴 - 최초 설치
 
@@ -40,14 +40,10 @@ echo.
 echo [3/7] instance 폴더 생성...
 if not exist "%BACK%\instance" mkdir "%BACK%\instance"
 
-
 echo.
 echo [4/7] DB 테이블 생성...
-
 cd /d "%BACK%"
-
 %PYTHON% -c "from run import app; from app import db; app.app_context().push(); db.create_all()"
-
 if errorlevel 1 (
     echo [오류] DB 생성 실패
     pause
@@ -56,11 +52,22 @@ if errorlevel 1 (
 echo 완료
 
 echo.
-echo [5/7] npm install...
+echo [5/7] 프론트 설치...
 cd /d "%FRONT%"
+
+echo npm install 실행...
 call npm install
 if errorlevel 1 (
-    echo [오류] Node.js 확인
+    echo [오류] npm install 실패
+    pause
+    exit /b 1
+)
+
+echo.
+echo Tailwind 관련 패키지 설치 중...
+call npm install -D tailwindcss @tailwindcss/vite @tailwindcss/postcss
+if errorlevel 1 (
+    echo [오류] Tailwind 설치 실패
     pause
     exit /b 1
 )
@@ -70,8 +77,6 @@ echo [6/7] 초기 데이터 넣기...
 cd /d "%BACK%"
 %PYTHON% seed.py
 
-
-:: 7. 수원 상가 CSV 임포트 (파일이 back 폴더에 있을 때만 실행)
 echo.
 echo [7/7] 수원지역 상가 데이터 임포트...
 if exist "%BACK%\수원지역_상가_정보.csv" (

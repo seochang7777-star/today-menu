@@ -24,15 +24,24 @@ if not exist "%FRONT%\package.json" (
     exit /b 1
 )
 
+:: ── 가상환경 감지 ──────────────────────────────────────────────────
 if exist "%ROOT%.venv\Scripts\python.exe" (
-    set PYTHON=%ROOT%.venv\Scripts\python.exe
+    set PYTHON="%ROOT%.venv\Scripts\python.exe"
+) else if exist "%BACK%\.venv\Scripts\python.exe" (
+    set PYTHON="%BACK%\.venv\Scripts\python.exe"
 ) else (
     set PYTHON=python
 )
 
+:: ── npm install 확인 (node_modules 없을 때만 실행) ────────────────
 if not exist "%FRONT%\node_modules" (
+    echo [프론트] node_modules 없음 - npm install 실행 중...
     cd /d "%FRONT%"
     call npm install
+    if errorlevel 1 ( echo [오류] npm install 실패 & pause & exit /b 1 )
+    echo [프론트] npm install 완료!
+) else (
+    echo [프론트] node_modules 존재 - 설치 건너뜀
 )
 
 if not exist "%BACK%\instance" (

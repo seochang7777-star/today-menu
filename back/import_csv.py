@@ -83,7 +83,8 @@ def run(csv_path: str, limit: int | None, clear: bool):
                 latitude=lat,
                 longitude=lng,
                 category=cat,
-                description=phone,   # 전화번호를 description에 저장
+                phone=phone,
+                description='',
                 avg_rating=0.0,
             )
             db.session.add(rest)

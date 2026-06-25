@@ -55,6 +55,7 @@ def admin_required(f):
 
 # ── 직렬화 헬퍼 ───────────────────────────────────────────────────────────────
 def serialize_user(u):
+    prefs = u.preferences or {}
     return {
         'user_id':      u.user_id,
         'email':        u.email,
@@ -64,9 +65,12 @@ def serialize_user(u):
         'allergies':    u.allergies,
         'role':         u.role.value,
         'created_at':   u.created_at.isoformat() if u.created_at else None,
+        'saved_locations': prefs.get('saved_locations', []),  # [{name, address, lat, lng}]
     }
 
 def serialize_restaurant(r):
+    # models.py에 phone 컬럼이 별도로 존재
+    phone = getattr(r, 'phone', None) or r.description or ''
     return {
         'id':          r.restaurant_id,
         'name':        r.name,
@@ -75,7 +79,7 @@ def serialize_restaurant(r):
         'longitude':   float(r.longitude) if r.longitude else None,
         'category':    r.category,
         'description': r.description,
-        'phone':       r.description,   # description에 전화번호 저장됨
+        'phone':       phone,
         'avg_rating':  r.avg_rating,
     }
 
@@ -196,9 +200,27 @@ def update_me():
         user.nickname = nickname
 
     user.allergies   = data.get('allergies', user.allergies)
+    prefs = user.preferences or {}
+
+    # saved_locations: [{name, address, lat, lng}, ...] 최대 3개
+    new_locations = data.get('saved_locations', None)
+    if new_locations is not None:
+        # 최대 3개, 필수 필드 검증
+        validated = []
+        for loc in new_locations[:3]:
+            if loc.get('name') and loc.get('lat') is not None and loc.get('lng') is not None:
+                validated.append({
+                    'name':    str(loc['name'])[:30],
+                    'address': str(loc.get('address', ''))[:100],
+                    'lat':     float(loc['lat']),
+                    'lng':     float(loc['lng']),
+                })
+        prefs['saved_locations'] = validated
+
     user.preferences = {
-        'likes':    data.get('preferences', (user.preferences or {}).get('likes', [])),
-        'dislikes': data.get('dislikes',    (user.preferences or {}).get('dislikes', [])),
+        **prefs,
+        'likes':    data.get('preferences', prefs.get('likes', [])),
+        'dislikes': data.get('dislikes',    prefs.get('dislikes', [])),
     }
     db.session.commit()
     return jsonify(serialize_user(user)), 200
@@ -350,6 +372,21 @@ def delete_restaurant(rest_id):
     db.session.commit()
     return jsonify({'message': '삭제되었습니다.'}), 200
 
+
+
+# ── 게임용 랜덤 메뉴 API ────────────────────────────────────────────────────
+@menu_bp.route('/random', methods=['GET'])
+def random_menus():
+    """GET /menu/random?count=64&cat=전체 — 게임용 랜덤 메뉴"""
+    count = min(request.args.get('count', 64, type=int), 128)
+    cat   = request.args.get('cat', '전체')
+    query = Restaurant.query
+    if cat != '전체':
+        query = query.filter_by(category=cat)
+    from sqlalchemy import func
+    items = query.order_by(func.random()).limit(count).all()
+    return jsonify({'items': [serialize_restaurant(r) for r in items]}), 200
+
 # ══════════════════════════════════════════════════════════════════════════════
 # PARTY
 # ══════════════════════════════════════════════════════════════════════════════
@@ -376,6 +413,7 @@ def list_parties():
     return jsonify([serialize_party(p, viewer_id) for p in parties])
 
 
+
 @party_bp.route('/<int:party_id>', methods=['GET'])
 def get_party(party_id):
     party    = Party.query.get_or_404(party_id)
@@ -393,6 +431,7 @@ def get_party(party_id):
     data          = serialize_party(party, viewer_id)
     data['messages'] = [serialize_message(m) for m in messages]
     return jsonify(data)
+
 
 
 @party_bp.route('/', methods=['POST'])
@@ -422,6 +461,7 @@ def create_party():
     return jsonify(serialize_party(party, host_id)), 201
 
 
+
 @party_bp.route('/<int:party_id>/join', methods=['POST'])
 @jwt_login_required
 def join_party(party_id):
@@ -442,6 +482,7 @@ def join_party(party_id):
     return jsonify({'message': '파티에 참여했습니다! 매너온도 +0.5°', 'manner_score': user.manner_score}), 200
 
 
+
 @party_bp.route('/<int:party_id>/chat', methods=['POST'])
 @jwt_login_required
 def party_chat(party_id):
@@ -453,6 +494,7 @@ def party_chat(party_id):
     db.session.add(msg)
     db.session.commit()
     return jsonify(serialize_message(msg)), 201
+
 
 
 @party_bp.route('/<int:party_id>/status', methods=['PATCH'])
@@ -592,14 +634,25 @@ def chatbot():
     body    = request.get_json(force=True)
     message = body.get('message', '').strip()
     history = body.get('history', [])
-    mode    = body.get('mode', 'recommend')   # 'recommend' | 'qna'
-    lat     = body.get('lat')
-    lng     = body.get('lng')
+    mode      = body.get('mode', 'recommend')   # 'recommend' | 'qna'
+    lat       = body.get('lat')
+    lng       = body.get('lng')
+    loc_index = body.get('loc_index')   # None | 0~2 → 저장된 장소 인덱스
 
     if not message:
         return jsonify({'error': 'message is required'}), 400
 
     user, ctx = _build_user_context(user_id)
+
+    # ── loc_index 가 지정된 경우 저장된 장소 좌표 사용 ──────────────────────
+    loc_name = None
+    if loc_index is not None:
+        saved = (user.preferences or {}).get('saved_locations', [])
+        if 0 <= int(loc_index) < len(saved):
+            chosen  = saved[int(loc_index)]
+            lat     = chosen['lat']
+            lng     = chosen['lng']
+            loc_name = chosen['name']
 
     # ── 위치 기반 식당 조회 ──────────────────────────────────────────────────
     nearby_list = []
@@ -612,6 +665,8 @@ def chatbot():
         nearby_list = nearby_list[:15]
 
     nearby_str = ', '.join(nearby_list) if nearby_list else None
+    if nearby_str and loc_name:
+        nearby_str = f'[{loc_name} 근처] ' + nearby_str
 
     # ── 등록된 장소 주변 식당 (위치 미제공 시 fallback) ─────────────────────
     all_rests = [f"{r.name}({r.category})" for r in Restaurant.query.limit(30).all()]
@@ -790,7 +845,8 @@ def kakao_register_restaurant():
         latitude=data.get('lat'),
         longitude=data.get('lng'),
         category=category,
-        description=data.get('phone', ''),
+        phone=data.get('phone', ''),
+        description='',
         avg_rating=0.0,
     )
     db.session.add(rest)

@@ -7,13 +7,19 @@
 
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🍽️</text></svg>" />
 
-    <!-- ✅ 카카오 지도 SDK -->
+    <!--
+      카카오맵 SDK
+      ★ autoload=false 필수 ★
+        - 없으면 SDK가 React 마운트 전에 로드 완료되어
+          kakao.maps.load() 콜백이 두 번 다시 호출되지 않아
+          지도가 절대 표시되지 않음
+    -->
     <script
       type="text/javascript"
-      src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=074ab0b682d82aa7fa0767cf0e9ac77f&libraries=services">
+      src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=074ab0b682d82aa7fa0767cf0e9ac77f&libraries=services&autoload=false">
     </script>
 
-    <!-- ✅ 네이버 SDK -->
+    <!-- 네이버 로그인 SDK -->
     <script
       type="text/javascript"
       src="https://static.nid.naver.com/js/naveridlogin_js_sdk_2.0.2.js"
@@ -24,7 +30,6 @@
 
   <body>
     <div id="root"></div>
-
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>
