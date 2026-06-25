@@ -4,7 +4,7 @@ import requests as req_lib
 from datetime import datetime
 from functools import wraps
 
-from flask import Blueprint, request, jsonify, session
+from flask import Blueprint, request, jsonify
 from flask_jwt_extended import (
     create_access_token, create_refresh_token,
     jwt_required, get_jwt_identity
@@ -561,13 +561,16 @@ def nearby():
     if not lat or not lng:
         return jsonify({'error': 'lat/lng required'}), 400
     result = []
-    for r in Restaurant.query.all():
-        if r.latitude and r.longitude:
-            dist = haversine(lat, lng, float(r.latitude), float(r.longitude))
-            if dist <= rad:
-                item = serialize_restaurant(r)
-                item['dist'] = round(dist)
-                result.append(item)
+    rests = Restaurant.query.filter(
+        Restaurant.latitude.isnot(None),
+        Restaurant.longitude.isnot(None)
+    ).all()
+    for r in rests:
+        dist = haversine(lat, lng, float(r.latitude), float(r.longitude))
+        if dist <= rad:
+            item = serialize_restaurant(r)
+            item['dist'] = round(dist)
+            result.append(item)
     result.sort(key=lambda x: x['dist'])
     return jsonify(result)
 
@@ -777,8 +780,6 @@ def chatbot():
 
 @api_bp.route('/kakao/search', methods=['GET'])
 def kakao_search():
-    print(" DEBUG:", request.args)
-    print(" DEBUG q:", request.args.get('q'))
     """
     카카오 로컬 API — 키워드로 음식점 검색
     GET /api/kakao/search?q=삼겹살&lat=37.5&lng=126.9&radius=1000
@@ -888,26 +889,22 @@ def handle_join(data):
     join_room(room_id)
 
     # 기존 메시지 내역 전송
-    with socketio.server.environ:
-        pass
     try:
-        from flask import current_app
-        with current_app.app_context():
-            msgs = ChatMessage.query.filter_by(party_id=int(room_id))\
-                              .order_by(ChatMessage.created_at).limit(100).all()
-            history = [
-                {
-                    'message_id': m.message_id,
-                    'content':    m.content,
-                    'created_at': m.created_at.isoformat() if m.created_at else '',
-                    'sender': {
-                        'user_id':  m.sender.user_id  if m.sender else None,
-                        'nickname': m.sender.nickname if m.sender else '알 수 없음',
-                    }
+        msgs = ChatMessage.query.filter_by(party_id=int(room_id))\
+                          .order_by(ChatMessage.created_at).limit(100).all()
+        history = [
+            {
+                'message_id': m.message_id,
+                'content':    m.content,
+                'created_at': m.created_at.isoformat() if m.created_at else '',
+                'sender': {
+                    'user_id':  m.sender.user_id  if m.sender else None,
+                    'nickname': m.sender.nickname if m.sender else '알 수 없음',
                 }
-                for m in msgs
-            ]
-            socket_emit('previous_messages', history)
+            }
+            for m in msgs
+        ]
+        socket_emit('previous_messages', history)
     except Exception:
         socket_emit('previous_messages', [])
 
@@ -939,26 +936,23 @@ def handle_send_message(data):
         return
 
     try:
-        from flask import current_app
-        with current_app.app_context():
-            msg = ChatMessage(
-                party_id=int(room_id),
-                sender_id=int(sender_id),
-                content=content,
-            )
-            db.session.add(msg)
-            db.session.commit()
-
-            db.session.refresh(msg)
-            payload = {
-                'message_id': msg.message_id,
-                'content':    msg.content,
-                'created_at': msg.created_at.isoformat() if msg.created_at else '',
-                'sender': {
-                    'user_id':  msg.sender.user_id  if msg.sender else sender_id,
-                    'nickname': msg.sender.nickname if msg.sender else '알 수 없음',
-                }
+        msg = ChatMessage(
+            party_id=int(room_id),
+            sender_id=int(sender_id),
+            content=content,
+        )
+        db.session.add(msg)
+        db.session.commit()
+        db.session.refresh(msg)
+        payload = {
+            'message_id': msg.message_id,
+            'content':    msg.content,
+            'created_at': msg.created_at.isoformat() if msg.created_at else '',
+            'sender': {
+                'user_id':  msg.sender.user_id  if msg.sender else sender_id,
+                'nickname': msg.sender.nickname if msg.sender else '알 수 없음',
             }
+        }
         socket_emit('receive_message', payload, to=room_id)
     except Exception as e:
         socket_emit('error', {'message': str(e)})
