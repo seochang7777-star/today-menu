@@ -87,7 +87,12 @@ def serialize_party(p, viewer_id=None):
     return {
         'party_id':     p.party_id,
         'title':        p.title,
-        'restaurant':   {'id': p.restaurant.restaurant_id, 'name': p.restaurant.name, 'category': p.restaurant.category} if p.restaurant else None,
+        'restaurant':   {
+            'id':       p.restaurant.restaurant_id,
+            'name':     p.restaurant.name,
+            'category': p.restaurant.category,
+            'address':  p.restaurant.address,   # PartyDetail 사이드에서 사용
+        } if p.restaurant else None,
         'host':         {'user_id': p.host.user_id, 'nickname': p.host.nickname} if p.host else None,
         'meeting_time': p.meeting_time.isoformat() if p.meeting_time else None,
         'max_people':   p.max_people,
@@ -95,6 +100,15 @@ def serialize_party(p, viewer_id=None):
         'status':       p.status.value,
         'is_member':    any(m.user_id == viewer_id for m in p.members) if viewer_id else False,
         'created_at':   p.created_at.isoformat() if p.created_at else None,
+        # PartyDetail 참여자 목록에서 사용
+        'members': [
+            {
+                'user': {'user_id': m.user.user_id, 'nickname': m.user.nickname} if m.user else None,
+                'is_host': m.is_host,
+                'joined_at': m.joined_at.isoformat() if m.joined_at else None,
+            }
+            for m in p.members
+        ],
     }
 
 def serialize_message(m):
