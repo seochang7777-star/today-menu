@@ -1,37 +1,30 @@
-import csv
-import os
-from app import create_app, db
-from app.models import Restaurant
+import pandas as pd
+from app import db
+from app import create_app
+from app.models import Menu
+# 1. CSV 파일 불러오기
 
+
+# 2. Flask 컨텍스트 안에서 작업 수행
 app = create_app()
+with app.app_context():
 
-def import_csv_to_db():
-    csv_file_path = os.path.join(os.path.dirname(__file__), 'data', 'clean_restaurants.csv')
-    
-    with app.app_context():
-        db.session.query(Restaurant).delete()
+    db.create_all()
+
+    df = pd.read_csv('메뉴목록.csv', encoding='utf-8-sig') 
+
+    for index, row in df.iterrows():
+        # menu_name을 기준으로 중복 체크
+        existing_menu = Menu.query.filter_by(menu_name=row['menu_name']).first()
         
-        with open(csv_file_path, mode='r', encoding='utf-8-sig') as file:
-            reader = csv.DictReader(file)
-            count = 0
-            for row in reader:
-                if '수원' in row['소재지도로명주소']:
-                    # 위도/경도가 비어있거나 공백이면 None으로 처리
-                    lat_val = row['위도'].strip()
-                    lng_val = row['경도'].strip()
-                    
-                    restaurant = Restaurant(
-                        name=row['사업장명'],
-                        address=row['소재지도로명주소'],
-                        category=row['업태구분명정보'],
-                        phone=row['소재지시설전화번호'],
-                        latitude=float(lat_val) if lat_val else None,
-                        longitude=float(lng_val) if lng_val else None
-                    )
-                    db.session.add(restaurant)
-                    count += 1
-            db.session.commit()
-            print(f"적재 완료! 총 {count}개의 수원시 식당이 저장되었습니다.")
-
-if __name__ == "__main__":
-    import_csv_to_db()
+        if not existing_menu:
+            # CSV의 열 이름(menu_name, category, category_id)과 맞춤
+            new_menu = Menu(
+                menu_name=row['menu_name'],
+                category=row['category'],
+                category_id=row['category_id'] # 추가된 필드 반영
+            )
+            db.session.add(new_menu)
+    
+    db.session.commit()
+    print("모든 데이터가 성공적으로 입력되었습니다!")

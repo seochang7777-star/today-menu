@@ -88,3 +88,9 @@ class RecommendationLog(db.Model):
     input_context             = db.Column(db.JSON)
     recommended_restaurant_id = db.Column(db.Integer, db.ForeignKey('restaurants.restaurant_id'), nullable=False)
     is_liked                  = db.Column(db.Boolean, default=False)
+
+class Menu(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    menu_name = db.Column(db.String(100), nullable=False)
+    category = db.Column(db.String(50), nullable=False)
+    category_id = db.Column(db.Integer, nullable=False)

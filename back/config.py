@@ -12,6 +12,7 @@ instance_dir = basedir / 'instance'
 instance_dir.mkdir(exist_ok=True)
 
 class Config:
+    DEBUG = True
     SECRET_KEY                     = os.environ.get('SECRET_KEY') or 'dev-secret-key'
     # DATABASE_URL 환경변수 무시 — 상대경로는 Windows에서 경로를 못 찾음
     # Path로 절대경로 계산 후 슬래시 통일
@@ -21,3 +22,4 @@ class Config:
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     JWT_SECRET_KEY                 = os.environ.get('JWT_SECRET_KEY') or 'super-secret-jwt-key'
     OPENAI_API_KEY                 = os.environ.get('OPENAI_API_KEY') or ''
+
