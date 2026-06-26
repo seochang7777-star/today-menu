@@ -10,13 +10,16 @@ from flask_socketio import SocketIO
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-db      = SQLAlchemy()
-migrate = Migrate()
-jwt     = JWTManager()
-socketio = SocketIO(cors_allowed_origins="*")
+db       = SQLAlchemy()
+migrate  = Migrate()
+jwt      = JWTManager()
+socketio = SocketIO(
+    cors_allowed_origins=['http://localhost:5173', 'http://127.0.0.1:5173'],
+    async_mode='eventlet',
+    supports_credentials=True,
+)
 
 def create_app():
-    # instance_path를 절대경로로 지정
     app = Flask(
         __name__,
         instance_relative_config=True,
@@ -24,8 +27,6 @@ def create_app():
     )
 
     app.config.from_object('config.Config')
-
-    # instance 폴더 보장 (Windows 경로 문제 방지)
     Path(app.instance_path).mkdir(parents=True, exist_ok=True)
 
     db.init_app(app)
@@ -33,11 +34,9 @@ def create_app():
     jwt.init_app(app)
     socketio.init_app(app)
 
-    CORS(
-        app,
-        resources={r'/*': {'origins': ['http://localhost:5173', 'http://127.0.0.1:5173']}},
-        supports_credentials=True
-    )
+    # CORS는 socketio에서 처리하므로 supports_credentials만 설정
+    CORS(app, supports_credentials=True,
+         resources={r'/*': {'origins': ['http://localhost:5173', 'http://127.0.0.1:5173']}})
 
     from app.routes import main_bp, auth_bp, menu_bp, party_bp, mypage_bp, api_bp
     app.register_blueprint(main_bp)

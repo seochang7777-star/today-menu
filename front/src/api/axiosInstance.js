@@ -1,88 +1,139 @@
-/**
- * axiosInstance.js
- * ─────────────────────────────────────────────────────────────────────────────
- * 재사용 가능한 Axios 인스턴스
- * - 요청 인터셉터 : localStorage의 accessToken을 Authorization 헤더에 자동 주입
- * - 응답 인터셉터 : 401 토큰 만료 시 refreshToken으로 재발급 → 원래 요청 재시도
- *                  재발급도 실패하면 로그아웃 처리
- * ─────────────────────────────────────────────────────────────────────────────
- */
 import axios from 'axios'
+import { TokenStore as BaseTokenStore } from './tokenStore'
 
-// ── 1. 인스턴스 생성 ──────────────────────────────────────────────────────────
-const api = axios.create({
-  baseURL:         import.meta.env.VITE_API_URL ?? '',
-  timeout:         10_000,
-  headers:         { 'Content-Type': 'application/json' },
-  withCredentials: true,
+const API_BASE_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:5000'
+const REFRESH_URL = '/auth/refresh'
+
+export const publicApi = axios.create({
+  baseURL: API_BASE_URL,
+  timeout: 10000,
+  headers: { 'Content-Type': 'application/json' },
 })
 
-// ── 2. 토큰 저장소 ───────────────────────────────────────────────────────────
+const api = axios.create({
+  baseURL: API_BASE_URL,
+  timeout: 10000,
+  headers: { 'Content-Type': 'application/json' },
+})
+
 export const TokenStore = {
-  getAccess:  ()      => localStorage.getItem('accessToken'),
-  getRefresh: ()      => localStorage.getItem('refreshToken'),
-  setTokens:  (a, r)  => {
-    localStorage.setItem('accessToken', a)
-    if (r) localStorage.setItem('refreshToken', r)
+  getAccessToken() {
+    return BaseTokenStore.getAccessToken()
   },
-  clear: () => {
-    localStorage.removeItem('accessToken')
-    localStorage.removeItem('refreshToken')
+  getRefreshToken() {
+    return BaseTokenStore.getRefreshToken()
+  },
+  setTokens(accessToken, refreshToken) {
+    BaseTokenStore.setTokens({ accessToken, refreshToken })
+  },
+  setTokenObject(tokens) {
+    BaseTokenStore.setTokens(tokens)
+  },
+  clearTokens() {
+    BaseTokenStore.clearTokens()
+  },
+  isLoggedIn() {
+    return BaseTokenStore.isLoggedIn()
+  },
+  getAccess() {
+    return BaseTokenStore.getAccessToken()
+  },
+  getRefresh() {
+    return BaseTokenStore.getRefreshToken()
+  },
+  clear() {
+    BaseTokenStore.clearTokens()
   },
 }
 
-// ── 3. 요청 인터셉터 : accessToken 자동 첨부 ─────────────────────────────────
 api.interceptors.request.use(
   (config) => {
     const token = TokenStore.getAccess()
-    if (token) config.headers['Authorization'] = `Bearer ${token}`
+
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`
+    }
+
     return config
   },
   (error) => Promise.reject(error),
 )
 
-// ── 4. 응답 인터셉터 : 401 → refresh → 재시도 ────────────────────────────────
 let isRefreshing = false
-let failedQueue  = []
+let refreshSubscribers = []
 
-function processQueue(error, token = null) {
-  failedQueue.forEach(({ resolve, reject }) =>
-    error ? reject(error) : resolve(token),
+function subscribeTokenRefresh(resolve, reject) {
+  refreshSubscribers.push({ resolve, reject })
+}
+
+function notifyTokenRefresh(error, accessToken = null) {
+  refreshSubscribers.forEach(({ resolve, reject }) => {
+    if (error) {
+      reject(error)
+      return
+    }
+
+    resolve(accessToken)
+  })
+
+  refreshSubscribers = []
+}
+
+async function refreshAccessToken() {
+  const refreshToken = TokenStore.getRefresh()
+
+  if (!refreshToken) {
+    throw new Error('Refresh token does not exist.')
+  }
+
+  const { data } = await publicApi.post(
+    REFRESH_URL,
+    {},
+    { headers: { Authorization: `Bearer ${refreshToken}` } },
   )
-  failedQueue = []
+
+  TokenStore.setTokens(data.access_token, data.refresh_token)
+  return data.access_token
+}
+
+function redirectToLogin() {
+  if (window.location.pathname !== '/login') {
+    window.location.href = '/login'
+  }
 }
 
 api.interceptors.response.use(
-  (res) => res,
+  (response) => response,
   async (error) => {
-    const orig = error.config
-    if (error.response?.status !== 401 || orig._retry) return Promise.reject(error)
+    const originalRequest = error.config
+
+    if (error.response?.status !== 401 || !originalRequest || originalRequest._retry) {
+      return Promise.reject(error)
+    }
 
     if (isRefreshing) {
       return new Promise((resolve, reject) => {
-        failedQueue.push({ resolve, reject })
-      }).then((newToken) => {
-        orig.headers['Authorization'] = `Bearer ${newToken}`
-        return api(orig)
+        subscribeTokenRefresh(resolve, reject)
+      }).then((accessToken) => {
+        originalRequest.headers ??= {}
+        originalRequest.headers.Authorization = `Bearer ${accessToken}`
+        return api(originalRequest)
       })
     }
 
-    orig._retry  = true
+    originalRequest._retry = true
     isRefreshing = true
 
     try {
-      const { data } = await axios.post('/auth/refresh', {}, {
-        headers: { Authorization: `Bearer ${TokenStore.getRefresh()}` },
-      })
-      const newToken = data.access_token
-      TokenStore.setTokens(newToken, data.refresh_token ?? TokenStore.getRefresh())
-      processQueue(null, newToken)
-      orig.headers['Authorization'] = `Bearer ${newToken}`
-      return api(orig)
+      const accessToken = await refreshAccessToken()
+      notifyTokenRefresh(null, accessToken)
+      originalRequest.headers ??= {}
+      originalRequest.headers.Authorization = `Bearer ${accessToken}`
+      return api(originalRequest)
     } catch (refreshError) {
-      processQueue(refreshError)
+      notifyTokenRefresh(refreshError)
       TokenStore.clear()
-      window.location.href = '/login'
+      redirectToLogin()
       return Promise.reject(refreshError)
     } finally {
       isRefreshing = false

@@ -9,7 +9,7 @@ export default function RestaurantCard({ rest, showDist = false, onClick }) {
   const stars = '★'.repeat(score) + '☆'.repeat(5 - score)
 
   return (
-    <div onClick={onClick} className={`card rest-card${onClick ? '' : ''}`}
+    <div onClick={onClick} className="card rest-card"
       style={{ cursor: onClick ? 'pointer' : 'default' }}>
       <div className="card-img" style={{ fontSize: '2.5rem' }}>{icon}</div>
       <div className="card-body">

@@ -21,7 +21,8 @@ class User(db.Model):
     manner_score = db.Column(db.Float, default=36.5)
     preferences  = db.Column(db.JSON)       # { likes: [], dislikes: [] }
     allergies    = db.Column(db.Text)
-    # address      = db.Column(db.String(200), nullable=True)
+    address      = db.Column(db.String(200), nullable=True)
+    gender       = db.Column(db.String(20), nullable=True, default='미설정')
     role         = db.Column(db.Enum(RoleEnum), default=RoleEnum.USER)
     created_at   = db.Column(db.DateTime, default=datetime.utcnow)
 

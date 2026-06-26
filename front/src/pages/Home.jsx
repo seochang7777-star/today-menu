@@ -1,6 +1,6 @@
 // src/pages/Home.jsx
 import { useState, useEffect, useRef } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import { getRestaurants, getNearby } from '../api/services'
 import { useAuth } from '../App'
 import KakaoMap from '../components/KakaoMap'
@@ -15,7 +15,6 @@ function catIcon(c) { return CAT_ICON[c] ?? '🍴' }
 
 export default function Home() {
   const { user } = useAuth()
-  const navigate = useNavigate()
   const [trending, setTrending] = useState([])
   const [nearby, setNearby] = useState([])
   const [userLoc, setUserLoc] = useState(null)
@@ -25,7 +24,9 @@ export default function Home() {
   const bannerTimer = useRef(null)
 
   useEffect(() => {
-    getRestaurants({ cat: '전체', page: 1 }).then((d) => setTrending(d.items ?? [])).catch(() => { })
+    getRestaurants({ cat: '전체', page: 1 })
+      .then((d) => setTrending(d.items ?? []))
+      .catch((err) => console.error('trending 로드 실패:', err))
   }, [])
 
   // 배너 자동 슬라이드
@@ -145,6 +146,36 @@ export default function Home() {
         </div>
       </div>
 
+      {/* 인기 맛집 TOP 8 */}
+      <section style={{ marginBottom: 32 }}>
+        <div className="section-title">
+          <span>🔥 인기 맛집 TOP 8</span>
+          <Link to="/menu">전체보기 →</Link>
+        </div>
+        <div className="grid-4">
+          {trending.length === 0 ? (
+            <div className="empty-state" style={{ gridColumn: '1/-1' }}>
+              <div className="empty-icon">🍴</div>
+              <p>등록된 식당이 없습니다. 관리자에게 문의하세요.</p>
+            </div>
+          ) : trending.slice(0, 8).map((r) => (
+            <Link to={`/menu/${r.id}`} className="card rest-card" key={r.id}>
+              <div className="card-img">{catIcon(r.category)}</div>
+              <div className="card-body">
+                <span className="badge badge-primary">{r.category || '기타'}</span>
+                <div className="card-title mt-8">{r.name}</div>
+                <div className="rest-meta">
+                  <span className="stars">★★★★</span>
+                  <span className="rest-rating">{(r.avg_rating ?? 0).toFixed(1)}</span>
+                </div>
+                <div className="rest-addr">{r.address}</div>
+              </div>
+            </Link>
+          ))}
+        </div>
+      </section>
+
+
       {/* NEARBY GRID */}
       {user && (
         <section style={{ marginBottom: 32 }}>
@@ -225,35 +256,6 @@ export default function Home() {
           )}
         </section>
       )}
-
-      {/* 인기 맛집 TOP 8 */}
-      <section style={{ marginBottom: 32 }}>
-        <div className="section-title">
-          <span>🔥 인기 맛집 TOP 8</span>
-          <Link to="/menu">전체보기 →</Link>
-        </div>
-        <div className="grid-4">
-          {trending.length === 0 ? (
-            <div className="empty-state" style={{ gridColumn: '1/-1' }}>
-              <div className="empty-icon">🍴</div>
-              <p>등록된 식당이 없습니다. 관리자에게 문의하세요.</p>
-            </div>
-          ) : trending.slice(0, 8).map((r) => (
-            <Link to={`/menu/${r.id}`} className="card rest-card" key={r.id}>
-              <div className="card-img">{catIcon(r.category)}</div>
-              <div className="card-body">
-                <span className="badge badge-primary">{r.category || '기타'}</span>
-                <div className="card-title mt-8">{r.name}</div>
-                <div className="rest-meta">
-                  <span className="stars">★★★★</span>
-                  <span className="rest-rating">{(r.avg_rating ?? 0).toFixed(1)}</span>
-                </div>
-                <div className="rest-addr">{r.address}</div>
-              </div>
-            </Link>
-          ))}
-        </div>
-      </section>
 
       {/* PROMO BANNER */}
       <div className="promo-banner">
