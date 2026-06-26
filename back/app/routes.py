@@ -4,12 +4,13 @@ import requests as req_lib
 from datetime import datetime
 from functools import wraps
 
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, send_from_directory
 from flask_jwt_extended import (
     create_access_token, create_refresh_token,
     jwt_required, get_jwt_identity
 )
 from werkzeug.security import generate_password_hash, check_password_hash
+
 
 from app import db
 from app.models import (
@@ -18,11 +19,11 @@ from app.models import (
 )
 
 # ── 블루프린트 ────────────────────────────────────────────────────────────────
-main_bp   = Blueprint('main',   __name__)
-auth_bp   = Blueprint('auth',   __name__, url_prefix='/auth')
-menu_bp   = Blueprint('menu',   __name__, url_prefix='/menu')
-party_bp  = Blueprint('party',  __name__, url_prefix='/party')
-mypage_bp = Blueprint('mypage', __name__, url_prefix='/mypage')
+main_bp   = Blueprint('main',   __name__, url_prefix='/api')
+auth_bp   = Blueprint('auth',   __name__, url_prefix='/api/auth')
+menu_bp   = Blueprint('menu',   __name__, url_prefix='/api/menu')
+party_bp  = Blueprint('party',  __name__, url_prefix='/api/party')
+mypage_bp = Blueprint('mypage', __name__, url_prefix='/api/mypage')
 api_bp    = Blueprint('api',    __name__, url_prefix='/api')
 
 CATEGORIES = ['전체', '한식', '일식', '중식', '양식', '분식', '치킨', '피자', '카페', '술집']
