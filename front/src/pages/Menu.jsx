@@ -54,7 +54,7 @@ export default function Menu() {
 
   return (
     <>
-      <h1 style={{ fontSize: '2.2rem', fontWeight: 900, marginBottom: 24 }}>글쓰기</h1>
+      <h1 style={{ fontSize: '2.2rem', fontWeight: 900, marginBottom: 24 }}>메뉴 찾기</h1>
 
       {/* 광고 배너 */}
       <div style={{ background: 'var(--bg-surface)', borderRadius: 'var(--border-radius-lg)', height: 80, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)', marginBottom: 20, fontWeight: 600 }}>

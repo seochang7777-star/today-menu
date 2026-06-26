@@ -37,7 +37,15 @@ function AuthProvider({ children }) {
   return (
     <AuthContext.Provider value={{
       user, loading,
-      login:  (u) => setUser(u),
+      login:  (data) => {
+        // data = 로그인 응답 { access_token, refresh_token, user_id, nickname, ... }
+        //      또는 프로필 수정 응답 { user_id, nickname, ... } (토큰 없음)
+        if (!data) return
+        const { access_token, refresh_token, ...userInfo } = data
+        // 토큰이 있으면 저장, 없으면 기존 토큰 유지
+        if (access_token) TokenStore.setTokens(access_token, refresh_token)
+        setUser(userInfo)
+      },
       logout: ()  => { TokenStore.clear(); setUser(null) },
     }}>
       {children}
@@ -93,3 +101,4 @@ export default function App() {
     </AuthProvider>
   )
 }
+

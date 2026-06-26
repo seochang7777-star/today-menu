@@ -4,7 +4,7 @@ import requests as req_lib
 from datetime import datetime
 from functools import wraps
 
-from flask import Blueprint, request, jsonify, session
+from flask import Blueprint, request, jsonify
 from flask_jwt_extended import (
     create_access_token, create_refresh_token,
     jwt_required, get_jwt_identity
@@ -87,7 +87,12 @@ def serialize_party(p, viewer_id=None):
     return {
         'party_id':     p.party_id,
         'title':        p.title,
-        'restaurant':   {'id': p.restaurant.restaurant_id, 'name': p.restaurant.name, 'category': p.restaurant.category} if p.restaurant else None,
+        'restaurant':   {
+            'id':       p.restaurant.restaurant_id,
+            'name':     p.restaurant.name,
+            'category': p.restaurant.category,
+            'address':  p.restaurant.address,   # PartyDetail 사이드에서 사용
+        } if p.restaurant else None,
         'host':         {'user_id': p.host.user_id, 'nickname': p.host.nickname} if p.host else None,
         'meeting_time': p.meeting_time.isoformat() if p.meeting_time else None,
         'max_people':   p.max_people,
@@ -95,6 +100,15 @@ def serialize_party(p, viewer_id=None):
         'status':       p.status.value,
         'is_member':    any(m.user_id == viewer_id for m in p.members) if viewer_id else False,
         'created_at':   p.created_at.isoformat() if p.created_at else None,
+        # PartyDetail 참여자 목록에서 사용
+        'members': [
+            {
+                'user': {'user_id': m.user.user_id, 'nickname': m.user.nickname} if m.user else None,
+                'is_host': m.is_host,
+                'joined_at': m.joined_at.isoformat() if m.joined_at else None,
+            }
+            for m in p.members
+        ],
     }
 
 def serialize_message(m):
@@ -547,13 +561,16 @@ def nearby():
     if not lat or not lng:
         return jsonify({'error': 'lat/lng required'}), 400
     result = []
-    for r in Restaurant.query.all():
-        if r.latitude and r.longitude:
-            dist = haversine(lat, lng, float(r.latitude), float(r.longitude))
-            if dist <= rad:
-                item = serialize_restaurant(r)
-                item['dist'] = round(dist)
-                result.append(item)
+    rests = Restaurant.query.filter(
+        Restaurant.latitude.isnot(None),
+        Restaurant.longitude.isnot(None)
+    ).all()
+    for r in rests:
+        dist = haversine(lat, lng, float(r.latitude), float(r.longitude))
+        if dist <= rad:
+            item = serialize_restaurant(r)
+            item['dist'] = round(dist)
+            result.append(item)
     result.sort(key=lambda x: x['dist'])
     return jsonify(result)
 
@@ -604,8 +621,9 @@ def _build_user_context(user_id):
             liked_rests.append(f"{r.name}({r.category})")
     wishlist = ', '.join(liked_rests) or '없음'
 
-    # 유저가 등록한 장소 (preferences.locations)
-    saved_locs = ', '.join((user.preferences or {}).get('locations', [])) or '없음'
+    # 유저가 등록한 저장 장소 (preferences.saved_locations)
+    raw_locs   = (user.preferences or {}).get('saved_locations', [])
+    saved_locs = ', '.join([loc.get('name','') for loc in raw_locs if loc.get('name')]) or '없음'
 
     return user, {
         'allergies':  allergies,
@@ -657,11 +675,15 @@ def chatbot():
     # ── 위치 기반 식당 조회 ──────────────────────────────────────────────────
     nearby_list = []
     if lat and lng:
-        for r in Restaurant.query.all():
-            if r.latitude and r.longitude:
-                dist = haversine(lat, lng, float(r.latitude), float(r.longitude))
-                if dist <= 1000:   # 1km 이내
-                    nearby_list.append(f"{r.name}({r.category}, {round(dist)}m)")
+        # 위도/경도 있는 식당만 필터링해서 조회 (성능 개선)
+        rests = Restaurant.query.filter(
+            Restaurant.latitude.isnot(None),
+            Restaurant.longitude.isnot(None)
+        ).all()
+        for r in rests:
+            dist = haversine(lat, lng, float(r.latitude), float(r.longitude))
+            if dist <= 1000:   # 1km 이내
+                nearby_list.append(f"{r.name}({r.category}, {round(dist)}m)")
         nearby_list = nearby_list[:15]
 
     nearby_str = ', '.join(nearby_list) if nearby_list else None
@@ -758,8 +780,6 @@ def chatbot():
 
 @api_bp.route('/kakao/search', methods=['GET'])
 def kakao_search():
-    print(" DEBUG:", request.args)
-    print(" DEBUG q:", request.args.get('q'))
     """
     카카오 로컬 API — 키워드로 음식점 검색
     GET /api/kakao/search?q=삼겹살&lat=37.5&lng=126.9&radius=1000
@@ -852,3 +872,92 @@ def kakao_register_restaurant():
     db.session.add(rest)
     db.session.commit()
     return jsonify({'message': '식당이 등록되었습니다.', 'id': rest.restaurant_id}), 201
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# SOCKET.IO — 파티 실시간 채팅
+# ══════════════════════════════════════════════════════════════════════════════
+from flask_socketio import join_room, leave_room, emit as socket_emit
+from app import socketio
+
+@socketio.on('join')
+def handle_join(data):
+    """파티 채팅방 입장"""
+    room_id  = str(data.get('room_id', ''))
+    username = data.get('username', '익명')
+
+    join_room(room_id)
+
+    # 기존 메시지 내역 전송
+    try:
+        msgs = ChatMessage.query.filter_by(party_id=int(room_id))\
+                          .order_by(ChatMessage.created_at).limit(100).all()
+        history = [
+            {
+                'message_id': m.message_id,
+                'content':    m.content,
+                'created_at': m.created_at.isoformat() if m.created_at else '',
+                'sender': {
+                    'user_id':  m.sender.user_id  if m.sender else None,
+                    'nickname': m.sender.nickname if m.sender else '알 수 없음',
+                }
+            }
+            for m in msgs
+        ]
+        socket_emit('previous_messages', history)
+    except Exception:
+        socket_emit('previous_messages', [])
+
+    socket_emit('system_message',
+        {'message': f'{username}님이 입장했습니다.', 'created_at': ''},
+        to=room_id)
+
+
+@socketio.on('leave')
+def handle_leave(data):
+    """파티 채팅방 퇴장"""
+    room_id  = str(data.get('room_id', ''))
+    username = data.get('username', '익명')
+    leave_room(room_id)
+    socket_emit('system_message',
+        {'message': f'{username}님이 퇴장했습니다.', 'created_at': ''},
+        to=room_id)
+
+
+@socketio.on('send_message')
+def handle_send_message(data):
+    """메시지 전송 → DB 저장 + 실시간 브로드캐스트"""
+    room_id   = str(data.get('room_id', ''))
+    sender_id = data.get('sender_id')
+    content   = data.get('content', '').strip()
+
+    if not content or not sender_id:
+        socket_emit('error', {'message': '메시지 또는 발신자 정보가 없습니다.'})
+        return
+
+    try:
+        msg = ChatMessage(
+            party_id=int(room_id),
+            sender_id=int(sender_id),
+            content=content,
+        )
+        db.session.add(msg)
+        db.session.commit()
+        db.session.refresh(msg)
+        payload = {
+            'message_id': msg.message_id,
+            'content':    msg.content,
+            'created_at': msg.created_at.isoformat() if msg.created_at else '',
+            'sender': {
+                'user_id':  msg.sender.user_id  if msg.sender else sender_id,
+                'nickname': msg.sender.nickname if msg.sender else '알 수 없음',
+            }
+        }
+        socket_emit('receive_message', payload, to=room_id)
+    except Exception as e:
+        socket_emit('error', {'message': str(e)})
+
+
+@socketio.on('disconnect')
+def handle_disconnect():
+    pass

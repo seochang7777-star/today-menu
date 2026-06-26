@@ -175,7 +175,10 @@ export default function ChatBot() {
   return (
     <>
       {/* ── FAB ── */}
-      <button className="chat-fab" onClick={() => setOpen((o) => !o)} aria-label="AI 챗봇">
+      <button className="chat-fab" onClick={() => {
+        if (open) setHistories((h) => ({ ...h, [mode]: messages }))
+        setOpen((o) => !o)
+      }} aria-label="AI 챗봇">
         {open ? '✕' : '💬'}
       </button>
 

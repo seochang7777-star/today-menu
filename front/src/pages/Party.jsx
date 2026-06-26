@@ -15,7 +15,7 @@ export default function Party() {
 
   useEffect(() => {
     setLoading(true)
-    getParties({ status }).then(setParties).catch(() => {}).finally(() => setLoading(false))
+    getParties({ status }).then((d) => setParties(Array.isArray(d) ? d : [])).catch(() => setParties([])).finally(() => setLoading(false))
   }, [status])
 
   const pct = (p) => Math.min(Math.round((p.member_count / p.max_people) * 100), 100)
@@ -84,3 +84,4 @@ export default function Party() {
     </>
   )
 }
+

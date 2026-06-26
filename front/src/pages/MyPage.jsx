@@ -3,18 +3,32 @@ import { Link, useNavigate } from 'react-router-dom'
 import { getMyPage, toggleLike, logout, saveFavoriteLocations } from '../api/services'
 import { useAuth } from '../App'
 
+// ── 팀원 코드의 processTags 통합 — 콤마로 꼬인 데이터 정제 ─────────────────
+const processTags = (rawPrefs) => {
+  if (!rawPrefs) return []
+  if (Array.isArray(rawPrefs)) {
+    const flat = rawPrefs.flatMap((item) =>
+      typeof item === 'string' ? item.split(',') : item
+    )
+    return [...new Set(flat.map((v) => v.trim()).filter(Boolean))]
+  }
+  return []
+}
+
 export default function MyPage() {
-  const navigate = useNavigate()
-  const { user: authUser, logout: ctxLogout } = useAuth()
-  const [data,      setData]      = useState(null)
-  const [activeTab, setActiveTab]   = useState('liked')  // liked | disliked
-  const [savedLocs, setSavedLocs]   = useState([])        // 저장된 장소 3개
-  const [locSearch, setLocSearch]   = useState('')         // 장소 검색 입력
-  const [locResults, setLocResults] = useState([])         // 카카오 검색 결과
+  const navigate    = useNavigate()
+  const { logout: ctxLogout } = useAuth()
+  const gauge2Ref   = useRef(null)
+
+  const [data,       setData]       = useState(null)
+  const [activeTab,  setActiveTab]  = useState('liked')
+  const [savedLocs,  setSavedLocs]  = useState([])
+  const [locSearch,  setLocSearch]  = useState('')
+  const [locResults, setLocResults] = useState([])
   const [locLoading, setLocLoading] = useState(false)
   const [locMsg,     setLocMsg]     = useState('')
-  const gauge2Ref = useRef(null)
 
+  // ── 데이터 로드 ────────────────────────────────────────────────────────────
   useEffect(() => {
     getMyPage()
       .then((d) => {
@@ -24,7 +38,7 @@ export default function MyPage() {
       .catch((err) => console.error('마이페이지 로드 실패:', err))
   }, [])
 
-  // 매너 게이지 SVG 애니메이션
+  // ── 매너 게이지 SVG 애니메이션 ─────────────────────────────────────────────
   useEffect(() => {
     if (!data || !gauge2Ref.current) return
     const score = data.user.manner_score
@@ -42,9 +56,10 @@ export default function MyPage() {
     if (!locSearch.trim()) return
     setLocLoading(true); setLocResults([]); setLocMsg('')
     try {
+      const token = localStorage.getItem('accessToken')
       const res = await fetch(
         `/api/kakao/search?q=${encodeURIComponent(locSearch.split('&')[0])}`,
-        { headers: { Authorization: `Bearer ${localStorage.getItem('accessToken')}` } }
+        { headers: { Authorization: `Bearer ${token}` } }
       )
       const json = await res.json()
       setLocResults(json.places ?? [])
@@ -54,13 +69,8 @@ export default function MyPage() {
   }
 
   const addLoc = async (place) => {
-    if (savedLocs.length >= 3) { setLocMsg('장소는 최대 3개까지 저장할 수 있습니다.'); return }
-    const newLocs = [...savedLocs, {
-      name: place.name,
-      address: place.address,
-      lat: place.lat,
-      lng: place.lng,
-    }]
+    if (savedLocs.length >= 3) { setLocMsg('장소는 최대 3개까지 저장 가능합니다.'); return }
+    const newLocs = [...savedLocs, { name: place.name, address: place.address, lat: place.lat, lng: place.lng }]
     await saveFavoriteLocations(newLocs)
     setSavedLocs(newLocs)
     setLocResults([]); setLocSearch(''); setLocMsg(`✅ "${place.name}" 저장됨`)
@@ -73,45 +83,46 @@ export default function MyPage() {
     setLocMsg('장소가 삭제됐습니다.')
   }
 
-  // ── 회원 탈퇴 ────────────────────────────────────────────────────────────
-  const handleWithdraw = async () => {
-    if (!window.confirm('정말로 회원 탈퇴를 하시겠습니까? 모든 정보가 삭제됩니다.')) return
-    try {
-      await logout()
-      ctxLogout()
-      alert('회원 탈퇴가 완료되었습니다. 그동안 이용해 주셔서 감사합니다.')
-      navigate('/')
-    } catch {
-      alert('탈퇴 처리 중 오류가 발생했습니다. 다시 시도해 주세요.')
-    }
-  }
-
-  // ── 찜 토글 ──────────────────────────────────────────────────────────────
+  // ── 찜 토글 ───────────────────────────────────────────────────────────────
   const handleLike = async (logId) => {
     const res = await toggleLike(logId)
     setData((d) => ({
       ...d,
-      rec_logs: d.rec_logs.map((r) => r.log_id === logId ? { ...r, is_liked: res.liked } : r),
+      rec_logs: d.rec_logs.map((r) =>
+        r.log_id === logId ? { ...r, is_liked: res.liked } : r
+      ),
     }))
   }
 
+  // ── 회원 탈퇴 ─────────────────────────────────────────────────────────────
+  const handleWithdraw = async () => {
+    if (!window.confirm('정말로 회원 탈퇴를 하시겠습니까?')) return
+    try {
+      await logout(); ctxLogout()
+      alert('회원 탈퇴가 완료되었습니다.'); navigate('/')
+    } catch { alert('탈퇴 처리 중 오류가 발생했습니다.') }
+  }
+
+  // ── 로딩/에러 ─────────────────────────────────────────────────────────────
   if (!data) return (
     <div style={{ textAlign: 'center', padding: 60, color: 'var(--text-muted)' }}>로딩 중...</div>
   )
 
   const { user, my_parties, rec_logs } = data
-  const liked_logs = rec_logs.filter((r) => r.is_liked)
-  const dislikes   = user.preferences?.dislikes ?? []
+
+  // processTags로 정제 (팀원 코드 통합)
+  const likes       = processTags(user.preferences?.likes)
+  const dislikes    = processTags(user.preferences?.dislikes)
+  const liked_logs  = rec_logs.filter((r) => r.is_liked)
   const mannerScore = user.manner_score
 
-  // 히어로 게이지 (SVG inline)
   const R    = 36
   const circ = 2 * Math.PI * R
   const heroOffset = circ * (1 - Math.min(mannerScore / 50, 1))
 
   return (
     <>
-      <h1 style={{ fontSize: '2.4rem', fontWeight: 900, marginBottom: 24 }}>마이 메이지</h1>
+      <h1 style={{ fontSize: '2.4rem', fontWeight: 900, marginBottom: 24 }}>마이페이지</h1>
 
       {/* ── HERO BANNER ── */}
       <div className="mypage-hero">
@@ -126,7 +137,6 @@ export default function MyPage() {
               프로필 수정 →
             </Link>
           </div>
-          {/* 매너온도 게이지 */}
           <div style={{ flexShrink: 0, textAlign: 'center' }}>
             <div style={{ position: 'relative', width: 90, height: 90 }}>
               <svg width="90" height="90" viewBox="0 0 90 90">
@@ -148,10 +158,10 @@ export default function MyPage() {
       {/* ── STAT ROW ── */}
       <div className="stat-row">
         <div className="stat-card">
-          <div className="stat-num">{(user.preferences?.likes ?? []).length}</div>
+          <div className="stat-num">{likes.length}</div>
           <div className="stat-label">찜한 메뉴</div>
           <div style={{ fontSize: '.72rem', color: 'var(--text-muted)', marginTop: 2 }}>
-            좋아요 {(user.preferences?.likes ?? []).length}개 · 싫어요 {dislikes.length}개
+            좋아요 {likes.length}개 · 싫어요 {dislikes.length}개
           </div>
         </div>
         <div className="stat-card">
@@ -171,10 +181,8 @@ export default function MyPage() {
         </div>
       </div>
 
-      {/* ── PROFILE + MANNER SCORE ── */}
+      {/* ── 프로필 + 매너점수 ── */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 360px', gap: 16, marginBottom: 16 }}>
-
-        {/* 프로필 */}
         <div className="profile-section">
           <div className="flex-between mb-16">
             <h3>프로필</h3>
@@ -184,8 +192,8 @@ export default function MyPage() {
             <div className="profile-avatar">{user.nickname?.[0]}</div>
             <div>
               {[
-                ['성별',    user.preferences?.gender ?? '미설정'],
-                ['선호메뉴', (user.preferences?.likes ?? []).slice(0, 3).join(', ') || '없음'],
+                ['이메일',  user.email],
+                ['선호메뉴', likes.slice(0, 3).join(', ') || '없음'],
                 ['알러지',  (user.allergies ?? '').split(',').filter(Boolean).slice(0, 2).join(', ') || '없음'],
               ].map(([label, val]) => (
                 <div key={label} style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid var(--bg-surface)', fontSize: '.88rem' }}>
@@ -197,11 +205,9 @@ export default function MyPage() {
           </div>
         </div>
 
-        {/* 매너점수 */}
         <div className="profile-section">
           <div className="flex-between mb-16">
             <h3>매너점수</h3>
-            <a href="#" className="btn btn-sm btn-secondary">내역</a>
           </div>
           <div style={{ display: 'flex', gap: 16, alignItems: 'center' }}>
             <div ref={gauge2Ref} style={{ position: 'relative', width: 100, height: 100, flexShrink: 0 }}>
@@ -237,14 +243,50 @@ export default function MyPage() {
         </div>
       </div>
 
+      {/* ── 음식 취향 (팀원 코드 통합) ── */}
+      <div className="profile-section">
+        <div className="flex-between mb-16">
+          <h3>🍽️ 나의 음식 취향</h3>
+          <Link to="/mypage/edit" className="btn btn-sm btn-secondary">수정 →</Link>
+        </div>
+
+        <div style={{ marginBottom: 16 }}>
+          <div style={{ fontSize: '.82rem', fontWeight: 700, color: '#1890ff', marginBottom: 8 }}>👍 좋아하는 음식</div>
+          {likes.length > 0 ? (
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+              {likes.map((item, idx) => (
+                <span key={idx} style={{ background: '#e6f7ff', color: '#1890ff', border: '1px solid #91d5ff', padding: '4px 12px', borderRadius: 20, fontSize: '.82rem' }}>
+                  {item}
+                </span>
+              ))}
+            </div>
+          ) : (
+            <p style={{ fontSize: '.82rem', color: 'var(--text-muted)' }}>등록된 선호 음식이 없습니다.</p>
+          )}
+        </div>
+
+        <div>
+          <div style={{ fontSize: '.82rem', fontWeight: 700, color: '#ff4d4f', marginBottom: 8 }}>👎 기피하는 음식</div>
+          {dislikes.length > 0 ? (
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+              {dislikes.map((item, idx) => (
+                <span key={idx} style={{ background: '#fff1f0', color: '#ff4d4f', border: '1px solid #ffa39e', padding: '4px 12px', borderRadius: 20, fontSize: '.82rem' }}>
+                  {item}
+                </span>
+              ))}
+            </div>
+          ) : (
+            <p style={{ fontSize: '.82rem', color: 'var(--text-muted)' }}>등록된 기피 음식이 없습니다.</p>
+          )}
+        </div>
+      </div>
+
       {/* ── 메뉴 찜목록 ── */}
       <div className="profile-section">
         <div className="flex-between mb-16">
           <h3>메뉴 찜목록</h3>
           <Link to="/menu" className="btn btn-sm btn-secondary">선택보기 →</Link>
         </div>
-
-        {/* 탭 */}
         <div style={{ display: 'flex', gap: 6, marginBottom: 16 }}>
           {[['liked','좋아요'], ['disliked','싫어요']].map(([key, label]) => (
             <button key={key} onClick={() => setActiveTab(key)}
@@ -263,7 +305,7 @@ export default function MyPage() {
           liked_logs.length > 0 ? (
             <div className="grid-4">
               {liked_logs.slice(0, 4).map((log) => (
-                <Link to={`/menu/${log.recommended_restaurant_id}`} className="card rest-card" key={log.log_id}>
+                <Link to={`/menu/${log.restaurant?.id ?? log.recommended_restaurant_id}`} className="card rest-card" key={log.log_id}>
                   <div className="card-img" style={{ fontSize: '2rem' }}>🍴</div>
                   <div className="card-body">
                     <span className="badge badge-primary">{log.restaurant?.category ?? '기타'}</span>
@@ -303,7 +345,6 @@ export default function MyPage() {
       <div className="profile-section">
         <div className="flex-between mb-16">
           <h3>활동내역</h3>
-          <a href="#" className="btn btn-sm btn-secondary">선택보기 →</a>
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 12 }}>
           {rec_logs.slice(0, 3).map((log) => (
@@ -312,9 +353,7 @@ export default function MyPage() {
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontSize: '.72rem', fontWeight: 700, color: 'var(--text-muted)', marginBottom: 2 }}>추천</div>
                 <div style={{ fontWeight: 700, fontSize: '.9rem' }}>{log.restaurant?.name ?? '식당 추천'}</div>
-                <div style={{ fontSize: '.8rem', color: 'var(--text-muted)', marginTop: 2 }}>
-                  {log.restaurant?.category ?? ''} · {log.is_liked ? '찜함' : '추천만'}
-                </div>
+                <div style={{ fontSize: '.8rem', color: 'var(--text-muted)', marginTop: 2 }}>{log.restaurant?.category ?? ''} · {log.is_liked ? '찜함' : '추천만'}</div>
               </div>
               <button onClick={() => handleLike(log.log_id)}
                 style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.1rem' }}>
@@ -332,15 +371,11 @@ export default function MyPage() {
                   {p.restaurant?.name ?? ''} · {p.meeting_time ? new Date(p.meeting_time).toLocaleString('ko-KR', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }) : ''}
                 </div>
               </div>
-              <div style={{ fontSize: '.72rem', color: 'var(--text-muted)', flexShrink: 0 }}>
-                {p.created_at ? new Date(p.created_at).toLocaleDateString('ko-KR') : ''}
-              </div>
             </div>
           ))}
           {rec_logs.length === 0 && my_parties.length === 0 && (
             <div className="empty-state" style={{ gridColumn: '1/-1' }}>
-              <div className="empty-icon">📋</div>
-              <p>아직 활동 내역이 없습니다</p>
+              <div className="empty-icon">📋</div><p>아직 활동 내역이 없습니다</p>
             </div>
           )}
         </div>
@@ -355,40 +390,21 @@ export default function MyPage() {
           자주 가는 장소를 최대 3개 저장하면 챗봇에서 선택해 근처 맛집을 추천받을 수 있어요.
         </p>
 
-        {/* 저장된 장소 목록 */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 16 }}>
           {savedLocs.map((loc, idx) => (
-            <div key={idx} style={{
-              display: 'flex', alignItems: 'center', gap: 12,
-              background: 'var(--bg-surface)', borderRadius: 8, padding: '10px 14px',
-              border: '1px solid var(--border-color)',
-            }}>
-              <div style={{
-                width: 28, height: 28, borderRadius: '50%', flexShrink: 0,
-                background: ['#E53E3E','#3182CE','#38A169'][idx],
-                color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: '.75rem', fontWeight: 800,
-              }}>
+            <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: 12, background: 'var(--bg-surface)', borderRadius: 8, padding: '10px 14px', border: '1px solid var(--border-color)' }}>
+              <div style={{ width: 28, height: 28, borderRadius: '50%', flexShrink: 0, background: ['#E53E3E','#3182CE','#38A169'][idx], color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '.75rem', fontWeight: 800 }}>
                 {idx + 1}
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontWeight: 700, fontSize: '.9rem' }}>{loc.name}</div>
-                <div style={{ fontSize: '.75rem', color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                  {loc.address}
-                </div>
+                <div style={{ fontSize: '.75rem', color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{loc.address}</div>
               </div>
-              <button onClick={() => removeLoc(idx)}
-                style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', fontSize: '1rem', padding: 4, flexShrink: 0 }}>
-                ✕
-              </button>
+              <button onClick={() => removeLoc(idx)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', fontSize: '1rem', padding: 4, flexShrink: 0 }}>✕</button>
             </div>
           ))}
           {savedLocs.length < 3 && Array.from({ length: 3 - savedLocs.length }).map((_, i) => (
-            <div key={`empty-${i}`} style={{
-              display: 'flex', alignItems: 'center', gap: 12,
-              background: 'transparent', borderRadius: 8, padding: '10px 14px',
-              border: '1.5px dashed var(--border-color)',
-            }}>
+            <div key={`empty-${i}`} style={{ display: 'flex', alignItems: 'center', gap: 12, background: 'transparent', borderRadius: 8, padding: '10px 14px', border: '1.5px dashed var(--border-color)' }}>
               <div style={{ width: 28, height: 28, borderRadius: '50%', background: 'var(--bg-surface)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '.75rem', color: 'var(--text-light)', flexShrink: 0 }}>
                 {savedLocs.length + i + 1}
               </div>
@@ -397,45 +413,32 @@ export default function MyPage() {
           ))}
         </div>
 
-        {/* 장소 검색 */}
         {savedLocs.length < 3 && (
           <div>
             <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
-              <input
-                className="form-control" style={{ flex: 1 }}
+              <input className="form-control" style={{ flex: 1 }}
                 placeholder="장소명 검색 (예: 우리집, 회사, 학교...)"
                 value={locSearch}
                 onChange={(e) => setLocSearch(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && searchPlace()}
-              />
+                onKeyDown={(e) => e.key === 'Enter' && searchPlace()} />
               <button className="btn btn-secondary btn-sm" onClick={searchPlace} disabled={locLoading} style={{ flexShrink: 0 }}>
                 {locLoading ? '...' : '🔍 검색'}
               </button>
             </div>
-
             {locMsg && (
-              <div style={{ fontSize: '.8rem', padding: '6px 10px', borderRadius: 6, marginBottom: 8,
-                background: locMsg.startsWith('✅') ? '#F0FFF4' : '#FFF5F5',
-                color: locMsg.startsWith('✅') ? '#276749' : '#C53030' }}>
+              <div style={{ fontSize: '.8rem', padding: '6px 10px', borderRadius: 6, marginBottom: 8, background: locMsg.startsWith('✅') ? '#F0FFF4' : '#FFF5F5', color: locMsg.startsWith('✅') ? '#276749' : '#C53030' }}>
                 {locMsg}
               </div>
             )}
-
             {locResults.length > 0 && (
               <div style={{ border: '1px solid var(--border-color)', borderRadius: 8, overflow: 'hidden', maxHeight: 220, overflowY: 'auto' }}>
                 {locResults.slice(0, 6).map((p) => (
-                  <div key={p.id} style={{
-                    display: 'flex', alignItems: 'center', gap: 10,
-                    padding: '10px 14px', borderBottom: '1px solid var(--bg-surface)',
-                    background: 'var(--bg-white)',
-                  }}>
+                  <div key={p.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', borderBottom: '1px solid var(--bg-surface)', background: 'var(--bg-white)' }}>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontWeight: 700, fontSize: '.88rem' }}>{p.name}</div>
                       <div style={{ fontSize: '.75rem', color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.address}</div>
-                      {p.dist > 0 && <div style={{ fontSize: '.72rem', color: 'var(--color-success)', fontWeight: 600 }}>🚶 {p.dist}m</div>}
                     </div>
-                    <button className="btn btn-primary btn-sm" style={{ fontSize: '.75rem', flexShrink: 0 }}
-                      onClick={() => addLoc(p)}>
+                    <button className="btn btn-primary btn-sm" style={{ fontSize: '.75rem', flexShrink: 0 }} onClick={() => addLoc(p)}>
                       + 저장
                     </button>
                   </div>
@@ -448,14 +451,12 @@ export default function MyPage() {
 
       {/* ── 회원 탈퇴 ── */}
       <div style={{ marginTop: 56, borderTop: '1px solid var(--border-color)', paddingTop: 24, textAlign: 'right' }}>
-        <p style={{ color: 'var(--text-muted)', fontSize: '.85rem', marginBottom: 8 }}>
-          더 이상 서비스를 이용하고 싶지 않으신가요?
-        </p>
-        <button onClick={handleWithdraw}
-          style={{ background: '#E53E3E', color: '#fff', border: 'none', borderRadius: 4, padding: '6px 12px', fontSize: '.85rem', fontWeight: 700, cursor: 'pointer' }}>
+        <p style={{ color: 'var(--text-muted)', fontSize: '.85rem', marginBottom: 8 }}>더 이상 서비스를 이용하고 싶지 않으신가요?</p>
+        <button onClick={handleWithdraw} style={{ background: '#E53E3E', color: '#fff', border: 'none', borderRadius: 4, padding: '6px 12px', fontSize: '.85rem', fontWeight: 700, cursor: 'pointer' }}>
           🚨 회원 탈퇴하기
         </button>
       </div>
     </>
   )
 }
+

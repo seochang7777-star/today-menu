@@ -436,10 +436,11 @@ function ScratchCard({ menus }) {
   const [done,     setDone]     = useState(false)
   const TARGET = 60  // 60% 이상 긁으면 자동 공개
 
-  const pick = useCallback(() => menus[Math.floor(Math.random() * menus.length)], [menus])
+  const pick = useCallback(() => menus.length > 0 ? menus[Math.floor(Math.random() * menus.length)] : null, [menus])
 
   const initCard = useCallback(() => {
     const p = pick()
+    if (!p) return
     setPrize(p)
     setRevealed(0)
     setDone(false)
