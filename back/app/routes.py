@@ -63,13 +63,14 @@ def serialize_user(u):
         'manner_score': u.manner_score,
         'preferences':  u.preferences,
         'allergies':    u.allergies,
+        'gender':       u.gender or '미설정',   # ← 추가
+        'address':      u.address or '',         # ← 추가
         'role':         u.role.value,
         'created_at':   u.created_at.isoformat() if u.created_at else None,
-        'saved_locations': prefs.get('saved_locations', []),  # [{name, address, lat, lng}]
+        'saved_locations': prefs.get('saved_locations', []),
     }
 
 def serialize_restaurant(r):
-    # models.py에 phone 컬럼이 별도로 존재
     phone = getattr(r, 'phone', None) or r.description or ''
     return {
         'id':          r.restaurant_id,
@@ -126,7 +127,7 @@ def serialize_message(m):
 def index():
     trending     = Restaurant.query.order_by(Restaurant.avg_rating.desc()).limit(8).all()
     open_parties = Party.query.filter_by(status=StatusEnum.RECRUITING)\
-                              .order_by(Party.created_at.desc()).limit(4).all()
+                             .order_by(Party.created_at.desc()).limit(4).all()
     return jsonify({
         'trending':     [serialize_restaurant(r) for r in trending],
         'open_parties': [serialize_party(p) for p in open_parties],
@@ -144,7 +145,10 @@ def register():
     password2 = data.get('password2', '')
     nickname  = data.get('nickname', '').strip()
     allergies = data.get('allergies', '')
-    prefs     = data.get('preferences', [])
+    
+    # 💡 [필드명 통일] 프론트엔드와 맞춰 likes와 dislikes를 명확하게 수신합니다.
+    likes     = data.get('likes', [])
+    dislikes  = data.get('dislikes', [])
 
     if not email or not password or not nickname:
         return jsonify({'message': '필수 항목을 입력해주세요.'}), 400
@@ -160,7 +164,7 @@ def register():
         password=generate_password_hash(password),
         nickname=nickname,
         allergies=allergies,
-        preferences={'likes': prefs, 'dislikes': []},
+        preferences={'likes': likes, 'dislikes': dislikes},
     )
     db.session.add(user)
     db.session.commit()
@@ -214,12 +218,12 @@ def update_me():
         user.nickname = nickname
 
     user.allergies   = data.get('allergies', user.allergies)
+    user.gender    = data.get('gender',    user.gender)    # ← 추가
+    user.address   = data.get('address',   user.address)   # ← 추가
     prefs = user.preferences or {}
 
-    # saved_locations: [{name, address, lat, lng}, ...] 최대 3개
     new_locations = data.get('saved_locations', None)
     if new_locations is not None:
-        # 최대 3개, 필수 필드 검증
         validated = []
         for loc in new_locations[:3]:
             if loc.get('name') and loc.get('lat') is not None and loc.get('lng') is not None:
@@ -231,10 +235,11 @@ def update_me():
                 })
         prefs['saved_locations'] = validated
 
+    # 💡 [필드명 통일] 프론트엔드 payload 구조와 데이터베이스 JSON 구조 명확히 동치
     user.preferences = {
         **prefs,
-        'likes':    data.get('preferences', prefs.get('likes', [])),
-        'dislikes': data.get('dislikes',    prefs.get('dislikes', [])),
+        'likes':    data.get('likes', prefs.get('likes', [])),
+        'dislikes': data.get('dislikes', prefs.get('dislikes', [])),
     }
     db.session.commit()
     return jsonify(serialize_user(user)), 200
@@ -242,13 +247,8 @@ def update_me():
 
 # ── 소셜 로그인 공통 헬퍼 ─────────────────────────────────────────────────────
 def _social_login_or_register(email, nickname, provider):
-    """
-    소셜 계정으로 로그인 or 최초 가입 처리.
-    email 이 이미 있으면 로그인, 없으면 자동 회원가입 후 로그인.
-    """
     user = User.query.filter_by(email=email).first()
     if not user:
-        # 닉네임 중복 방지
         base_nick = nickname or email.split('@')[0]
         nick      = base_nick
         suffix    = 1
@@ -258,7 +258,7 @@ def _social_login_or_register(email, nickname, provider):
 
         user = User(
             email=email,
-            password=generate_password_hash(os.urandom(32).hex()),  # 랜덤 비번
+            password=generate_password_hash(os.urandom(32).hex()),
             nickname=nick,
             allergies='',
             preferences={'likes': [], 'dislikes': [], 'provider': provider},
@@ -274,15 +274,10 @@ def _social_login_or_register(email, nickname, provider):
 # ── 카카오 로그인 ─────────────────────────────────────────────────────────────
 @auth_bp.route('/kakao', methods=['POST'])
 def kakao_login():
-    """
-    프론트에서 카카오 SDK로 받은 access_token 을 전달받아 유저 정보 조회 후 JWT 발급.
-    Body: { "access_token": "kakao_oauth_token" }
-    """
     kakao_token = request.get_json().get('access_token', '')
     if not kakao_token:
         return jsonify({'message': 'access_token required'}), 400
 
-    # 카카오 유저 정보 조회
     resp = req_lib.get(
         'https://kapi.kakao.com/v2/user/me',
         headers={'Authorization': f'Bearer {kakao_token}'},
@@ -304,15 +299,10 @@ def kakao_login():
 # ── 네이버 로그인 ─────────────────────────────────────────────────────────────
 @auth_bp.route('/naver', methods=['POST'])
 def naver_login():
-    """
-    프론트에서 네이버 SDK로 받은 access_token 을 전달받아 유저 정보 조회 후 JWT 발급.
-    Body: { "access_token": "naver_oauth_token" }
-    """
     naver_token = request.get_json().get('access_token', '')
     if not naver_token:
         return jsonify({'message': 'access_token required'}), 400
 
-    # 네이버 유저 정보 조회
     resp = req_lib.get(
         'https://openapi.naver.com/v1/nid/me',
         headers={'Authorization': f'Bearer {naver_token}'},
@@ -328,6 +318,7 @@ def naver_login():
 
     access_token, refresh_token, user = _social_login_or_register(email, nickname, 'naver')
     return jsonify({'access_token': access_token, 'refresh_token': refresh_token, **serialize_user(user)}), 200
+
 
 # ══════════════════════════════════════════════════════════════════════════════
 # MENU / RESTAURANT
@@ -387,11 +378,8 @@ def delete_restaurant(rest_id):
     return jsonify({'message': '삭제되었습니다.'}), 200
 
 
-
-# ── 게임용 랜덤 메뉴 API ────────────────────────────────────────────────────
 @menu_bp.route('/random', methods=['GET'])
 def random_menus():
-    """GET /menu/random?count=64&cat=전체 — 게임용 랜덤 메뉴"""
     count = min(request.args.get('count', 64, type=int), 128)
     cat   = request.args.get('cat', '전체')
     query = Restaurant.query
@@ -400,6 +388,7 @@ def random_menus():
     from sqlalchemy import func
     items = query.order_by(func.random()).limit(count).all()
     return jsonify({'items': [serialize_restaurant(r) for r in items]}), 200
+
 
 # ══════════════════════════════════════════════════════════════════════════════
 # PARTY
@@ -427,7 +416,6 @@ def list_parties():
     return jsonify([serialize_party(p, viewer_id) for p in parties])
 
 
-
 @party_bp.route('/<int:party_id>', methods=['GET'])
 def get_party(party_id):
     party    = Party.query.get_or_404(party_id)
@@ -445,7 +433,6 @@ def get_party(party_id):
     data          = serialize_party(party, viewer_id)
     data['messages'] = [serialize_message(m) for m in messages]
     return jsonify(data)
-
 
 
 @party_bp.route('/', methods=['POST'])
@@ -475,7 +462,6 @@ def create_party():
     return jsonify(serialize_party(party, host_id)), 201
 
 
-
 @party_bp.route('/<int:party_id>/join', methods=['POST'])
 @jwt_login_required
 def join_party(party_id):
@@ -496,7 +482,6 @@ def join_party(party_id):
     return jsonify({'message': '파티에 참여했습니다! 매너온도 +0.5°', 'manner_score': user.manner_score}), 200
 
 
-
 @party_bp.route('/<int:party_id>/chat', methods=['POST'])
 @jwt_login_required
 def party_chat(party_id):
@@ -510,7 +495,6 @@ def party_chat(party_id):
     return jsonify(serialize_message(msg)), 201
 
 
-
 @party_bp.route('/<int:party_id>/status', methods=['PATCH'])
 @admin_required
 def update_party_status(party_id):
@@ -522,6 +506,7 @@ def update_party_status(party_id):
         return jsonify({'message': '유효하지 않은 상태값입니다.'}), 400
     db.session.commit()
     return jsonify(serialize_party(party))
+
 
 # ══════════════════════════════════════════════════════════════════════════════
 # MYPAGE
@@ -550,9 +535,12 @@ def mypage():
         ],
     })
 
+
 # ══════════════════════════════════════════════════════════════════════════════
 # API — 위치 기반 / 어드민 / 챗봇
 # ══════════════════════════════════════════════════════════════════════════════
+
+# 💡 [코드 최적화] 하버사인 전체 스캔 연산을 극복하기 위한 Bounding Box(Mbr) 1차 쿼리 적용 완료
 @api_bp.route('/nearby', methods=['GET'])
 def nearby():
     lat = request.args.get('lat', type=float)
@@ -560,17 +548,25 @@ def nearby():
     rad = request.args.get('radius', 500, type=int)
     if not lat or not lng:
         return jsonify({'error': 'lat/lng required'}), 400
-    result = []
-    rests = Restaurant.query.filter(
-        Restaurant.latitude.isnot(None),
-        Restaurant.longitude.isnot(None)
+        
+    lat_buffer = (rad / 1000.0) * 0.0091
+    lng_buffer = (rad / 1000.0) * 0.0113
+
+    filtered_restaurants = Restaurant.query.filter(
+        Restaurant.latitude.between(lat - lat_buffer, lat + lat_buffer),
+        Restaurant.longitude.between(lng - lng_buffer, lng + lng_buffer)
     ).all()
-    for r in rests:
-        dist = haversine(lat, lng, float(r.latitude), float(r.longitude))
-        if dist <= rad:
-            item = serialize_restaurant(r)
-            item['dist'] = round(dist)
-            result.append(item)
+
+    result = []
+
+    for r in filtered_restaurants:
+        if r.latitude and r.longitude:
+            dist = haversine(lat, lng, float(r.latitude), float(r.longitude))
+            if dist <= rad:
+                item = serialize_restaurant(r)
+                item['dist'] = round(dist)
+                result.append(item)
+
     result.sort(key=lambda x: x['dist'])
     return jsonify(result)
 
@@ -584,7 +580,6 @@ def like_rec(log_id):
     return jsonify({'liked': log.is_liked})
 
 
-# ── 관리자 전용 ───────────────────────────────────────────────────────────────
 @api_bp.route('/admin/users', methods=['GET'])
 @admin_required
 def admin_users():
@@ -602,17 +597,16 @@ def admin_delete_user(user_id):
 
 
 # ── OpenAI 챗봇 ───────────────────────────────────────────────────────────────
-# ── 챗봇 공통: DB에서 유저 컨텍스트 빌드 ──────────────────────────────────────
 def _build_user_context(user_id):
-    """JWT 인증된 유저의 DB 정보를 챗봇 프롬프트용으로 조립"""
     user = User.query.get_or_404(user_id)
+    user_prefs = user.preferences or {}
 
-    # 알러지 / 기피 / 선호
     allergies = user.allergies or '없음'
-    likes     = ', '.join((user.preferences or {}).get('likes',    [])) or '없음'
-    dislikes  = ', '.join((user.preferences or {}).get('dislikes', [])) or '없음'
+    
+    # 💡 [필드명 통일] DB JSON 컬럼에서 likes, dislikes 배열을 바인딩
+    likes     = ', '.join(user_prefs.get('likes', [])) or '없음'
+    dislikes  = ', '.join(user_prefs.get('dislikes', [])) or '없음'
 
-    # 유저가 찜(is_liked)한 식당 목록
     liked_logs = RecommendationLog.query.filter_by(user_id=user_id, is_liked=True).limit(20).all()
     liked_rests = []
     for log in liked_logs:
@@ -621,9 +615,9 @@ def _build_user_context(user_id):
             liked_rests.append(f"{r.name}({r.category})")
     wishlist = ', '.join(liked_rests) or '없음'
 
-    # 유저가 등록한 저장 장소 (preferences.saved_locations)
-    raw_locs   = (user.preferences or {}).get('saved_locations', [])
-    saved_locs = ', '.join([loc.get('name','') for loc in raw_locs if loc.get('name')]) or '없음'
+
+    saved_locs = ', '.join([loc.get('name', '') for loc in user_prefs.get('saved_locations', [])]) or '없음'
+
 
     return user, {
         'allergies':  allergies,
@@ -634,35 +628,25 @@ def _build_user_context(user_id):
     }
 
 
-# ── /api/chat  ─  메뉴 추천 챗봇 (회원 전용) ────────────────────────────────
 @api_bp.route('/chat', methods=['POST'])
 @jwt_login_required
 def chatbot():
-    """
-    Body:
-      message  str   사용자 입력
-      history  list  이전 대화 [{role, content}, ...]
-      mode     str   'recommend' | 'qna'  (기본값 recommend)
-      lat      float 현재 위치 위도 (optional)
-      lng      float 현재 위치 경도 (optional)
-    """
     from openai import OpenAI
 
     user_id = int(get_jwt_identity())
     body    = request.get_json(force=True)
     message = body.get('message', '').strip()
     history = body.get('history', [])
-    mode      = body.get('mode', 'recommend')   # 'recommend' | 'qna'
+    mode      = body.get('mode', 'recommend')
     lat       = body.get('lat')
     lng       = body.get('lng')
-    loc_index = body.get('loc_index')   # None | 0~2 → 저장된 장소 인덱스
+    loc_index = body.get('loc_index')
 
     if not message:
         return jsonify({'error': 'message is required'}), 400
 
     user, ctx = _build_user_context(user_id)
 
-    # ── loc_index 가 지정된 경우 저장된 장소 좌표 사용 ──────────────────────
     loc_name = None
     if loc_index is not None:
         saved = (user.preferences or {}).get('saved_locations', [])
@@ -672,29 +656,30 @@ def chatbot():
             lng     = chosen['lng']
             loc_name = chosen['name']
 
-    # ── 위치 기반 식당 조회 ──────────────────────────────────────────────────
     nearby_list = []
     if lat and lng:
-        # 위도/경도 있는 식당만 필터링해서 조회 (성능 개선)
-        rests = Restaurant.query.filter(
-            Restaurant.latitude.isnot(None),
-            Restaurant.longitude.isnot(None)
+
+        lat_buffer = 0.0091 # 대략 1km 마진
+        lng_buffer = 0.0113
+        filtered_for_chat = Restaurant.query.filter(
+            Restaurant.latitude.between(lat - lat_buffer, lat + lat_buffer),
+            Restaurant.longitude.between(lng - lng_buffer, lng + lng_buffer)
         ).all()
-        for r in rests:
-            dist = haversine(lat, lng, float(r.latitude), float(r.longitude))
-            if dist <= 1000:   # 1km 이내
-                nearby_list.append(f"{r.name}({r.category}, {round(dist)}m)")
+        for r in filtered_for_chat:
+            if r.latitude and r.longitude:
+                dist = haversine(lat, lng, float(r.latitude), float(r.longitude))
+                if dist <= 1000:
+                    nearby_list.append(f"{r.name}({r.category}, {round(dist)}m)")
+
         nearby_list = nearby_list[:15]
 
     nearby_str = ', '.join(nearby_list) if nearby_list else None
     if nearby_str and loc_name:
         nearby_str = f'[{loc_name} 근처] ' + nearby_str
 
-    # ── 등록된 장소 주변 식당 (위치 미제공 시 fallback) ─────────────────────
     all_rests = [f"{r.name}({r.category})" for r in Restaurant.query.limit(30).all()]
     all_rests_str = ', '.join(all_rests) or '등록된 식당 없음'
 
-    # ── System Prompt 분기 ──────────────────────────────────────────────────
     if mode == 'recommend':
         location_section = (
             f"- 현재 위치 반경 1km 식당: {nearby_str}"
@@ -723,7 +708,7 @@ def chatbot():
 7. 짧고 친근한 한국어로 답변하세요 (3~5문장 이내).
 8. 여러 선택지를 줄 때는 번호 목록으로 제시하세요."""
 
-    else:  # qna
+    else:
         system_prompt = f"""당신은 '오늘의 메뉴' 앱의 고객지원 Q&A 챗봇입니다.
 앱 사용법, 기능, 회원 정보 관련 질문에 친절하게 답변해주세요.
 
@@ -755,39 +740,43 @@ def chatbot():
         )
         reply = response.choices[0].message.content
 
-        # 추천 로그 저장 (식당 이름이 응답에 포함된 경우)
+        # 💡 [코드 고도화] 추천 로그 인메모리 루프 누수 해결을 위한 텍스트 포함 쿼리 적용
         if mode == 'recommend':
-            for r in Restaurant.query.limit(30).all():
-                if r.name in reply:
-                    db.session.add(RecommendationLog(
-                        user_id=user_id,
-                        input_context={'message': message, 'mode': mode},
-                        recommended_restaurant_id=r.restaurant_id,
-                        is_liked=False,
-                    ))
-                    db.session.commit()
-                    break
+            matched_restaurant = Restaurant.query.filter(
+                db.literal(reply).like(db.func.concat('%', Restaurant.name, '%'))
+            ).first()
+
+            if matched_restaurant:
+                db.session.add(RecommendationLog(
+                    user_id=user_id,
+                    input_context={'message': message, 'mode': mode},
+                    recommended_restaurant_id=matched_restaurant.restaurant_id,
+                    is_liked=False,
+                ))
+                db.session.commit()
 
         return jsonify({'reply': reply}), 200
 
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+
 # ══════════════════════════════════════════════════════════════════════════════
 # 카카오 로컬 API 연동
 # ══════════════════════════════════════════════════════════════════════════════
-
-
 @api_bp.route('/kakao/search', methods=['GET'])
 def kakao_search():
+
+
     """
     카카오 로컬 API — 키워드로 음식점 검색
     GET /api/kakao/search?q=삼겹살&lat=37.5&lng=126.9&radius=1000
     """
+
     q      = request.args.get('q', '').strip()
     lat    = request.args.get('lat', type=float)
     lng    = request.args.get('lng', type=float)
-    radius = request.args.get('radius', 1000, type=int)   # 미터
+    radius = request.args.get('radius', 1000, type=int)
 
     if not q:
         return jsonify({'error': 'q(검색어) is required'}), 400
@@ -798,11 +787,11 @@ def kakao_search():
 
     params = {
         'query':    q,
-        'category_group_code': 'FD6',   # 음식점
+        'category_group_code': 'FD6',
         'size':     15,
     }
     if lat and lng:
-        params['x']      = lng        # 카카오는 x=경도, y=위도
+        params['x']      = lng
         params['y']      = lat
         params['radius'] = radius
 
@@ -816,7 +805,6 @@ def kakao_search():
         resp.raise_for_status()
         data = resp.json()
 
-        # 필요한 필드만 추출
         places = [
             {
                 'id':           p['id'],
@@ -840,14 +828,8 @@ def kakao_search():
 @api_bp.route('/kakao/register', methods=['POST'])
 @jwt_login_required
 def kakao_register_restaurant():
-    """
-    카카오 검색 결과 → DB에 식당 등록
-    POST /api/kakao/register
-    Body: { name, address, lat, lng, category, phone }
-    """
     data = request.get_json(force=True)
 
-    # 이미 같은 이름 + 주소로 등록된 식당인지 확인
     existing = Restaurant.query.filter_by(
         name=data.get('name'), address=data.get('address')
     ).first()
@@ -855,9 +837,13 @@ def kakao_register_restaurant():
     if existing:
         return jsonify({'message': '이미 등록된 식당입니다.', 'id': existing.restaurant_id}), 200
 
-    # 카테고리 정제 (카카오 카테고리는 "음식점 > 한식 > 삼겹살" 형태)
+    # 💡 [예외 차단] 카카오 카테고리를 쪼갤 때 발생하던 잠재적 IndexError 예외 방지 가드 적용
     raw_cat = data.get('category', '')
-    category = raw_cat.split(' > ')[1] if ' > ' in raw_cat else raw_cat[:10]
+    tokens = raw_cat.split(' > ') if raw_cat else []
+    if len(tokens) > 1:
+        category = tokens[1]
+    else:
+        category = raw_cat[:10] if raw_cat else '기타'
 
     rest = Restaurant(
         name=data.get('name', ''),
@@ -871,6 +857,8 @@ def kakao_register_restaurant():
     )
     db.session.add(rest)
     db.session.commit()
+
+
     return jsonify({'message': '식당이 등록되었습니다.', 'id': rest.restaurant_id}), 201
 
 
@@ -961,3 +949,4 @@ def handle_send_message(data):
 @socketio.on('disconnect')
 def handle_disconnect():
     pass
+

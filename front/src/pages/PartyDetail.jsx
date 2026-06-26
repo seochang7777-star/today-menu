@@ -1,6 +1,6 @@
 import io from 'socket.io-client'
 import { useState, useEffect, useRef } from 'react'
-import { Link, useParams, useNavigate } from 'react-router-dom'
+import { Link, useParams, useNavigate, useSearchParams } from 'react-router-dom'
 import { getParty, joinParty } from '../api/services'
 import { useAuth } from '../App'
 
@@ -10,6 +10,7 @@ export default function PartyDetail() {
   const { partyId } = useParams()
   const { user } = useAuth()
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
 
   const socket  = useRef(null)
   const chatRef = useRef(null)
@@ -17,14 +18,14 @@ export default function PartyDetail() {
   const [party,     setParty]     = useState(null)
   const [messages,  setMessages]  = useState([])
   const [chatInput, setChatInput] = useState('')
-  const [activeTab, setActiveTab] = useState('info')
+  const [activeTab, setActiveTab] = useState(searchParams.get('tab') === 'chat' ? 'chat' : 'info')
 
   // ── 파티 정보 로드 ─────────────────────────────────────────────────────────
   useEffect(() => {
     getParty(partyId)
       .then((d) => { setParty(d); setMessages(d.messages ?? []) })
       .catch(() => navigate('/party'))
-  }, [partyId])
+  }, [partyId, navigate])
 
   // ── 채팅 스크롤 ────────────────────────────────────────────────────────────
   useEffect(() => {
