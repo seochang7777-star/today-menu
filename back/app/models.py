@@ -21,8 +21,6 @@ class User(db.Model):
     manner_score = db.Column(db.Float, default=36.5)
     preferences  = db.Column(db.JSON)       # { likes: [], dislikes: [] }
     allergies    = db.Column(db.Text)
-    address      = db.Column(db.String(200), nullable=True)
-    gender       = db.Column(db.String(20), nullable=True, default='미설정')
     role         = db.Column(db.Enum(RoleEnum), default=RoleEnum.USER)
     created_at   = db.Column(db.DateTime, default=datetime.utcnow)
 
@@ -34,17 +32,16 @@ class Restaurant(db.Model):
     __tablename__ = 'restaurants'
 
     restaurant_id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(100), nullable=False)
-    address = db.Column(db.String(200), nullable=False)
-    phone = db.Column(db.String(20), nullable=True)
-    latitude = db.Column(db.Numeric(10, 8))
-    longitude = db.Column(db.Numeric(11, 8))
-    category = db.Column(db.String(50))
-    description = db.Column(db.Text)
-    avg_rating = db.Column(db.Float, default=0.0)
+    name          = db.Column(db.String(100), nullable=False)
+    address       = db.Column(db.String(200), nullable=False)
+    latitude      = db.Column(db.Numeric(10, 8))
+    longitude     = db.Column(db.Numeric(11, 8))
+    category      = db.Column(db.String(50))
+    description   = db.Column(db.Text)
+    avg_rating    = db.Column(db.Float, default=0.0)
+
     parties  = db.relationship('Party',              backref='restaurant', lazy=True)
     rec_logs = db.relationship('RecommendationLog',  backref='restaurant', lazy=True)
-
 
 class Party(db.Model):
     __tablename__ = 'parties'
@@ -89,9 +86,3 @@ class RecommendationLog(db.Model):
     input_context             = db.Column(db.JSON)
     recommended_restaurant_id = db.Column(db.Integer, db.ForeignKey('restaurants.restaurant_id'), nullable=False)
     is_liked                  = db.Column(db.Boolean, default=False)
-
-class Menu(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    menu_name = db.Column(db.String(100), nullable=False)
-    category = db.Column(db.String(50), nullable=False)
-    category_id = db.Column(db.Integer, nullable=False)
