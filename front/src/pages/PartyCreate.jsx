@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { createParty, getRestaurants } from '../api/services'
 
 export default function PartyCreate() {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const [restaurants, setRestaurants] = useState([])
-  const [form, setForm] = useState({ title: '', restaurant_id: '', meeting_time: '', max_people: 4 })
+  const [form, setForm] = useState({ title: '', restaurant_id: searchParams.get('rest') ?? '', meeting_time: '', max_people: 4 })
   const [loading, setLoading] = useState(false)
 
   useEffect(() => {
@@ -30,9 +31,9 @@ export default function PartyCreate() {
   return (
     <>
       <Link to="/party" className="btn btn-sm btn-secondary" style={{ marginBottom: 16 }}>← 목록으로</Link>
-      <h2 style={{ marginBottom: 24, textAlign: 'center' }}>🍽️ 밥친구 파티 만들기</h2>
+      <h2 style={{ marginBottom: 24 }}>🍽️ 밥친구 파티 만들기</h2>
 
-      <div style={{ background: 'var(--bg-white)', border: '1px solid var(--border-color)', borderRadius: 'var(--border-radius-xl)', padding: 32, maxWidth: 560, margin: '0 auto' }}>
+      <div style={{ background: 'var(--bg-white)', border: '1px solid var(--border-color)', borderRadius: 'var(--border-radius-xl)', padding: 32, maxWidth: 560 }}>
         <form onSubmit={handleSubmit}>
           <div className="form-group">
             <label className="form-label">파티 제목 *</label>
