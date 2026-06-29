@@ -963,11 +963,20 @@ def kakao_register_restaurant():
 from flask_socketio import join_room, leave_room, emit as socket_emit
 from app import socketio
 
+def is_user_in_party(user_id, party_id):
+    # 예: PartyMember 테이블에 해당 user_id와 party_id 조합이 존재하는지 확인
+    return PartyMember.query.filter_by(user_id=user_id, party_id=party_id).first() is not None
+
 @socketio.on('join')
 def handle_join(data):
-    """파티 채팅방 입장"""
-    room_id  = str(data.get('room_id', ''))
+    """파티 채팅방 입장 (참여자 검증 포함)"""
+    room_id = str(data.get('room_id', ''))
+    user_id = data.get('sender_id') 
     username = data.get('username', '익명')
+
+    if not user_id or not is_user_in_party(int(user_id), int(room_id)):
+        socket_emit('error', {'message': '참여자만 채팅방에 입장할 수 있습니다.'})
+        return 
 
     join_room(room_id)
 
@@ -1009,13 +1018,17 @@ def handle_leave(data):
 
 @socketio.on('send_message')
 def handle_send_message(data):
-    """메시지 전송 → DB 저장 + 실시간 브로드캐스트"""
+    """메시지 전송 → 참여자 검증 + DB 저장 + 브로드캐스트"""
     room_id   = str(data.get('room_id', ''))
     sender_id = data.get('sender_id')
     content   = data.get('content', '').strip()
 
     if not content or not sender_id:
         socket_emit('error', {'message': '메시지 또는 발신자 정보가 없습니다.'})
+        return
+
+    if not is_user_in_party(int(sender_id), int(room_id)):
+        socket_emit('error', {'message': '참여자만 메시지를 보낼 수 있습니다.'})
         return
 
     try:

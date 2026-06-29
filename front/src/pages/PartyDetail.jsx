@@ -37,7 +37,11 @@ export default function PartyDetail() {
 
   // ── 소켓 연결 ──────────────────────────────────────────────────────────────
   useEffect(() => {
-    if (!user) return
+    if (!party) return;
+
+    const isUserMember = party.is_member;
+
+    if (!user || !isMember) return
 
     socket.current = io('http://localhost:5000', {
       transports: ['websocket', 'polling'],
@@ -48,6 +52,7 @@ export default function PartyDetail() {
     socket.current.emit('join', {
       room_id:  partyId,
       username: user.nickname,
+      sender_id: user.user_id,
     })
 
     // 이전 메시지 수신
@@ -71,6 +76,14 @@ export default function PartyDetail() {
   }, [partyId, user])
 
   // ── 메시지 전송 ────────────────────────────────────────────────────────────
+    const handleTabClick = (key) => {
+    if (key === 'chat' && !isMember) {
+      alert("파티 참여자만 채팅을 이용할 수 있습니다.");
+      return;
+    }
+    setActiveTab(key);
+  }
+  
   const handleChat = (e) => {
     e.preventDefault()
     if (!chatInput.trim() || !socket.current) return
@@ -107,10 +120,16 @@ export default function PartyDetail() {
 
   const handleJoin = async () => {
     try {
-      await joinParty(partyId)
-      const d = await getParty(partyId)
-      setParty(d); setMessages(d.messages ?? [])
-    } catch (e) { alert(e.response?.data?.message ?? '오류가 발생했습니다.') }
+      await joinParty(partyId);
+      const d = await getParty(partyId);
+      setParty(d); 
+      setMessages(d.messages ?? []);
+      
+      setActiveTab('chat'); 
+      alert("파티에 참여하였습니다! 채팅을 시작해보세요.");
+    } catch (e) { 
+      alert(e.response?.data?.message ?? '오류가 발생했습니다.'); 
+    }
   }
 
   const dummyReviews = [
