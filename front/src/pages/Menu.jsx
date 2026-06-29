@@ -54,12 +54,17 @@ export default function Menu() {
 
   return (
     <>
-      <h1 style={{ fontSize: '2.2rem', fontWeight: 900, marginBottom: 24 }}>메뉴 찾기</h1>
+      <h1 style={{ fontSize: '2.2rem', fontWeight: 900, marginBottom: 24 }}>맛집 찾기</h1>
 
       {/* 광고 배너 */}
-      <div style={{ background: 'var(--bg-surface)', borderRadius: 'var(--border-radius-lg)', height: 80, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)', marginBottom: 20, fontWeight: 600 }}>
+      {/* <div style={{ background: 'var(--bg-surface)', borderRadius: 'var(--border-radius-lg)', height: 80, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)', marginBottom: 20, fontWeight: 600 }}>
         광고 배너 영역
-      </div>
+      </div> */}
+      <section className="ad-banner">
+          <Link to="/party" className="ad-banner-link" aria-label="파티 페이지로 이동">
+            <img src="/img/banner1.png" alt="파티 만들기 배너" />
+          </Link>
+        </section>
 
       {/* 카테고리 필터 */}
       <div className="menu-filter-bar">

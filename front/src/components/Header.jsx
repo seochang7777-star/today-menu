@@ -4,10 +4,10 @@ import { useAuth } from '../App'
 import { logout } from '../api/services'
 
 const NAV_LINKS = [
-  { to: '/',      label: '홈',         end: true },
-  { to: '/menu',  label: '메뉴 찾기' },
+  { to: '/',      label: '홈', end: true },
+  { to: '/menu',  label: '맛집 찾기' },
   { to: '/party', label: '밥친구' },
-  { to: '/game',  label: '🎲 게임창' },
+  { to: '/game',  label: '게임창' },
 ]
 
 export default function Header() {
@@ -30,122 +30,108 @@ export default function Header() {
   return (
     <>
       <header className="site-header">
-        <div className="container">
-          {/* 로고 */}
+        <div className="container header-container">
           <Link to="/" className="site-logo" onClick={() => setMobileOpen(false)}>
-            🍽️ <span>오늘의 메뉴</span>
+            <span>오늘 뭐먹지?</span>
+            <span className="logo-clock">⏰</span>
           </Link>
 
-          {/* 검색 (데스크탑) */}
-          <div className="header-search" style={{ flex: 1, maxWidth: 420 }}>
-            <span className="search-icon">🔍</span>
-            <form onSubmit={handleSearch} style={{ width: '100%' }}>
-              <input type="text" placeholder="식당명, 메뉴 검색..."
-                value={q} onChange={(e) => setQ(e.target.value)} style={{ width: '100%' }} />
+          <div className="header-search">
+            <form onSubmit={handleSearch}>
+              <input
+                type="text"
+                placeholder="식당명, 메뉴 검색..."
+                value={q}
+                onChange={(e) => setQ(e.target.value)}
+              />
+              <button type="submit" className="search-submit" aria-label="검색">⌕</button>
             </form>
           </div>
 
-          {/* 유저 영역 (데스크탑) */}
           <div className="header-actions">
             {user ? (
-              // ── 로그인 상태 ──────────────────────────────────────────────
               <>
-                <Link to="/mypage" className="header-user-btn" style={{ display: 'flex', alignItems: 'center', gap: 6, textDecoration: 'none', color: 'var(--text-primary)' }}>
-                  <div className="avatar-sm">{user.nickname?.[0] ?? '?'}</div>
-                  <span className="hide-mobile" style={{ fontWeight: 600, fontSize: '.9rem' }}>
-                    {user.nickname}
-                  </span>
-                </Link>
-                <button onClick={handleLogout}
-                  className="btn btn-sm btn-secondary hide-mobile">
-                  로그아웃
+                <button onClick={handleLogout} className="header-icon-link">
+                  <img src="/img/logout.png" className="h-xl" alt="logout" />
+                  {/* <span>로그아웃</span> */}
                 </button>
               </>
             ) : (
-              // ── 비로그인 상태 ─────────────────────────────────────────────
               <>
-                <Link to="/login"    className="btn btn-sm btn-secondary hide-mobile">로그인</Link>
-                <Link to="/register" className="btn btn-sm btn-primary  hide-mobile">회원가입</Link>
+                <Link to="/mypage" className="header-icon-link">
+                  
+                </Link>
+                <Link to="/login" className="header-icon-link">
+                  <img src="/img/login.png" alt="login" />
+                  {/* <span>로그인</span> */}
+                </Link>
               </>
             )}
-            {/* 햄버거 (모바일) */}
-            <button className="show-mobile"
-              onClick={() => setMobileOpen((o) => !o)}
-              style={{ background: 'none', border: 'none', fontSize: '1.4rem', cursor: 'pointer', padding: 4, color: 'var(--text-primary)' }}>
+
+            <button className="show-mobile mobile-menu-btn" onClick={() => setMobileOpen((o) => !o)}>
               {mobileOpen ? '✕' : '☰'}
             </button>
           </div>
         </div>
       </header>
 
-      {/* ── 네비 (데스크탑) ── */}
       <nav className="site-nav">
-        <div className="container">
-          {NAV_LINKS.map(({ to, label, end }) => (
-            <NavLink key={to} to={to} end={end} className={navCls}>{label}</NavLink>
-          ))}
-          {user && (
-            <span style={{ marginLeft: 'auto', color: 'var(--text-muted)', fontSize: '.82rem' }}>
-              👤 {user.nickname}님 환영합니다
-            </span>
-          )}
+        <div className="container nav-container">
+          <div className="nav-links">
+            {NAV_LINKS.map(({ to, label, end }) => (
+              <NavLink key={to} to={to} end={end} className={navCls}>{label}</NavLink>
+            ))}
+          </div>
+
+          
+            <Link to="/mypage" className="header-icon-link">
+            <div className="nav-welcome">
+            {user ? (
+              <span>{user.nickname}님 환영합니다</span>
+            ) : null}
+            
+          </div></Link>
         </div>
       </nav>
 
-      {/* ── 모바일 드로어 ── */}
       {mobileOpen && (
         <>
-          <div onClick={() => setMobileOpen(false)}
-            style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.4)', zIndex: 400 }} />
-          <div style={{
-            position: 'fixed', top: 0, right: 0, bottom: 0, width: 260,
-            background: 'var(--bg-white)', zIndex: 410,
-            display: 'flex', flexDirection: 'column', boxShadow: 'var(--shadow-lg)',
-          }}>
-            <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span style={{ fontWeight: 800, fontSize: '1rem' }}>🍽️ 오늘의 메뉴</span>
-              <button onClick={() => setMobileOpen(false)}
-                style={{ background: 'none', border: 'none', fontSize: '1.2rem', cursor: 'pointer', color: 'var(--text-muted)' }}>✕</button>
+          <div onClick={() => setMobileOpen(false)} className="mobile-overlay" />
+          <div className="mobile-drawer">
+            <div className="mobile-drawer-head">
+              <span>오늘 뭐먹지? ⏰</span>
+              <button onClick={() => setMobileOpen(false)}>✕</button>
             </div>
 
-            {/* 유저 정보 */}
             {user && (
-              <div style={{ padding: '16px 20px', background: 'var(--bg-surface)', display: 'flex', gap: 12, alignItems: 'center' }}>
-                <div className="profile-avatar" style={{ width: 40, height: 40, fontSize: '1.1rem' }}>
-                  {user.nickname?.[0] ?? '?'}
-                </div>
+              <div className="mobile-profile">
+                <div className="profile-avatar">{user.nickname?.[0] ?? '?'}</div>
                 <div>
-                  <div style={{ fontWeight: 700, fontSize: '.9rem' }}>{user.nickname}</div>
-                  <div style={{ fontSize: '.75rem', color: 'var(--text-muted)' }}>{user.email}</div>
+                  <div>{user.nickname}님 환영합니다</div>
+                  <small>{user.email}</small>
                 </div>
               </div>
             )}
 
-            {/* 네비 링크 */}
-            <div style={{ flex: 1, overflowY: 'auto', padding: '8px 0' }}>
+            <div className="mobile-links">
               {NAV_LINKS.map(({ to, label }) => (
-                <Link key={to} to={to} onClick={() => setMobileOpen(false)}
-                  style={{ display: 'block', padding: '14px 20px', fontWeight: 600, fontSize: '.95rem', color: 'var(--text-primary)', borderBottom: '1px solid var(--bg-surface)', textDecoration: 'none' }}>
+                <Link key={to} to={to} onClick={() => setMobileOpen(false)}>
                   {label}
                 </Link>
               ))}
-              {user && (
-                <Link to="/mypage" onClick={() => setMobileOpen(false)}
-                  style={{ display: 'block', padding: '14px 20px', fontWeight: 600, fontSize: '.95rem', color: 'var(--text-primary)', borderBottom: '1px solid var(--bg-surface)', textDecoration: 'none' }}>
-                  👤 마이페이지
-                </Link>
-              )}
+              <Link to="/mypage" onClick={() => setMobileOpen(false)}>
+                ♡ 마이페이지
+              </Link>
             </div>
 
-            {/* 로그인/로그아웃 */}
-            <div style={{ padding: '16px 20px', borderTop: '1px solid var(--border-color)' }}>
+            <div className="mobile-auth">
               {user ? (
                 <button onClick={handleLogout} className="btn btn-secondary btn-block">로그아웃</button>
               ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                  <Link to="/login"    onClick={() => setMobileOpen(false)} className="btn btn-secondary btn-block" style={{ textDecoration: 'none' }}>로그인</Link>
-                  <Link to="/register" onClick={() => setMobileOpen(false)} className="btn btn-primary  btn-block" style={{ textDecoration: 'none' }}>회원가입</Link>
-                </div>
+                <>
+                  <Link to="/login" onClick={() => setMobileOpen(false)} className="btn btn-secondary btn-block">로그인</Link>
+                  <Link to="/register" onClick={() => setMobileOpen(false)} className="btn btn-primary btn-block">회원가입</Link>
+                </>
               )}
             </div>
           </div>
