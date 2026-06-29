@@ -274,48 +274,11 @@ export default function Home() {
         )}
 
         <section className="ad-banner">
-  <Link to="/party" className="ad-banner-link" aria-label="파티 페이지로 이동">
-    <img src="/img/banner1.png" alt="파티 만들기 배너" />
-  </Link>
-</section>
+          <Link to="/party" className="ad-banner-link" aria-label="파티 페이지로 이동">
+            <img src="/img/banner1.png" alt="파티 만들기 배너" />
+          </Link>
+        </section>
       </main>
-
-      {/* <footer className="site-footer">
-        <div className="container footer-grid">
-          <div>
-            <strong className="footer-logo-text">오늘 뭐먹지? ⏰</strong>
-            <p>AI가 추천하는<br />오늘의 베스트 맛집</p>
-            <div className="social-row">
-              <span>◎</span><span>f</span><span>t</span>
-            </div>
-          </div>
-          <div>
-            <h4>서비스</h4>
-            <Link to="/menu">소개</Link>
-            <Link to="/menu">이용 안내</Link>
-            <Link to="/party">공지사항</Link>
-            <Link to="/mypage">고객센터</Link>
-          </div>
-          <div>
-            <h4>파트너</h4>
-            <Link to="/menu">맛집 등록</Link>
-            <Link to="/party">비즈니스 문의</Link>
-          </div>
-          <div>
-            <h4>회사</h4>
-            <a href="#">회사 소개</a>
-            <a href="#">채용 정보</a>
-            <a href="#">개인정보 처리방침</a>
-            <a href="#">이용약관</a>
-          </div>
-          <div>
-            <h4>앱 다운로드</h4>
-            <button className="store-btn"> App Store</button>
-            <button className="store-btn">▶ Google Play</button>
-          </div>
-        </div>
-        <p className="copyright">© 2024 오늘 뭐먹지? All rights reserved.</p>
-      </footer> */}
     </div>
   )
 }

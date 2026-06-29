@@ -5,7 +5,7 @@ import { logout } from '../api/services'
 
 const NAV_LINKS = [
   { to: '/',      label: '홈', end: true },
-  { to: '/menu',  label: '메뉴 찾기' },
+  { to: '/menu',  label: '맛집 찾기' },
   { to: '/party', label: '밥친구' },
   { to: '/game',  label: '게임창' },
 ]
