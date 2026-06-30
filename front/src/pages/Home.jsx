@@ -5,13 +5,9 @@ import { getRestaurants, getNearby } from '../api/services'
 import { useAuth } from '../App'
 import KakaoMap from '../components/KakaoMap'
 import RestaurantSearch from '../components/RestaurantSearch'
-import RestaurantImage from "../components/RestaurantImage";
-
 
 const CAT_ICON = { 한식: '🍚', 일식: '🍣', 중식: '🥡', 양식: '🥩', 분식: '🍜', 치킨: '🍗', 피자: '🍕', 카페: '☕' }
 const TREND_FOODS = ['삼겹살', '치킨', '짜장면', '순대국', '초밥', '파스타', '비빔밥', '떡볶이']
-const POPULAR = [['🍚', '김치찌개'], ['🍜', '짬뽕'], ['🥩', '스테이크'], ['🍣', '초밥'], ['🍗', '치킨'], ['🍕', '피자']]
-const NEWS = ['AI 기반 메뉴 추천 서비스 시작', '밥친구 매칭 기능 출시', '신규 식당 300곳 추가', '이벤트 진행 중']
 
 const SAMPLE_RESTAURANTS = [
   {
@@ -56,7 +52,31 @@ const SAMPLE_RESTAURANTS = [
   },
 ]
 
-function catIcon(c) { return CAT_ICON[c] ?? '🍴' }
+const heroLayoutClass = 'mb-[30px] grid grid-cols-[minmax(0,1fr)_400px] gap-7 max-lg:grid-cols-1'
+const mainBannerClass = 'relative h-[290px] overflow-hidden rounded-[var(--border-radius-lg)] shadow-[var(--shadow-sm)]'
+const slideBaseClass = 'absolute left-0 top-0 z-[1] flex h-full w-full items-center justify-between gap-6 px-10 py-8 text-white opacity-0 transition-opacity duration-[600ms] ease-in-out max-md:items-start max-md:px-6'
+const slideActiveClass = 'z-[2] opacity-100'
+const slideBackgrounds = [
+  '[background:radial-gradient(circle_at_85%_22%,rgba(255,255,255,0.26),transparent_26%),linear-gradient(135deg,#FF6970,var(--color-primary))]',
+  '[background:radial-gradient(circle_at_85%_25%,rgba(255,255,255,0.28),transparent_24%),linear-gradient(135deg,#FEB95C,#F46C6F)]',
+  '[background:radial-gradient(circle_at_85%_25%,rgba(255,238,127,0.35),transparent_25%),linear-gradient(135deg,#F1B8AE,#F46C6F)]',
+]
+const bannerCopyClass = 'relative z-[2] max-w-[430px]'
+const bannerTitleClass = 'mb-4 text-[clamp(1.65rem,3vw,2.35rem)] font-black leading-[1.12] tracking-[-0.02em]'
+const bannerTitleAccentClass = 'mx-0.5 inline-flex translate-y-0.5'
+const bannerTextClass = 'mb-6 text-[1rem] font-extrabold leading-[1.7]'
+const bannerActionsClass = 'flex flex-wrap gap-[14px]'
+const bannerFoodClass = 'relative z-[1] aspect-square w-[min(34%,220px)] flex-none rounded-full border-[10px] border-white/70 object-cover shadow-[0_18px_30px_rgba(85,34,26,0.2)] max-md:hidden'
+const bannerDotsClass = 'absolute bottom-[22px] left-1/2 flex -translate-x-1/2 gap-[9px]'
+const bannerDotClass = 'h-3 w-3 rounded-full border-2 border-white'
+const bannerDotActiveClass = 'bg-white'
+const trendCardClass = 'h-[290px] overflow-hidden rounded-[var(--border-radius-lg)] border border-[var(--border-color)] bg-[var(--bg-white)] p-[18px] shadow-[var(--shadow-sm)]'
+const trendTitleClass = 'mb-3 text-[1.05rem] font-black text-[var(--text-primary)]'
+const trendListClass = 'flex flex-col gap-2'
+const trendItemClass = 'flex items-center gap-2.5 text-[0.9rem] font-medium'
+const trendRankClass = 'w-5 font-black text-[var(--color-primary)]'
+const trendNameClass = 'flex-1 text-[var(--text-secondary)]'
+const trendUpClass = 'text-[var(--color-primary)]'
 
 export default function Home() {
   const { user } = useAuth()
@@ -90,8 +110,11 @@ export default function Home() {
       setUserLoc(loc)
       try {
         const data = await getNearby({ lat: loc.lat, lng: loc.lng })
-        setNearby(data); setLocStatus('done')
-      } catch { setLocStatus('error') }
+        setNearby(data)
+        setLocStatus('done')
+      } catch {
+        setLocStatus('error')
+      }
     }, () => setLocStatus('error'))
   }
 
@@ -99,75 +122,78 @@ export default function Home() {
 
   return (
     <div className="home-page">
-      <main className="container home-container">
-        <section className="hero-layout">
-          <div className="main-banner">
-            <div className={`banner-slide food-banner${bannerIdx === 0 ? ' active' : ''}`}>
-              <div className="banner-copy">
-                <h1>
-                  HAVE A G<span>🕘</span>OD TIME
+      <main className="home-container">
+        <section className={heroLayoutClass}>
+          <div className={mainBannerClass}>
+            <div className={`${slideBaseClass} ${slideBackgrounds[0]} ${bannerIdx === 0 ? slideActiveClass : ''}`}>
+              <div className={bannerCopyClass}>
+                <h1 className={bannerTitleClass}>
+                  HAVE A G<span className={bannerTitleAccentClass}>🕘</span>OD TIME
                 </h1>
-                <p>AI가 추천하는 오늘의 베스트 맛집<br />지금, 당신의 취향을 찾아보세요!</p>
-                <div className="banner-actions">
+                <p className={bannerTextClass}>AI가 추천하는 오늘의 베스트 맛집<br />지금, 당신의 취향을 찾아보세요!</p>
+                <div className={bannerActionsClass}>
                   <Link to="/menu" className="btn btn-light">추천 맛집 보기 →</Link>
                   <Link to="/game" className="btn btn-yellow">랜덤 메뉴 추천 🎲</Link>
                 </div>
               </div>
               <img
-                className="banner-food"
+                className={bannerFoodClass}
                 src="https://images.unsplash.com/photo-1621996346565-e3dbc646d9a9?auto=format&fit=crop&w=900&q=80"
                 alt="파스타"
               />
-              <div className="banner-dots">
-                {[0, 1, 2].map((dot) => <span key={dot} className={bannerIdx === dot ? 'active' : ''} />)}
+              <div className={bannerDotsClass}>
+                {[0, 1, 2].map((dot) => (
+                  <span
+                    key={dot}
+                    className={`${bannerDotClass} ${bannerIdx === dot ? bannerDotActiveClass : ''}`}
+                  />
+                ))}
               </div>
             </div>
 
-            <div className={`banner-slide food-banner alt${bannerIdx === 1 ? ' active' : ''}`}>
-              <div className="banner-copy">
-                <h1>오늘의 밥친구</h1>
-                <p>혼밥 말고 같이 먹는 즐거움<br />가까운 맛집에서 바로 만나요.</p>
-                <div className="banner-actions">
+            <div className={`${slideBaseClass} ${slideBackgrounds[1]} ${bannerIdx === 1 ? slideActiveClass : ''}`}>
+              <div className={bannerCopyClass}>
+                <h1 className={bannerTitleClass}>오늘의 밥친구</h1>
+                <p className={bannerTextClass}>혼밥 말고 같이 먹는 즐거움<br />가까운 맛집에서 바로 만나요.</p>
+                <div className={bannerActionsClass}>
                   <Link to="/party" className="btn btn-light">밥친구 찾기 →</Link>
                   <button type="button" className="btn btn-yellow" onClick={findNearby}>내 주변 찾기 📍</button>
                 </div>
-
               </div>
               <img
-                className="banner-food"
+                className={bannerFoodClass}
                 src="https://images.unsplash.com/photo-1555939594-58d7cb561ad1?auto=format&fit=crop&w=900&q=80"
                 alt="브런치"
               />
             </div>
 
-            <div className={`banner-slide food-banner deep${bannerIdx === 2 ? ' active' : ''}`}>
-              <div className="banner-copy">
-                <h1>AI 메뉴 추천</h1>
-                <p>날씨, 시간, 취향을 분석해서<br />오늘 먹기 좋은 메뉴를 골라드려요.</p>
-                <div className="banner-actions">
+            <div className={`${slideBaseClass} ${slideBackgrounds[2]} ${bannerIdx === 2 ? slideActiveClass : ''}`}>
+              <div className={bannerCopyClass}>
+                <h1 className={bannerTitleClass}>AI 메뉴 추천</h1>
+                <p className={bannerTextClass}>날씨, 시간, 취향을 분석해서<br />오늘 먹기 좋은 메뉴를 골라드려요.</p>
+                <div className={bannerActionsClass}>
                   <Link to="/game" className="btn btn-light">추천 받기 →</Link>
                 </div>
               </div>
               <img
-                className="banner-food"
+                className={bannerFoodClass}
                 src="https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&w=900&q=80"
                 alt="피자"
               />
             </div>
           </div>
 
-          <aside className="trend-card">
-            <h4>🔥 실시간 인기 검색어</h4>
-            <div className="trend-list">
+          <aside className={trendCardClass}>
+            <h4 className={trendTitleClass}>🔥 실시간 인기 검색어</h4>
+            <div className={trendListClass}>
               {TREND_FOODS.map((food, i) => (
-                <Link to={`/menu?q=${food}`} className="trend-item" key={food}>
-                  <span className="trend-rank">{i + 1}</span>
-                  <span className="trend-name">{food}</span>
-                  <span className="trend-up">↑</span>
+                <Link to={`/menu?q=${food}`} className={trendItemClass} key={food}>
+                  <span className={trendRankClass}>{i + 1}</span>
+                  <span className={trendNameClass}>{food}</span>
+                  <span className={trendUpClass}>↑</span>
                 </Link>
               ))}
             </div>
-
           </aside>
         </section>
 
@@ -280,7 +306,7 @@ export default function Home() {
 
         <section className="ad-banner">
           <Link to="/party" className="ad-banner-link" aria-label="파티 페이지로 이동">
-            <img src="/img/banner1.png" alt="파티 만들기 배너" />
+            <img src="/img/banner/banner1.png" alt="파티 만들기 배너" />
           </Link>
         </section>
       </main>
