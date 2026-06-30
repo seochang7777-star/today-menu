@@ -15,21 +15,28 @@ export default function Terms() {
     }
   }, [location]);
 
+  useEffect(() => {
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth" // 💡 스크롤이 부드럽게 위로 올라가는 효과 (원치 않으시면 제거 가능)
+    });
+  }, [tab]);
+
   const data = tab === "terms" ? termsContent : privacyContent;
 
   return (
     // 전체 배경 흰색, 글자 검은색 모노톤 유지
     <div className="flex justify-center flex-wrap w-full min-h-screen bg-white font-sans antialiased text-gray-900 pb-40">
       
-      {/* 1. 최상단 타이틀: py-40으로 세로 여백을 주어 완벽하게 공간 분리 */}
-      <div className="w-full py-40 text-center">
+      {/* 1. 최상단 타이틀: */}
+      <div className="w-full py-20 text-center">
         <h1 className="text-4xl font-black tracking-tight text-black">
           약관 안내
         </h1>
       </div>
 
-      {/* 2. 탭 내비게이션 영역: 기준선 위아래로 넉넉한 세로 여백(my-20)을 주어 독립 공간 확보 */}
-      <div className="w-full border-b border-gray-200 sticky top-0 bg-white z-10 my-20">
+      {/* 2. 탭 내비게이션 영역 */}
+      <div className="w-full border-b border-gray-200 sticky top-0 bg-white z-10 ">
         {/* py-6을 주어 기준선 안의 글자(이용약관) 자체도 선 위아래로 여백을 가집니다 */}
         <div className="w-full flex justify-center gap-20 py-6">
           

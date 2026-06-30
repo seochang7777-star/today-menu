@@ -13,15 +13,15 @@ const CAT_ICON = {
 };
 
 const CAT_IMG = {
-  한식: "/food_category/korean.avif",
-  일식: "/food_category/japanese.webp",
-  중식: "/food_category/chinese.webp",
-  양식: "/food_category/western.jpg",
-  분식: "/food_category/street-food.jpg",
-  치킨: "/food_category/chicken.jpg",
-  피자: "/food_category/pizza.jpg",
-  카페: "/food_category/cafe.webp",
-  술집: "/food_category/pub.webp",
+  한식: "/img/food_category/korean.avif",
+  일식: "/img/food_category/japanese.webp",
+  중식: "/img/food_category/chinese.webp",
+  양식: "/img/food_category/western.jpg",
+  분식: "/img/food_category/street-food.jpg",
+  치킨: "/img/food_category/chicken.jpg",
+  피자: "/img/food_category/pizza.jpg",
+  카페: "/img/food_category/cafe.webp",
+  술집: "/img/food_category/pub.webp",
 };
 
 export default function RestaurantImage({

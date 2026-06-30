@@ -61,6 +61,14 @@ class Party(db.Model):
     members  = db.relationship('PartyMember',   backref='party', cascade='all, delete-orphan')
     messages = db.relationship('ChatMessage',   backref='party', cascade='all, delete-orphan')
 
+    def refresh_status(self):
+        now = datetime.utcnow()
+        if self.status != StatusEnum.COMPLETED and self.meeting_time < now:
+            self.status = StatusEnum.COMPLETED
+        elif self.status == StatusEnum.RECRUITING and len(self.members) >= self.max_people:
+            self.status = StatusEnum.CLOSED
+        db.session.commit()
+
 class PartyMember(db.Model):
     __tablename__ = 'party_members'
 
@@ -74,10 +82,10 @@ class ChatMessage(db.Model):
     __tablename__ = 'chat_messages'
 
     message_id = db.Column(db.Integer, primary_key=True)
-    party_id   = db.Column(db.Integer, db.ForeignKey('parties.party_id'), nullable=False)
+    party_id = db.Column(db.Integer, db.ForeignKey('parties.party_id'), nullable=False, index=True)
     sender_id  = db.Column(db.Integer, db.ForeignKey('users.user_id'),    nullable=False)
     content    = db.Column(db.Text, nullable=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
 
     sender = db.relationship('User', foreign_keys=[sender_id])
 
