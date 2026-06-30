@@ -6,6 +6,11 @@ import RestaurantImage from "../components/RestaurantImage";
 
 const CAT_ICON = { 한식: '🍚', 일식: '🍣', 중식: '🥟', 양식: '🥩', 분식: '🍜', 치킨: '🍗', 피자: '🍕', 카페: '☕', 술집: '🍺' }
 const CATEGORIES = ['전체', '한식', '일식', '중식', '양식', '분식', '치킨', '피자', '카페', '술집']
+const adBannerClass =
+  'h-[88px] w-full overflow-hidden rounded-[12px] bg-white max-md:h-[70px]'
+const adBannerLinkClass = 'block h-full w-full'
+const adBannerImageClass =
+  'h-full w-full object-contain object-center'
 
 
 export default function Menu() {
@@ -63,9 +68,9 @@ export default function Menu() {
       {/* <div style={{ background: 'var(--bg-surface)', borderRadius: 'var(--border-radius-lg)', height: 80, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)', marginBottom: 20, fontWeight: 600 }}>
         광고 배너 영역
       </div> */}
-      <section className="ad-banner">
-          <Link to="/party" className="ad-banner-link" aria-label="파티 페이지로 이동">
-            <img src="/img/banner1.png" alt="파티 만들기 배너" />
+      <section className={adBannerClass}>
+          <Link to="/party" className={adBannerLinkClass} aria-label="파티 페이지로 이동">
+            <img className={adBannerImageClass} src="/img/banner1.png" alt="파티 만들기 배너" />
           </Link>
         </section>
 

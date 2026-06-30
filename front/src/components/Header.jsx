@@ -48,7 +48,7 @@ export default function Header() {
             className="inline-flex justify-self-start items-center gap-2 text-[1.72rem] font-black tracking-[-0.04em] text-[#0E0C0B] max-md:text-[1.35rem]"
             onClick={() => setMobileOpen(false)}
           >
-            <span>오늘 뭐먹지?</span>
+            <span className='text-{balack}'>오늘 뭐먹지?</span>
             <span className="grid h-7 w-7 place-items-center rounded-full border-2 border-[var(--color-primary)] bg-white text-[1.05rem]">⏰</span>
           </Link>
 
