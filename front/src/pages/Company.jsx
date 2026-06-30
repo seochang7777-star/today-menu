@@ -4,7 +4,6 @@ import { useNavigate } from 'react-router-dom';
 export default function Company() {
   const navigate = useNavigate();
 
-  // 🌟 백엔드 서버 없이 프론트엔드 자체에서 들고 있는 가상 회사(서비스) 데이터입니다!
   const companyData = {
     badge: "인류 최대의 난제 해결 중 ⏰",
     title: "배달 최소주문금액보다\n친구 구하기가 더 어렵다",
@@ -14,17 +13,7 @@ export default function Company() {
   return (
     <div className="bg-[#FDFAD1] min-h-screen font-sans antialiased text-gray-800 pb-20">
       
-      {/* 1. 상단 일러스트 시그니처 배너 영역 */}
-      <div className="w-full bg-white border-b-4 border-[#F1B8AE] flex justify-center overflow-hidden">
-        <div className="max-w-7xl w-full relative">
-          <img 
-            src="/img/banner/banner1.png" 
-            alt="today-menu 메인 배너" 
-            className="w-full h-auto object-cover max-h-[420px]"
-          />
-          <div className="absolute inset-x-0 bottom-0 h-12 bg-gradient-to-t from-[#FDFAD1]/30 to-transparent"></div>
-        </div>
-      </div>
+      
 
       {/* 2. 히어로 인트로 섹션 */}
       <section className="max-w-4xl mx-auto px-6 pt-16 text-center">
@@ -85,7 +74,7 @@ export default function Company() {
             onClick={() => navigate('/menu')}
             className="px-8 py-3 font-extrabold bg-[#FFEE7F] text-gray-900 shadow-md hover:bg-[#feb95c] rounded-[24px] text-sm transition-all"
           >
-            🍕 AI 추천 메뉴 보기
+            🍚 추천 메뉴 보기
           </button>
           <button
             onClick={() => navigate('/party')}
@@ -96,6 +85,7 @@ export default function Company() {
         </div>
       </section>
 
+          
     </div>
   );
 }

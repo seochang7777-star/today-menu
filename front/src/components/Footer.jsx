@@ -65,7 +65,7 @@ export default function Footer() {
             <button className="store-btn">▶ Google Play</button>
           </div>
         </div>
-        <p className="copyright">© 2024 오늘 뭐먹지? All rights reserved.</p>
+        <p className="copyright">© 2026 오늘 뭐먹지? All rights reserved.</p>
       </footer>
     
   )
