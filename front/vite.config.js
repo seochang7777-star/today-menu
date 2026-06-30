@@ -7,11 +7,10 @@ export default defineConfig({
   server: {
     port: 5173,
     proxy: {
-      // 이제 /party, /menu 같은 페이지 경로는 프록시되지 않음!
-      '/api': {
-        target: 'http://localhost:5000',
+      '/api': { 
+        target: 'http://localhost:5000', 
         changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api/, ''),
+        secure: false,
       },
     },
   },

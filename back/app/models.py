@@ -21,7 +21,8 @@ class User(db.Model):
     manner_score = db.Column(db.Float, default=36.5)
     preferences  = db.Column(db.JSON)       # { likes: [], dislikes: [] }
     allergies    = db.Column(db.Text)
-    # address      = db.Column(db.String(200), nullable=True)
+    address      = db.Column(db.String(200), nullable=True)
+    gender       = db.Column(db.String(20), nullable=True, default='미설정')
     role         = db.Column(db.Enum(RoleEnum), default=RoleEnum.USER)
     created_at   = db.Column(db.DateTime, default=datetime.utcnow)
 
@@ -80,6 +81,20 @@ class ChatMessage(db.Model):
 
     sender = db.relationship('User', foreign_keys=[sender_id])
 
+class MannerVote(db.Model):
+    """매너온도 투표 — 하루 2회 제한"""
+    __tablename__ = 'manner_votes'
+
+    vote_id     = db.Column(db.Integer, primary_key=True)
+    voter_id    = db.Column(db.Integer, db.ForeignKey('users.user_id'), nullable=False)
+    target_id   = db.Column(db.Integer, db.ForeignKey('users.user_id'), nullable=False)
+    is_positive = db.Column(db.Boolean, nullable=False)
+    voted_at    = db.Column(db.DateTime, default=datetime.utcnow)
+
+    voter  = db.relationship('User', foreign_keys=[voter_id])
+    target = db.relationship('User', foreign_keys=[target_id])
+
+
 class RecommendationLog(db.Model):
     __tablename__ = 'recommendation_logs'
 
@@ -88,9 +103,3 @@ class RecommendationLog(db.Model):
     input_context             = db.Column(db.JSON)
     recommended_restaurant_id = db.Column(db.Integer, db.ForeignKey('restaurants.restaurant_id'), nullable=False)
     is_liked                  = db.Column(db.Boolean, default=False)
-
-class Menu(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    menu_name = db.Column(db.String(100), nullable=False)
-    category = db.Column(db.String(50), nullable=False)
-    category_id = db.Column(db.Integer, nullable=False)

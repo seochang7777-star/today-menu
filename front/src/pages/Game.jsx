@@ -19,7 +19,7 @@ function Roulette({ menus }) {
 
   const items  = menus.slice(0, 30)
   const slice  = (2 * Math.PI) / items.length
-  const COLORS = ['#E53E3E','#DD6B20','#D69E2E','#38A169','#3182CE','#6B46C1','#D53F8C']
+  const COLORS = ['#E53E3E','#DD6B20','var(--color-accent)','#38A169','#3182CE','#6B46C1','#D53F8C']
 
   const draw = useCallback((angle) => {
     const canvas = canvasRef.current
@@ -350,14 +350,14 @@ function WorldCup({ menus }) {
       <div style={{ fontWeight: 900, fontSize: '1.4rem', marginBottom: 4 }}>최종 우승!</div>
       <div style={{
         background: 'linear-gradient(135deg,#FFFFF0,#FEFCBF)',
-        border: '3px solid #D69E2E', borderRadius: 20, padding: '28px 24px',
+        border: '3px solid var(--color-accent)', borderRadius: 20, padding: '28px 24px',
         margin: '16px 0', display: 'inline-block', minWidth: 200,
       }}>
         <div style={{ fontSize: '3.5rem', marginBottom: 8 }}>{catIcon(champion.category)}</div>
         <div style={{ fontWeight: 900, fontSize: '1.5rem' }}>{champion.name}</div>
         <div style={{ fontSize: '.82rem', color: 'var(--text-muted)', marginTop: 4 }}>{champion.category} · {champion.address}</div>
         <Link to={`/menu/${champion.id}`}
-          style={{ display: 'inline-block', marginTop: 14, padding: '8px 24px', background: '#D69E2E', color: '#fff', borderRadius: 20, fontSize: '.88rem', fontWeight: 700, textDecoration: 'none' }}>
+          style={{ display: 'inline-block', marginTop: 14, padding: '8px 24px', background: 'var(--color-accent)', color: '#fff', borderRadius: 20, fontSize: '.88rem', fontWeight: 700, textDecoration: 'none' }}>
           식당 보러가기 →
         </Link>
       </div>
@@ -515,7 +515,7 @@ function ScratchCard({ menus }) {
       </div>
 
       {/* 복권 카드 */}
-      <div style={{ position: 'relative', width: 300, height: 160, borderRadius: 16, overflow: 'hidden', boxShadow: '0 8px 24px rgba(0,0,0,.15)', border: '3px solid #D69E2E' }}>
+      <div style={{ position: 'relative', width: 300, height: 160, borderRadius: 16, overflow: 'hidden', boxShadow: '0 8px 24px rgba(0,0,0,.15)', border: '3px solid var(--color-accent)' }}>
         {/* 뒤 배경 (상품 표시) */}
         <div style={{
           position: 'absolute', inset: 0,
@@ -547,7 +547,7 @@ function ScratchCard({ menus }) {
             <span>{revealed}% / {TARGET}% 완성</span>
           </div>
           <div style={{ height: 6, background: 'var(--bg-surface)', borderRadius: 4, overflow: 'hidden' }}>
-            <div style={{ height: '100%', background: '#D69E2E', width: `${Math.min(revealed / TARGET * 100, 100)}%`, transition: 'width .1s' }} />
+            <div style={{ height: '100%', background: 'var(--color-accent)', width: `${Math.min(revealed / TARGET * 100, 100)}%`, transition: 'width .1s' }} />
           </div>
         </div>
       )}
@@ -555,9 +555,9 @@ function ScratchCard({ menus }) {
       {/* 당첨 결과 */}
       {done && prize && (
         <div style={{ textAlign: 'center', animation: 'popIn .4s ease' }}>
-          <div style={{ fontWeight: 900, fontSize: '1rem', color: '#D69E2E', marginBottom: 8 }}>🎉 당첨!</div>
+          <div style={{ fontWeight: 900, fontSize: '1rem', color: 'var(--color-accent)', marginBottom: 8 }}>🎉 당첨!</div>
           <Link to={`/menu/${prize.id}`}
-            style={{ display: 'inline-block', padding: '8px 24px', background: '#D69E2E', color: '#fff', borderRadius: 20, fontSize: '.88rem', fontWeight: 700, textDecoration: 'none' }}>
+            style={{ display: 'inline-block', padding: '8px 24px', background: 'var(--color-accent)', color: '#fff', borderRadius: 20, fontSize: '.88rem', fontWeight: 700, textDecoration: 'none' }}>
             식당 보러가기 →
           </Link>
         </div>

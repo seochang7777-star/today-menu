@@ -14,12 +14,14 @@ const QUICK = {
     { icon: '💰', text: '1만원 이하 추천해줘' },
   ],
   qna: [
-    { icon: '❤️', text: '찜 목록은 어떻게 쓰나요?' },
-    { icon: '👥', text: '파티 참여는 어떻게 하나요?' },
-    { icon: '🎯', text: '취향 설정하고 싶어요' },
-    { icon: '🌡️', text: '매너점수가 뭔가요?' },
-    { icon: '🎲', text: '게임창은 어떻게 쓰나요?' },
-    { icon: '📍', text: '위치 기반 추천이 뭔가요?' },
+    { icon: '🎲', text: '게임창 사용법 알려줘' },
+    { icon: '👥', text: '파티 만드는 법 알려줘' },
+    { icon: '❤️', text: '찜 목록 어떻게 쓰나요?' },
+    { icon: '🌡️', text: '매너온도 올리는 방법은?' },
+    { icon: '📍', text: '위치 기반 추천 어떻게 해요?' },
+    { icon: '🎯', text: '내 취향 설정은 어디서 하나요?' },
+    { icon: '💬', text: '파티 채팅은 어떻게 쓰나요?' },
+    { icon: '🏆', text: '내 찜목록 보여줘' },
   ],
 }
 
@@ -49,6 +51,8 @@ export default function ChatBot() {
   const [savedLocs,    setSavedLocs]    = useState([])       // 마이페이지 저장 장소
   const [locMode,      setLocMode]      = useState('current') // 'current' | 'saved_0' | 'saved_1' | 'saved_2'
   const [locPicker,    setLocPicker]    = useState(false)     // 위치 선택 드롭다운
+  const [wishlist,     setWishlist]     = useState([])       // 찜한 식당 목록
+  const [mannerScore,  setMannerScore]  = useState(null)     // 매너온도
 
   const endRef   = useRef(null)
   const inputRef = useRef(null)
@@ -58,8 +62,11 @@ export default function ChatBot() {
   useEffect(() => {
     if (open) {
       setTimeout(() => inputRef.current?.focus(), 100)
-      // 저장 장소 새로고침
-      fetchMe().then((u) => setSavedLocs(u.saved_locations ?? [])).catch(() => {})
+      // 저장 장소 + 매너온도 새로고침
+      fetchMe().then((u) => {
+        setSavedLocs(u.saved_locations ?? [])
+        setMannerScore(u.manner_score ?? null)
+      }).catch(() => {})
     }
   }, [open])
 
@@ -136,6 +143,8 @@ export default function ChatBot() {
         mode, sendLat, sendLng, sendLocIndex,
       )
       addMsg('assistant', data.reply)
+      if (data.manner_score != null) setMannerScore(data.manner_score)
+      if (data.wishlist)             setWishlist(data.wishlist)
     } catch (e) {
       addMsg('assistant',
         e.response?.status === 401 ? '로그인이 필요합니다.'
@@ -194,8 +203,16 @@ export default function ChatBot() {
                 <div style={{ fontWeight: 700, fontSize: '.88rem', lineHeight: 1.2 }}>
                   {mode === 'recommend' ? 'AI 메뉴 추천' : 'Q&A 도우미'}
                 </div>
-                <div style={{ fontSize: '.7rem', opacity: .6 }}>
+                <div style={{ fontSize: '.7rem', opacity: .6, display: 'flex', alignItems: 'center', gap: 5 }}>
                   {user.nickname}님 맞춤 · GPT
+                  {mannerScore != null && (
+                    <span style={{
+                      background: mannerScore >= 40 ? '#68D391' : mannerScore >= 30 ? '#F6AD55' : '#FC8181',
+                      color: '#fff', borderRadius: 10, padding: '1px 6px', fontSize: '.65rem', fontWeight: 700,
+                    }}>
+                      🌡️ {mannerScore}°
+                    </span>
+                  )}
                 </div>
               </div>
             </div>
@@ -447,7 +464,34 @@ export default function ChatBot() {
                     {mode === 'recommend' ? '빠른 메뉴 추천' : '자주 묻는 질문'}
                   </div>
 
-                  {/* 질문 목록 */}
+                  {/* 찜 목록 (추천 탭 + 찜 있을 때만) */}
+                  {mode === 'recommend' && wishlist.length > 0 && (
+                    <div style={{ borderBottom: '1px solid var(--border-color)' }}>
+                      <div style={{ padding: '6px 14px 3px', fontSize: '.7rem', fontWeight: 700, color: 'var(--text-muted)' }}>
+                        ❤️ 내 찜 목록으로 추천
+                      </div>
+                      {wishlist.slice(0, 3).map((name) => (
+                        <button key={name}
+                          onClick={() => { send(`${name} 근처 비슷한 메뉴 추천해줘`); setPlusOpen(false) }}
+                          style={{
+                            width: '100%', padding: '7px 14px',
+                            border: 'none', background: 'none',
+                            cursor: 'pointer', textAlign: 'left',
+                            display: 'flex', alignItems: 'center', gap: 10,
+                            fontSize: '.8rem', color: 'var(--color-primary)',
+                            transition: 'background .1s',
+                          }}
+                          onMouseEnter={(e) => e.currentTarget.style.background = 'var(--bg-surface)'}
+                          onMouseLeave={(e) => e.currentTarget.style.background = 'none'}
+                        >
+                          <span style={{ fontSize: '.9rem', flexShrink: 0 }}>❤️</span>
+                          <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{name}</span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* 빠른 질문 목록 */}
                   <div style={{ padding: '6px 0' }}>
                     {QUICK[mode].map(({ icon, text }) => (
                       <button key={text}

@@ -96,7 +96,7 @@ export default function KakaoMap({ center, markers = [], height = '400px', onSel
         content: `<div style="padding:8px 10px;min-width:140px;font-family:sans-serif">
           <span style="display:inline-block;padding:2px 6px;border-radius:10px;font-size:11px;font-weight:700;background:${color};color:#fff;margin-bottom:4px">${spot.category ?? '기타'}</span>
           <div style="font-size:13px;font-weight:700;margin-bottom:2px">${spot.name}</div>
-          ${spot.dist ? `<div style="font-size:11px;color:#666">🚶 ${spot.dist}m</div>` : ''}
+          ${spot.dist ? `<div style="font-size:11px;color:var(--text-muted)">🚶 ${spot.dist}m</div>` : ''}
         </div>`,
         removable: true,
       })

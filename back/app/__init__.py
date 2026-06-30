@@ -32,7 +32,7 @@ def create_app():
     db.init_app(app)
     migrate.init_app(app, db)
     jwt.init_app(app)
-    socketio.init_app(app)
+    socketio.init_app(app, async_mode='eventlet', cors_allowed_origins=['http://localhost:5173', 'http://127.0.0.1:5173'])
 
     # CORS는 socketio에서 처리하므로 supports_credentials만 설정
     CORS(app, supports_credentials=True,

@@ -50,8 +50,16 @@ export default function Party() {
       ) : parties.length === 0 ? (
         <div className="empty-state">
           <div className="empty-icon">👥</div>
-          <p>모집 중인 파티가 없습니다</p>
-          {user && <Link to="/party/create" className="btn btn-primary" style={{ marginTop: 14 }}>첫 파티 만들기</Link>}
+          <p>
+            {status === 'RECRUITING' && '모집 중인 파티가 없습니다'}
+            {status === 'CLOSED'     && '마감된 파티가 없습니다'}
+            {status === 'COMPLETED'  && '완료된 파티가 없습니다'}
+          </p>
+          {user && status === 'RECRUITING' && (
+            <Link to="/party/create" className="btn btn-primary" style={{ marginTop: 14 }}>
+              + 파티 만들기
+            </Link>
+          )}
         </div>
       ) : (
         parties.map((p) => (
@@ -84,4 +92,3 @@ export default function Party() {
     </>
   )
 }
-

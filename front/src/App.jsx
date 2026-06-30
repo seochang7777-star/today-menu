@@ -40,11 +40,10 @@ function AuthProvider({ children }) {
       login:  (data) => {
         // data = 로그인 응답 { access_token, refresh_token, user_id, nickname, ... }
         //      또는 프로필 수정 응답 { user_id, nickname, ... } (토큰 없음)
+        // services.js에서 이미 TokenStore.setTokens() 호출 → 여기선 user 정보만 저장
         if (!data) return
         const { access_token, refresh_token, ...userInfo } = data
-        // 토큰이 있으면 저장, 없으면 기존 토큰 유지
-        if (access_token) TokenStore.setTokens(access_token, refresh_token)
-        setUser(userInfo)
+        setUser(Object.keys(userInfo).length ? userInfo : data)
       },
       logout: ()  => { TokenStore.clear(); setUser(null) },
     }}>
@@ -101,4 +100,3 @@ export default function App() {
     </AuthProvider>
   )
 }
-

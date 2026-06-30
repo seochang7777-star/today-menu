@@ -1,7 +1,7 @@
 import io from 'socket.io-client'
 import { useState, useEffect, useRef } from 'react'
-import { Link, useParams, useNavigate } from 'react-router-dom'
-import { getParty, joinParty } from '../api/services'
+import { Link, useParams, useNavigate, useSearchParams } from 'react-router-dom'
+import { getParty, joinParty, voteManner, getMannerVoteStatus } from '../api/services'
 import { useAuth } from '../App'
 
 const CAT_ICON = { 한식:'🍚', 일식:'🍣', 중식:'🥟', 양식:'🥩', 분식:'🍜', 치킨:'🍗', 피자:'🍕', 카페:'☕' }
@@ -10,6 +10,7 @@ export default function PartyDetail() {
   const { partyId } = useParams()
   const { user } = useAuth()
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
 
   const socket  = useRef(null)
   const chatRef = useRef(null)
@@ -17,14 +18,17 @@ export default function PartyDetail() {
   const [party,     setParty]     = useState(null)
   const [messages,  setMessages]  = useState([])
   const [chatInput, setChatInput] = useState('')
-  const [activeTab, setActiveTab] = useState('info')
+  const [activeTab,     setActiveTab]     = useState(searchParams.get('tab') === 'chat' ? 'chat' : 'info')
+  const [voteRemaining, setVoteRemaining] = useState(2)
+  const [votedToday,    setVotedToday]    = useState([])
+  const [voteMsg,       setVoteMsg]       = useState('')
 
   // ── 파티 정보 로드 ─────────────────────────────────────────────────────────
   useEffect(() => {
     getParty(partyId)
       .then((d) => { setParty(d); setMessages(d.messages ?? []) })
       .catch(() => navigate('/party'))
-  }, [partyId])
+  }, [partyId, navigate])
 
   // ── 채팅 스크롤 ────────────────────────────────────────────────────────────
   useEffect(() => {
@@ -33,7 +37,11 @@ export default function PartyDetail() {
 
   // ── 소켓 연결 ──────────────────────────────────────────────────────────────
   useEffect(() => {
-    if (!user) return
+    if (!party) return;
+
+    const isUserMember = party.is_member;
+
+    if (!user || !isMember) return
 
     socket.current = io('http://localhost:5000', {
       transports: ['websocket', 'polling'],
@@ -44,6 +52,7 @@ export default function PartyDetail() {
     socket.current.emit('join', {
       room_id:  partyId,
       username: user.nickname,
+      sender_id: user.user_id,
     })
 
     // 이전 메시지 수신
@@ -67,6 +76,14 @@ export default function PartyDetail() {
   }, [partyId, user])
 
   // ── 메시지 전송 ────────────────────────────────────────────────────────────
+    const handleTabClick = (key) => {
+    if (key === 'chat' && !isMember) {
+      alert("파티 참여자만 채팅을 이용할 수 있습니다.");
+      return;
+    }
+    setActiveTab(key);
+  }
+  
   const handleChat = (e) => {
     e.preventDefault()
     if (!chatInput.trim() || !socket.current) return
@@ -87,12 +104,32 @@ export default function PartyDetail() {
   const isMember     = party.is_member
   const pct = Math.min(Math.round((party.member_count / party.max_people) * 100), 100)
 
+  const handleVote = async (targetId, isPositive) => {
+    if (voteRemaining <= 0) { setVoteMsg('오늘 투표 횟수(2회)를 모두 사용했습니다.'); return }
+    try {
+      const res = await voteManner(targetId, isPositive)
+      setVoteMsg(res.message)
+      setVoteRemaining(res.remaining)
+      setVotedToday((prev) => [...prev, targetId])
+      setTimeout(() => setVoteMsg(''), 3000)
+    } catch (e) {
+      setVoteMsg(e.response?.data?.message ?? '투표 실패')
+      setTimeout(() => setVoteMsg(''), 3000)
+    }
+  }
+
   const handleJoin = async () => {
     try {
-      await joinParty(partyId)
-      const d = await getParty(partyId)
-      setParty(d); setMessages(d.messages ?? [])
-    } catch (e) { alert(e.response?.data?.message ?? '오류가 발생했습니다.') }
+      await joinParty(partyId);
+      const d = await getParty(partyId);
+      setParty(d); 
+      setMessages(d.messages ?? []);
+      
+      setActiveTab('chat'); 
+      alert("파티에 참여하였습니다! 채팅을 시작해보세요.");
+    } catch (e) { 
+      alert(e.response?.data?.message ?? '오류가 발생했습니다.'); 
+    }
   }
 
   const dummyReviews = [
@@ -275,6 +312,18 @@ export default function PartyDetail() {
 
           <div className="profile-section">
             <h3 style={{ marginBottom: 14 }}>👥 참여자 ({party.member_count}/{party.max_people})</h3>
+            {voteMsg && (
+              <div style={{fontSize:'.78rem',padding:'6px 10px',borderRadius:6,marginBottom:8,
+                background:voteMsg.includes('모두')||voteMsg.includes('실패')?'#FFF5F5':'#F0FFF4',
+                color:voteMsg.includes('모두')||voteMsg.includes('실패')?'#C53030':'#276749'}}>
+                {voteMsg}
+              </div>
+            )}
+            {user && voteRemaining > 0 && (
+              <div style={{fontSize:'.72rem',color:'var(--text-muted)',marginBottom:8}}>
+                오늘 남은 투표: <strong>{voteRemaining}회</strong>
+              </div>
+            )}
             {(party.members ?? []).map((m, i) => (
               <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 0', borderBottom: '1px solid var(--border-color)' }}>
                 <div className="avatar-sm">{m.user?.nickname?.[0] ?? '?'}</div>
@@ -282,7 +331,27 @@ export default function PartyDetail() {
                   <div style={{ fontWeight: 600, fontSize: '.9rem' }}>{m.user?.nickname ?? '알 수 없음'}</div>
                   <div style={{ fontSize: '.75rem', color: 'var(--text-muted)' }}>{m.is_host ? '호스트' : '참여자'}</div>
                 </div>
-                {m.is_host && <span className="badge badge-primary">호스트</span>}
+                {m.is_host && <span className="badge badge-primary" style={{marginRight:4}}>호스트</span>}
+              {user && m.user?.user_id !== user.user_id && (
+                <div style={{display:'flex',gap:3,flexShrink:0}}>
+                  <button onClick={() => handleVote(m.user.user_id, true)}
+                    disabled={votedToday.includes(m.user?.user_id) || voteRemaining<=0}
+                    title="매너 좋아요 +1°"
+                    style={{border:'none',borderRadius:6,padding:'3px 7px',cursor:'pointer',
+                      background:votedToday.includes(m.user?.user_id)?'#F0FFF4':'var(--bg-surface)',
+                      fontSize:'.75rem',opacity:voteRemaining<=0&&!votedToday.includes(m.user?.user_id)?.4:1}}>
+                    👍
+                  </button>
+                  <button onClick={() => handleVote(m.user.user_id, false)}
+                    disabled={votedToday.includes(m.user?.user_id) || voteRemaining<=0}
+                    title="매너 싫어요 -1°"
+                    style={{border:'none',borderRadius:6,padding:'3px 7px',cursor:'pointer',
+                      background:'var(--bg-surface)',fontSize:'.75rem',
+                      opacity:voteRemaining<=0&&!votedToday.includes(m.user?.user_id)?.4:1}}>
+                    👎
+                  </button>
+                </div>
+              )}
               </div>
             ))}
             {party.restaurant && (

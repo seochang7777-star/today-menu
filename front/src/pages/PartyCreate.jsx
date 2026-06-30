@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { createParty, getRestaurants } from '../api/services'
 
 export default function PartyCreate() {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const [restaurants, setRestaurants] = useState([])
-  const [form, setForm] = useState({ title: '', restaurant_id: '', meeting_time: '', max_people: 4 })
+  const [form, setForm] = useState({ title: '', restaurant_id: searchParams.get('rest') ?? '', meeting_time: '', max_people: 4 })
   const [loading, setLoading] = useState(false)
 
   useEffect(() => {

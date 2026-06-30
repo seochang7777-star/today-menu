@@ -133,6 +133,19 @@ export async function sendChat(message, history = [], mode = 'recommend', lat = 
   return data
 }
 
+// ── MANNER VOTE ──────────────────────────────────────────────────────────────
+/** 매너온도 투표 — 하루 2회 제한 */
+export async function voteManner(targetUserId, isPositive) {
+  const { data } = await api.post(`/api/manner/vote/${targetUserId}`, { is_positive: isPositive })
+  return data
+}
+
+/** 오늘 투표 현황 조회 */
+export async function getMannerVoteStatus() {
+  const { data } = await api.get('/api/manner/status')
+  return data
+}
+
 // ── LIKE ──────────────────────────────────────────────────────────────────────
 export async function toggleLike(logId) {
   const { data } = await api.post(`/api/like/${logId}`)

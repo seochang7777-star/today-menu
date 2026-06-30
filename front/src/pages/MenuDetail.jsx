@@ -3,8 +3,9 @@ import { Link, useParams, useNavigate } from 'react-router-dom'
 import { getRestaurant } from '../api/services'
 import { useAuth } from '../App'
 import KakaoMap from '../components/KakaoMap'
+import RestaurantImage from "../components/RestaurantImage";
 
-const CAT_ICON = { 한식:'🍚', 일식:'🍣', 중식:'🥟', 양식:'🥩', 분식:'🍜', 치킨:'🍗', 피자:'🍕', 카페:'☕', 술집:'🍺' }
+const CAT_ICON = { 한식: '🍚', 일식: '🍣', 중식: '🥟', 양식: '🥩', 분식: '🍜', 치킨: '🍗', 피자: '🍕', 카페: '☕', 술집: '🍺' }
 
 export default function MenuDetail() {
   const { restId } = useParams()
@@ -34,9 +35,13 @@ export default function MenuDetail() {
         <div>
           <div style={{ background: 'var(--bg-white)', border: '1px solid var(--border-color)', borderRadius: 'var(--border-radius-xl)', overflow: 'hidden', marginBottom: 16 }}>
             {/* 썸네일 */}
-            <div style={{ height: 220, background: 'var(--bg-surface)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '5rem' }}>
-              {CAT_ICON[rest.category] ?? '🍴'}
-            </div>
+            <RestaurantImage
+              imageUrl={rest.image_url}
+              category={rest.category}
+              name={rest.name}
+              height={220}
+              iconSize="5rem"
+            />
 
             <div style={{ padding: 24 }}>
               <span className="badge badge-primary">{rest.category || '기타'}</span>
@@ -81,7 +86,7 @@ export default function MenuDetail() {
             <h3 style={{ marginBottom: 16 }}>예약 / 파티 참여</h3>
             {user ? (
               <>
-                <Link to="/party/create" className="btn btn-primary btn-block">
+                <Link to={`/party/create?rest=${rest.id}`} className="btn btn-primary btn-block">
                   👥 밥친구 파티 만들기
                 </Link>
                 <hr className="divider" />
