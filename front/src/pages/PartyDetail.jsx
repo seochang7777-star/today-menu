@@ -3,8 +3,6 @@ import { useState, useEffect, useRef } from 'react'
 import { Link, useParams, useNavigate, useSearchParams } from 'react-router-dom'
 import { getParty, joinParty, voteManner, getMannerVoteStatus, closeParty } from '../api/services'
 import { useAuth } from '../App'
-import api from '../api/axiosInstance.js'
-import axios from 'axios'
 
 const CAT_ICON = { 한식:'🍚', 일식:'🍣', 중식:'🥟', 양식:'🥩', 분식:'🍜', 치킨:'🍗', 피자:'🍕', 카페:'☕' }
 
@@ -106,20 +104,33 @@ export default function PartyDetail() {
     <div style={{ textAlign: 'center', padding: 60, color: 'var(--text-muted)' }}>로딩 중...</div>
   )
 
+
+
   const handleVote = async (targetId, isPositive) => {
     if (voteRemaining <= 0) { setVoteMsg('오늘 투표 횟수(2회)를 모두 사용했습니다.'); return }
     try {
       const res = await voteManner(targetId, isPositive)
-      setVoteMsg(res.message)
-      setVoteRemaining(res.remaining)
+      setVoteMsg(res.message); setVoteRemaining(res.remaining)
       setVotedToday((prev) => [...prev, targetId])
       setTimeout(() => setVoteMsg(''), 3000)
-    } catch (e) {
-      setVoteMsg(e.response?.data?.message ?? '투표 실패')
-      setTimeout(() => setVoteMsg(''), 3000)
-    }
+    } catch (e) { setVoteMsg(e.response?.data?.message ?? '투표 실패'); setTimeout(() => setVoteMsg(''), 3000) }
   }
-
+  const handleLeaveParty = async () => {
+    if (!window.confirm('정말로 파티에서 퇴장하시겠습니까?')) return
+    try { await api.delete(`/api/party/${partyId}/leave`); alert('파티에서 퇴장했습니다.'); navigate('/party') }
+    catch (e) { alert(e.response?.data?.message || '퇴장 오류') }
+  }
+  const handleReport = async (targetId) => {
+    const reason = window.prompt('신고 사유를 입력해주세요:')
+    if (!reason?.trim()) return
+    try { await api.post(`/api/party/${partyId}/report`, { target_id: targetId, reason }); alert('신고 접수됐습니다.') }
+    catch (e) { alert(e.response?.data?.message || '신고 실패') }
+  }
+  const handleStatusChange = async (newStatus) => {
+    if (!window.confirm(newStatus === 'CLOSED' ? '모집을 마감하시겠습니까?' : '모집을 재개하시겠습니까?')) return
+    try { await api.patch(`/api/party/${partyId}/status`, { status: newStatus }); const d = await getParty(partyId); setParty(d) }
+    catch (e) { alert(e.response?.data?.message || '상태 변경 실패') }
+  }
   const handleJoin = async () => {
     try {
       await joinParty(partyId);
@@ -130,73 +141,22 @@ export default function PartyDetail() {
       setActiveTab('chat'); 
       alert("파티에 참여하였습니다! 채팅을 시작해보세요.");
     } catch (e) { 
-      if (e.response?.status === 403) {
-        alert("죄송합니다. 이 파티의 호스트에 의해 접근이 제한되었습니다.");
-      } else {
-        alert(e.response?.data?.message || "참여 중 오류가 발생했습니다.");
-      }
+      alert(e.response?.data?.message ?? '오류가 발생했습니다.'); 
     }
   }
 
-const handleStatusChange = async (newStatus) => {
-  const msg = newStatus === 'CLOSED' ? "모집을 마감하시겠습니까?" : "모집을 다시 시작하시겠습니까?";
-  if (!window.confirm(msg)) return;
-  
+  const handleCloseParty = async () => {
+  if (!window.confirm("정말로 파티 모집을 마감하시겠습니까?")) return;
   try {
-    const res = await api.patch(`/api/party/${partyId}/status`, { status: newStatus });
-    alert(res.data.message);
-    // 상태 변경 후 정보 다시 불러오기
-    const d = await getParty(partyId);
-    setParty(d);
+    const updatedParty = await closeParty(partyId);
+    setParty(updatedParty); // 상태 업데이트로 즉시 UI 반영
+    alert("파티가 마감되었습니다.");
   } catch (e) {
-    alert(e.response?.data?.message || "상태 변경 실패");
-  }
-}
-
-const handleKick = async (targetUserId) => {
-  if (!targetUserId) return;
-  
-  // 요청이 진행 중임을 명시적으로 표시 (UI에 로딩 상태 추가 권장)
-  try {
-    const token = localStorage.getItem('accessToken');
-    const response = await api.delete(`/api/party/${partyId}/kick/${targetUserId}`, {
-      headers: { Authorization: `Bearer ${token}` }
-    });
-    
-    alert("강퇴 처리가 완료되었습니다.");
-    // 강퇴 후 파티 정보 갱신
-    const d = await getParty(partyId);
-    setParty(d);
-  } catch (e) {
-  
-    const errorMessage = e?.response?.data?.message || e?.message || "서버 응답 없음";
-    console.error("강퇴 상세 에러:", e);
-    alert(`강퇴 실패: ${errorMessage}`);
+    alert(e.response?.data?.message ?? "마감 처리 중 오류가 발생했습니다.");
   }
 };
 
-const handleLeaveParty = async () => {
-  if (!window.confirm("정말로 파티에서 퇴장하시겠습니까?")) return;
-  try {
-    await api.delete(`/api/party/${partyId}/leave`);
-    alert("파티에서 퇴장했습니다.");
-    navigate('/party'); 
-  } catch (e) {
-    alert(e.response?.data?.message || "퇴장 처리 중 오류가 발생했습니다.");
-  }
-};
 
-const handleReport = async (targetId) => {
-  const reason = window.prompt("신고 사유를 입력해주세요:");
-  if (!reason || reason.trim() === "") return;
-
-  try {
-    await api.post(`/api/party/${partyId}/report`, { target_id: targetId, reason });
-    alert("신고가 접수되었습니다. 감사합니다.");
-  } catch (e) {
-    alert(e.response?.data?.message || "신고 처리에 실패했습니다.");
-  }
-};
 
   const dummyReviews = [
     { nick: '김철수', score: 5, text: '분위기 좋고 음식도 맛있었어요! 다음에 또 참여하고 싶습니다.' },
@@ -302,9 +262,14 @@ const handleReport = async (targetId) => {
                       <div style={{ fontSize: '.7rem', color: 'var(--text-light)', marginTop: 2, textAlign: mine ? 'right' : 'left' }}>
                         {msg.created_at ? 
                           (() => {
+                            // 1. 서버에서 받은 문자열을 Date 객체로 생성
                             const date = new Date(msg.created_at);
+                            
+                            // 2. 현재 시간에서 한국 시간대인 9시간(9 * 60 * 60 * 1000 밀리초)을 더함
+                            // 이미 브라우저가 로컬 시간대로 해석했다면, UTC로 변환한 뒤 9시간을 더합니다.
                             const kstDate = new Date(date.getTime() + (9 * 60 * 60 * 1000));
-
+                            
+                            // 3. 시간 형식으로 변환
                             return kstDate.toLocaleTimeString('ko-KR', { 
                                 hour: '2-digit', 
                                 minute: '2-digit', 
@@ -376,13 +341,9 @@ const handleReport = async (targetId) => {
             </div>
 
             {/* 1. 호스트 전용: 모집 중일 때 마감 버튼 */}
-            {party.is_host && (
-              <button 
-                className={`btn btn-block ${isRecruiting ? 'btn-warning' : 'btn-success'}`}
-                onClick={() => handleStatusChange(isRecruiting ? 'CLOSED' : 'RECRUITING')}
-                style={{ marginBottom: 10 }}
-              >
-                {isRecruiting ? '🚫 모집 마감하기' : '✅ 모집 재개하기'}
+            {party.is_host && isRecruiting && (
+              <button className="btn btn-warning btn-block" onClick={handleCloseParty} style={{ marginBottom: 10 }}>
+                🚫 모집 마감하기
               </button>
             )}
 
@@ -436,34 +397,19 @@ const handleReport = async (targetId) => {
                   <div style={{ fontSize: '.75rem', color: 'var(--text-muted)' }}>{m.is_host ? '호스트' : '참여자'}</div>
                 </div>
                 {m.is_host && <span className="badge badge-primary" style={{marginRight:4}}>호스트</span>}
-              {user && party.host?.user_id === user.user_id && !m.is_host && (
+              {party.is_host && !m.is_host && (
                 <button 
-                  onClick={(e) => {
-                    e.preventDefault();
+                  onClick={() => {
                     if (window.confirm(`${m.user?.nickname}님을 정말로 강퇴하시겠습니까?`)) {
-                      handleKick(m.user.user_id);
+                      // 강퇴 API 함수 (기존에 구현하신 함수명으로 사용하세요)
+                      // handleKick(m.user.user_id);
                     }
                   }}
-                  style={{ 
-                    marginRight: 8, fontSize: '0.7rem', padding: '2px 6px', 
-                    color: '#e53e3e', border: '1px solid #e53e3e', 
-                    borderRadius: 4, cursor: 'pointer', background: 'transparent' 
-                  }}
+                  style={{ marginRight: 8, fontSize: '0.7rem', padding: '2px 6px', color: '#e53e3e', border: '1px solid #e53e3e', borderRadius: 4, cursor: 'pointer' }}
                 >
                   강퇴
                 </button>
               )}
-              {user && m.user?.user_id === user.user_id && !m.is_host && (
-                <button onClick={handleLeaveParty} style={{ fontSize: '0.7rem', padding: '2px 6px', color: '#718096', border: '1px solid #718096', borderRadius: 4, background: 'transparent', cursor: 'pointer' }}>
-                  퇴장
-                </button>
-              )}
-              {user && m.user?.user_id !== user.user_id && (
-                <button onClick={() => handleReport(m.user.user_id)} style={{ fontSize: '0.7rem', padding: '2px 6px', color: '#d69e2e', border: '1px solid #d69e2e', borderRadius: 4, background: 'transparent', cursor: 'pointer' }}>
-                  신고
-                </button>
-              )}
-
               {user && m.user?.user_id !== user.user_id && (
                 <div style={{display:'flex',gap:3,flexShrink:0}}>
                   <button onClick={() => handleVote(m.user.user_id, true)}

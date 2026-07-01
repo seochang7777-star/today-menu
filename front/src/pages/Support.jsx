@@ -97,18 +97,18 @@ export default function Support() {
   );
 
   return (
-    <div className="bg-[#FDFAD1] min-h-screen text-gray-800 pb-20 font-sans antialiased">
+    <div className="min-h-screen pb-20">
       
       {/* 🛠️ 시연 및 테스트용 권한 탭 스위처 */}
-      <div className="fixed bottom-4 left-4 bg-white p-3 rounded-[16px] shadow-xl border border-[#FEB95C] z-50 flex gap-2 text-xs">
-        <span className="font-bold self-center text-gray-700">시연 권한:</span>
-        <button onClick={() => { setUserRole("user"); setOpenInquiryId(null); }} className={`px-3 py-1 rounded-[8px] font-bold ${userRole === "user" ? "bg-[#F46C6F] text-white" : "bg-gray-100 text-gray-500"}`}>일반회원</button>
-        <button onClick={() => { setUserRole("admin"); setOpenInquiryId(null); }} className={`px-3 py-1 rounded-[8px] font-bold ${userRole === "admin" ? "bg-gray-950 text-white" : "bg-gray-100 text-gray-500"}`}>관리자</button>
+      <div className="fixed bottom-4 left-4 bg-white p-3 rounded-[16px] shadow-xl border border-[var(--color-accent)] z-50 flex gap-2 text-xs">
+        <span className="font-bold self-center text-[var(--text-secondary)]">시연 권한:</span>
+        <button onClick={() => { setUserRole("user"); setOpenInquiryId(null); }} className={`px-3 py-1 rounded-[8px] font-bold ${userRole === "user" ? "bg-[var(--color-primary)] text-white" : "bg-[var(--bg-surface)] text-[var(--text-muted)]"}`}>일반회원</button>
+        <button onClick={() => { setUserRole("admin"); setOpenInquiryId(null); }} className={`px-3 py-1 rounded-[8px] font-bold ${userRole === "admin" ? "bg-[var(--bg-dark)] text-white" : "bg-[var(--bg-surface)] text-[var(--text-muted)]"}`}>관리자</button>
       </div>
 
       {/* 1. 타이틀 영역 */}
-      <div className="bg-transparent py-8 text-center border-b border-[#FEB95C]/40">
-        <h1 className="text-2xl sm:text-3xl font-black text-gray-950 tracking-tight">고객센터</h1>
+      <div className="bg-transparent py-8 text-center border-b border-[var(--color-accent)]/40">
+        <h2 className="page-title">고객센터</h2>
       </div>
 
       <div className="max-w-5xl mx-auto px-4 mt-8">
@@ -121,9 +121,9 @@ export default function Support() {
               placeholder="궁금한 단어를 입력하면 아래 리스트가 실시간으로 필터링됩니다..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full py-2.5 px-6 bg-white text-gray-950 text-sm font-medium rounded-full shadow-sm border-2 border-[#FEB95C] focus:outline-none focus:border-[#F46C6F]"
+              className="w-full py-2.5 px-6 bg-white text-[var(--text-primary)] text-sm font-medium rounded-full shadow-sm border border-[var(--border-color)] focus:outline-none focus:border-[var(--color-primary)]"
             />
-            <span className="absolute right-5 top-3 text-gray-400 text-sm">🔍</span>
+            <span className="absolute right-5 top-3 text-[var(--text-light)] text-sm">🔍</span>
           </div>
         </div>
 
@@ -141,8 +141,8 @@ export default function Support() {
                 onClick={() => setActiveTab(tab.id)}
                 className={`px-4 py-2 rounded-full font-black text-xs sm:text-sm transition-all border shadow-sm
                   ${activeTab === tab.id 
-                    ? "bg-[#F46C6F] text-white border-[#F46C6F]" 
-                    : "bg-white text-gray-600 border-gray-200 hover:bg-gray-50"
+                    ? "bg-[var(--color-primary)] text-white border-[var(--color-primary)]" 
+                    : "bg-white text-[var(--text-muted)] border-[var(--border-color)] hover:bg-[var(--bg-surface)]"
                   }`}
               >
                 {tab.label}
@@ -154,7 +154,7 @@ export default function Support() {
           {(activeTab === "all" || activeTab === "inquiry") && (
             <button
               onClick={() => { setIsInquiryModalOpen(true); setFormError(""); }}
-              className="w-full sm:w-auto px-5 py-2 bg-gray-950 hover:bg-gray-800 text-white font-black text-xs sm:text-sm rounded-full shadow-md transition-all flex items-center justify-center gap-1"
+              className="w-full sm:w-auto px-5 py-2 bg-[var(--bg-dark)] hover:opacity-90 text-white font-black text-xs sm:text-sm rounded-full shadow-md transition-all flex items-center justify-center gap-1"
             >
               <span>✍️</span> 1:1 문의하기
             </button>
@@ -165,19 +165,19 @@ export default function Support() {
         {(activeTab === "all" || activeTab === "faq") && (
           <section className="mb-12">
             <div className="mb-4">
-              <span className="inline-block px-4 py-1.5 bg-[#FFEE7F] border border-[#FEB95C] text-gray-900 font-extrabold text-xs tracking-wider rounded-[24px] shadow-sm">자주 묻는 질문</span>
+              <span className="inline-block px-4 py-1.5 bg-[var(--bg-surface)] border border-[var(--color-accent)] text-[var(--text-primary)] font-extrabold text-xs tracking-wider rounded-[24px] shadow-sm">자주 묻는 질문</span>
             </div>
             {filteredFaqs.length === 0 ? (
-              <p className="text-sm text-gray-500 py-4 bg-white text-center rounded-[24px]">검색 결과와 일치하는 FAQ가 없습니다.</p>
+              <p className="text-sm text-[var(--text-muted)] py-4 bg-white text-center rounded-[24px]">검색 결과와 일치하는 FAQ가 없습니다.</p>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
                 {filteredFaqs.map(item => (
                   <div 
                     key={item.id}
                     onClick={() => setActiveFaq(item)}
-                    className="bg-white hover:bg-gray-50 p-5 rounded-[24px] min-h-[100px] flex items-center justify-center text-center cursor-pointer transition-all border border-transparent shadow-sm hover:shadow-md group"
+                    className="bg-white hover:bg-[var(--bg-surface)] p-5 rounded-[24px] min-h-[100px] flex items-center justify-center text-center cursor-pointer transition-all border border-[var(--border-color)] shadow-sm hover:shadow-md group"
                   >
-                    <p className="text-xs font-bold text-gray-800 group-hover:text-gray-950 line-clamp-3">
+                    <p className="text-xs font-bold text-[var(--text-primary)] group-hover:text-[var(--text-primary)] line-clamp-3">
                       Q. {item.q}
                     </p>
                   </div>
@@ -191,59 +191,59 @@ export default function Support() {
         {(activeTab === "all" || activeTab === "inquiry") && (
           <section className="mb-10">
             <div className="mb-4">
-              <span className="inline-block px-4 py-1.5 bg-[#FFEE7F] border border-[#FEB95C] text-gray-900 font-extrabold text-xs tracking-wider rounded-[24px] shadow-sm">문의사항</span>
+              <span className="inline-block px-4 py-1.5 bg-[var(--bg-surface)] border border-[var(--color-accent)] text-[var(--text-primary)] font-extrabold text-xs tracking-wider rounded-[24px] shadow-sm">문의사항</span>
             </div>
-            <div className="bg-white rounded-[24px] shadow-sm border border-gray-100 overflow-hidden divide-y divide-gray-100">
+            <div className="bg-white rounded-[24px] shadow-sm border border-[var(--border-color)] overflow-hidden divide-y divide-[var(--border-color)]">
               {filteredInquiries.length === 0 ? (
-                <p className="text-sm text-gray-500 py-8 text-center bg-white">등록된 문의글이 없거나 검색 결과가 없습니다.</p>
+                <p className="text-sm text-[var(--text-muted)] py-8 text-center bg-white">등록된 문의글이 없거나 검색 결과가 없습니다.</p>
               ) : (
                 filteredInquiries.map(item => {
                   const isOpened = openInquiryId === item.id;
                   return (
-                    <div key={item.id} className="divide-y divide-gray-100">
+                    <div key={item.id} className="divide-y divide-[var(--border-color)]">
                       <div 
                         onClick={() => handleInquiryToggle(item.id)}
-                        className="w-full flex justify-between items-center p-4 bg-white hover:bg-gray-50/80 cursor-pointer transition-colors"
+                        className="w-full flex justify-between items-center p-4 bg-white hover:bg-[var(--bg-surface)]/80 cursor-pointer transition-colors"
                       >
                         <div className="flex items-center gap-3 overflow-hidden pr-4">
                           <span className={`text-[10px] px-2.5 py-0.5 font-bold rounded-full shrink-0 ${item.answer ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700'}`}>
                             {item.answer ? '답변완료' : '답변대기'}
                           </span>
-                          <span className="text-xs sm:text-sm font-bold text-gray-800 truncate">{item.title}</span>
+                          <span className="text-xs sm:text-sm font-bold text-[var(--text-primary)] truncate">{item.title}</span>
                         </div>
-                        <span className={`text-gray-400 text-xs transition-transform ${isOpened ? 'rotate-180' : ''}`}>▼</span>
+                        <span className={`text-[var(--text-light)] text-xs transition-transform ${isOpened ? 'rotate-180' : ''}`}>▼</span>
                       </div>
 
                       {isOpened && (
-                        <div className="bg-gray-50/50 p-5 text-xs sm:text-sm space-y-4 border-t border-gray-100">
+                        <div className="bg-[var(--bg-surface)] p-5 text-xs sm:text-sm space-y-4 border-t border-[var(--border-color)]">
                           <div className="bg-white p-4 rounded-[16px] shadow-sm">
-                            <div className="flex justify-between text-[11px] text-gray-400 mb-2 font-medium">
+                            <div className="flex justify-between text-[11px] text-[var(--text-light)] mb-2 font-medium">
                               <span>작성자: {item.writer}</span>
                               <span>{item.date}</span>
                             </div>
-                            <p className="text-gray-700 leading-relaxed font-medium whitespace-pre-line">{item.content}</p>
+                            <p className="text-[var(--text-secondary)] leading-relaxed font-medium whitespace-pre-line">{item.content}</p>
                           </div>
 
                           {item.answer ? (
-                            <div className="bg-[#FFEE7F]/30 border border-[#FEB95C]/30 p-4 rounded-[16px]">
-                              <p className="text-[11px] font-black text-[#FEB95C] mb-1">👑 관리자 답변</p>
-                              <p className="text-gray-800 leading-relaxed font-semibold">{item.answer}</p>
+                            <div className="bg-[var(--bg-surface)] border border-[var(--border-color)] p-4 rounded-[16px]">
+                              <p className="text-[11px] font-black text-[var(--color-primary)] mb-1">👑 관리자 답변</p>
+                              <p className="text-[var(--text-primary)] leading-relaxed font-semibold">{item.answer}</p>
                             </div>
                           ) : (
                             userRole === "admin" && (
-                              <div className="bg-white p-4 rounded-[16px] border border-dashed border-gray-300 shadow-sm">
-                                <p className="text-[11px] font-bold text-gray-500 mb-2">🔧 관리자 전용 답변란</p>
+                              <div className="bg-white p-4 rounded-[16px] border border-dashed border-[var(--border-color)] shadow-sm">
+                                <p className="text-[11px] font-bold text-[var(--text-muted)] mb-2">🔧 관리자 전용 답변란</p>
                                 <div className="flex gap-2">
                                   <input 
                                     type="text"
                                     placeholder="답변 내용을 입력하세요..."
                                     value={adminReplyText}
                                     onChange={(e) => setAdminReplyText(e.target.value)}
-                                    className="flex-1 p-2 border border-gray-200 rounded-[8px] text-xs font-medium focus:outline-none focus:border-[#F46C6F]"
+                                    className="flex-1 p-2 border border-[var(--border-color)] rounded-[8px] text-xs font-medium focus:outline-none focus:border-[var(--color-primary)]"
                                   />
                                   <button 
                                     onClick={() => handleAddAnswer(item.id)}
-                                    className="px-4 py-2 bg-[#F46C6F] hover:bg-[#e05659] text-white font-bold text-xs rounded-[8px] transition-colors"
+                                    className="px-4 py-2 bg-[var(--color-primary)] hover:bg-[var(--color-primary-dark)] text-white font-bold text-xs rounded-[8px] transition-colors"
                                   >
                                     등록
                                   </button>
@@ -265,9 +265,9 @@ export default function Support() {
 
       {/* 🌟 6. [위치 변경] 새로운 문의 등록 모달 팝업창 */}
       {isInquiryModalOpen && (
-        <div className="fixed inset-0 bg-black/40 flex justify-center items-center z-50 p-4 animate-fadeIn">
-          <div className="bg-white p-6 rounded-[24px] max-w-xl w-full shadow-2xl border border-gray-100 relative">
-            <h3 className="text-sm font-black text-gray-900 mb-4 flex items-center gap-1.5">
+        <div className="fixed inset-0 bg-black/40 flex justify-center items-center z-50 p-4">
+          <div className="bg-white p-6 rounded-[24px] max-w-xl w-full shadow-2xl border border-[var(--border-color)] relative">
+            <h3 className="text-sm font-black text-[var(--text-primary)] mb-4 flex items-center gap-1.5">
               <span>✍️</span> 1:1 새로운 문의 등록하기
             </h3>
             
@@ -278,14 +278,14 @@ export default function Support() {
                   placeholder="문의 제목을 입력해 주세요 (최소 4자)."
                   value={newTitle}
                   onChange={(e) => setNewTitle(e.target.value)}
-                  className="w-full p-2.5 border border-gray-200 rounded-[12px] text-xs font-medium focus:outline-none focus:border-[#F46C6F]"
+                  className="w-full p-2.5 border border-[var(--border-color)] rounded-[12px] text-xs font-medium focus:outline-none focus:border-[var(--color-primary)]"
                 />
                 <textarea 
                   placeholder="문의하실 구체적인 내용을 작성해 주세요 (최소 10자)."
                   rows="4"
                   value={newContent}
                   onChange={(e) => setNewContent(e.target.value)}
-                  className="w-full p-3 border border-gray-200 rounded-[12px] text-xs font-medium focus:outline-none focus:border-[#F46C6F] resize-none"
+                  className="w-full p-3 border border-[var(--border-color)] rounded-[12px] text-xs font-medium focus:outline-none focus:border-[var(--color-primary)] resize-none"
                 />
                 
                 {formError && <p className="text-[11px] font-bold text-red-500">{formError}</p>}
@@ -294,21 +294,21 @@ export default function Support() {
                   <button 
                     type="button"
                     onClick={() => setIsInquiryModalOpen(false)}
-                    className="flex-1 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold text-xs rounded-full transition-all"
+                    className="flex-1 py-2.5 bg-[var(--bg-surface)] hover:bg-gray-200 text-[var(--text-secondary)] font-bold text-xs rounded-full transition-all"
                   >
                     취소
                   </button>
                   <button 
                     type="submit"
-                    className="flex-1 py-2.5 bg-[#F46C6F] hover:bg-[#e05659] text-white font-bold text-xs rounded-full shadow transition-all"
+                    className="flex-1 py-2.5 bg-[var(--color-primary)] hover:bg-[var(--color-primary-dark)] text-white font-bold text-xs rounded-full shadow transition-all"
                   >
                     질문 등록 완료
                   </button>
                 </div>
               </form>
             ) : (
-              <div className="bg-gray-50 py-6 px-4 rounded-[16px] text-center border border-dashed border-gray-300">
-                <p className="text-xs text-gray-500 font-bold leading-relaxed mb-4">
+              <div className="bg-[var(--bg-surface)] py-6 px-4 rounded-[16px] text-center border border-dashed border-[var(--border-color)]">
+                <p className="text-xs text-[var(--text-muted)] font-bold leading-relaxed mb-4">
                   🔒 관리자(Admin) 계정은 답변 모드이므로 신규 문의를 남길 수 없습니다.
                 </p>
                 <button 
@@ -323,7 +323,7 @@ export default function Support() {
             {/* 우측 상단 닫기 X 버튼 */}
             <button 
               onClick={() => setIsInquiryModalOpen(false)} 
-              className="absolute top-4 right-5 text-gray-400 hover:text-black font-bold text-sm"
+              className="absolute top-4 right-5 text-[var(--text-light)] hover:text-black font-bold text-sm"
             >
               ✕
             </button>
@@ -334,13 +334,13 @@ export default function Support() {
       {/* 7. FAQ 모달 팝업창 */}
       {activeFaq && (
         <div className="fixed inset-0 bg-black/40 flex justify-center items-center z-50 p-4">
-          <div className="bg-white p-6 rounded-[24px] max-w-md w-full shadow-xl relative border border-gray-100">
+          <div className="bg-white p-6 rounded-[24px] max-w-md w-full shadow-xl relative border border-[var(--border-color)]">
             <div className="mb-4">
-              <span className="text-[10px] bg-[#FFEE7F] text-gray-900 font-black px-2.5 py-0.5 rounded-full">자주 묻는 질문</span>
+              <span className="text-[10px] bg-[var(--bg-surface)] text-[var(--text-primary)] font-black px-2.5 py-0.5 rounded-full">자주 묻는 질문</span>
             </div>
-            <h4 className="text-sm font-black text-gray-900 mb-3 pr-6">Q. {activeFaq.q}</h4>
-            <div className="bg-gray-50 p-4 rounded-[16px] mb-5 border border-gray-100">
-              <p className="text-xs sm:text-sm text-gray-600 leading-relaxed font-medium whitespace-pre-line">
+            <h4 className="text-sm font-black text-[var(--text-primary)] mb-3 pr-6">Q. {activeFaq.q}</h4>
+            <div className="bg-[var(--bg-surface)] p-4 rounded-[16px] mb-5 border border-[var(--border-color)]">
+              <p className="text-xs sm:text-sm text-[var(--text-muted)] leading-relaxed font-medium whitespace-pre-line">
                 {activeFaq.a}
               </p>
             </div>
@@ -350,7 +350,7 @@ export default function Support() {
             >
               닫기
             </button>
-            <button onClick={() => setActiveFaq(null)} className="absolute top-4 right-5 text-gray-400 hover:text-black font-bold text-sm">✕</button>
+            <button onClick={() => setActiveFaq(null)} className="absolute top-4 right-5 text-[var(--text-light)] hover:text-black font-bold text-sm">✕</button>
           </div>
         </div>
       )}

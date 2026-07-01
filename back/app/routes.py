@@ -516,10 +516,6 @@ def create_party():
 def join_party(party_id):
     user_id = int(get_jwt_identity())
     party   = Party.query.get_or_404(party_id)
-    user    = User.query.get(user_id)
-
-    if user in party.kicked_users:
-        return jsonify({'message': '이 파티에서 강퇴당하여 재참여가 불가능합니다.'}), 403
 
     if party.status != StatusEnum.RECRUITING:
         return jsonify({'message': '모집이 마감된 파티입니다.'}), 400
@@ -529,6 +525,7 @@ def join_party(party_id):
         return jsonify({'message': '이미 참여한 파티입니다.'}), 409
 
     db.session.add(PartyMember(party_id=party_id, user_id=user_id))
+    user = User.query.get(user_id)
     user.manner_score = min(50.0, round(user.manner_score + 0.5, 1))
     db.session.commit()
     return jsonify({'message': '파티에 참여했습니다! 매너온도 +0.5°', 'manner_score': user.manner_score}), 200
@@ -546,27 +543,21 @@ def party_chat(party_id):
     db.session.commit()
     return jsonify(serialize_message(msg)), 201
 
-@party_bp.route('/<int:party_id>/status', methods=['PATCH'])
-@jwt_required()
-def update_party_status_by_host(party_id):
+@party_bp.route('/<int:party_id>/close', methods=['PATCH'])
+@jwt_login_required
+def manual_close_party(party_id):
     user_id = int(get_jwt_identity())
     party = Party.query.get_or_404(party_id)
     
     if party.host_id != user_id:
-        return jsonify({'message': '호스트만 상태를 변경할 수 있습니다.'}), 403
+        return jsonify({'message': '호스트만 마감할 수 있습니다.'}), 403
     
-    data = request.get_json()
-    new_status_str = data.get('status') 
-    
-    try:
-        new_status = StatusEnum[new_status_str]
-    except KeyError:
-        return jsonify({'message': '유효하지 않은 상태입니다.'}), 400
+    if party.status != StatusEnum.RECRUITING:
+        return jsonify({'message': '이미 마감된 파티입니다.'}), 400
         
-    party.status = new_status
+    party.status = StatusEnum.CLOSED
     db.session.commit()
-    
-    return jsonify({'message': f'파티 상태가 {new_status.value}로 변경되었습니다.', 'status': party.status.name}), 200
+    return jsonify(serialize_party(party, user_id)), 200
 
 @party_bp.route('/<int:party_id>/status', methods=['PATCH'])
 @admin_required
@@ -590,33 +581,10 @@ def kick_member(party_id, target_user_id):
     if party.host_id != current_user_id:
         return jsonify({'message': '호스트만 강퇴할 수 있습니다.'}), 403
     
-    member = PartyMember.query.filter_by(party_id=party_id, user_id=target_user_id).first_or_404()
-    
-    user_to_kick = User.query.get_or_404(target_user_id)
-    if user_to_kick not in party.kicked_users:
-        party.kicked_users.append(user_to_kick)
-    
+    member = PartyMember.query.filter_by(party_id=party_id, user_id=target_user_id, is_host=False).first_or_404()
     db.session.delete(member)
-    
     db.session.commit()
     return jsonify({'message': '강퇴되었습니다.'}), 200
-
-@party_bp.route('/<int:party_id>/leave', methods=['DELETE'])
-@jwt_login_required
-def leave_party(party_id):
-    user_id = int(get_jwt_identity())
-    
-    member = PartyMember.query.filter_by(party_id=party_id, user_id=user_id).first()
-    if not member:
-        return jsonify({'message': '참여 중인 파티가 아닙니다.'}), 404
-        
-    if member.is_host:
-        return jsonify({'message': '호스트는 파티를 나갈 수 없습니다. 파티를 종료해주세요.'}), 400
-        
-    db.session.delete(member)
-    db.session.commit()
-    
-    return jsonify({'message': '파티에서 퇴장했습니다.'}), 200
 
 # 파티 모임 종료 (Host 전용)
 @party_bp.route('/<int:party_id>/finish', methods=['PATCH'])
@@ -994,7 +962,13 @@ def chatbot():
 - 홈 화면 → '내 주변 추천' 섹션에서 자동 표시
 - 챗봇 추천 탭 → 📍 버튼으로 위치 선택 후 질문
 
+■ 공지사항
+- 상단 메뉴 '공지사항' 또는 푸터 → 고객 → 공지사항 클릭
+- 서비스 업데이트, 점검 안내, 이벤트 정보 등 확인 가능
+- 최신 공지: 서비스 정식 오픈 안내, 파티 매칭 기능 업데이트, AI 챗봇 추천 고도화
+
 친절하고 명확한 한국어로 답변하세요.
+사용자 DB 정보를 활용해 개인화된 안내를 제공하세요.
 사용자 DB 정보를 활용해 개인화된 안내를 제공하세요.
 예: 찜한 식당이 있으면 "회원님이 찜하신 {liked_names} 관련 기능은..." 처럼 안내."""
 
@@ -1257,6 +1231,41 @@ def handle_send_message(data):
 def handle_disconnect():
     pass
 
+
+
+# ── 파티 탈퇴 API ─────────────────────────────────────────────────────────────
+@party_bp.route('/<int:party_id>/leave', methods=['DELETE'])
+@jwt_login_required
+def leave_party(party_id):
+    """파티 탈퇴 (호스트는 불가)"""
+    user_id = int(get_jwt_identity())
+    party   = Party.query.get_or_404(party_id)
+    member  = PartyMember.query.filter_by(party_id=party_id, user_id=user_id).first()
+    if not member:
+        return jsonify({'message': '파티 참여자가 아닙니다.'}), 404
+    if member.is_host:
+        return jsonify({'message': '호스트는 탈퇴할 수 없습니다. 파티를 종료해주세요.'}), 403
+    db.session.delete(member)
+    db.session.commit()
+    return jsonify({'message': '파티에서 탈퇴했습니다.'}), 200
+
+
+# ── 파티 상태 변경 API ──────────────────────────────────────────────────────────
+@party_bp.route('/<int:party_id>/status', methods=['PATCH'])
+@jwt_login_required
+def change_party_status(party_id):
+    """파티 모집 마감/재개 (호스트 전용)"""
+    user_id = int(get_jwt_identity())
+    party   = Party.query.get_or_404(party_id)
+    if party.host_id != user_id:
+        return jsonify({'message': '호스트만 상태를 변경할 수 있습니다.'}), 403
+    data       = request.get_json(force=True)
+    new_status = data.get('status')
+    if new_status not in ['RECRUITING', 'CLOSED']:
+        return jsonify({'message': '유효하지 않은 상태입니다.'}), 400
+    party.status = StatusEnum[new_status]
+    db.session.commit()
+    return jsonify({'message': f"파티 상태가 '{new_status}'로 변경되었습니다.", 'status': new_status}), 200
 
 
 # ── 매너온도 투표 API ────────────────────────────────────────────────────────
