@@ -1353,4 +1353,3 @@ def manner_vote_status():
         'remaining': max(0, 2 - used),
         'votes':     [{'target_id': v.target_id, 'is_positive': v.is_positive} for v in votes],
     }), 200
-
