@@ -398,12 +398,6 @@ button {
 .page-btn { padding: 7px 12px; border-radius: var(--border-radius); border: 1px solid var(--border-color); background: var(--bg-white); color: var(--text-secondary); font-size: .85rem; font-weight: 600; cursor: pointer; }
 .page-btn.active { background: var(--color-primary); color: #fff; border-color: var(--color-primary); }
 .page-btn:hover:not(.active) { background: var(--bg-surface); }
-
-.menu-filter-bar { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-bottom: 20px; }
-.cat-scroll { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; }
-.cat-scroll::-webkit-scrollbar { height: 0; }
-.cat-pill { border: none; padding: 6px 15px; border-radius: 20px; font-size: .8rem; font-weight: 700; white-space: nowrap; cursor: pointer; background: var(--bg-surface); color: var(--text-secondary); transition: all .15s; }
-.cat-pill.active, .cat-pill:hover { background: var(--color-primary); color: #fff; }
 .filter-count { font-size: .85rem; color: var(--text-muted); }
 .sort-select { padding: 7px 12px; border-radius: var(--border-radius); border: 1px solid var(--border-color); font-size: .85rem; background: var(--bg-white); outline: none; }
 

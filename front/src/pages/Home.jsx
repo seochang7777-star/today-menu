@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom'
 import { getRestaurants, getNearby } from '../api/services'
 import { useAuth } from '../App'
 import KakaoMap from '../components/KakaoMap'
+import RestaurantCard from '../components/RestaurantCard'
 import RestaurantSearch from '../components/RestaurantSearch'
 
 const adBannerClass =
@@ -97,19 +98,21 @@ const recommendTitleWrapClass = 'mb-[18px] flex items-center justify-between fon
 const recommendTitleClass = 'relative text-[1.55rem] after:absolute after:left-0 after:bottom-[-8px] after:h-[3px] after:w-[34px] after:rounded-full after:bg-[var(--color-primary)] max-[540px]:text-[1.28rem]'
 const recommendMoreClass = 'text-[0.9rem] text-[#7D4213]'
 const restaurantGridClass = 'grid grid-cols-4 gap-[15px] max-lg:grid-cols-2 max-[540px]:grid-cols-2'
-const restaurantCardClass = 'group overflow-hidden rounded-[8px] border border-[var(--border-color)] bg-white shadow-[var(--shadow-sm)] transition hover:-translate-y-1 hover:shadow-[var(--shadow)]'
-const restaurantImageWrapClass = 'relative h-[154px] overflow-hidden bg-[#FFF4EA] max-[540px]:h-[130px]'
-const restaurantImageClass = 'h-full w-full object-cover transition-transform duration-[280ms] group-hover:scale-105'
-const rankBadgeBaseClass = 'absolute left-0 top-0 grid h-[52px] w-[52px] place-items-center bg-[var(--color-primary)] text-[1.35rem] font-black text-white'
-const rankBadgeAccentClass = 'bg-[var(--color-accent)]'
-const restaurantBodyClass = 'px-[18px] pb-[18px] pt-4 max-[540px]:p-[14px]'
-const restaurantTitleClass = 'mb-1.5 text-[1.08rem] font-black text-[var(--text-primary)]'
-const restaurantMetaClass = 'mb-[5px] flex items-center gap-1 text-[0.88rem] text-[var(--text-secondary)]'
-const restaurantScoreClass = 'font-black text-[var(--color-primary)]'
-const restaurantReviewClass = 'text-[var(--text-secondary)]'
-const restaurantAddressClass = 'mb-[14px] overflow-hidden text-ellipsis whitespace-nowrap text-[0.88rem] text-[var(--text-secondary)]'
-const restaurantTagRowClass = 'flex flex-wrap gap-[7px]'
-const restaurantTagClass = 'rounded-[7px] bg-[#FFF0E4] px-2 py-[5px] text-[0.78rem] font-extrabold text-[var(--color-primary)] max-[540px]:text-[0.72rem]'
+// Restaurant card styles were moved to components/RestaurantCard.jsx.
+// Ranking badge classes were intentionally not moved because the shared card should not show order.
+// const restaurantCardClass = 'group overflow-hidden rounded-[8px] border border-[var(--border-color)] bg-white shadow-[var(--shadow-sm)] transition hover:-translate-y-1 hover:shadow-[var(--shadow)]'
+// const restaurantImageWrapClass = 'relative h-[154px] overflow-hidden bg-[#FFF4EA] max-[540px]:h-[130px]'
+// const restaurantImageClass = 'h-full w-full object-cover transition-transform duration-[280ms] group-hover:scale-105'
+// const rankBadgeBaseClass = 'absolute left-0 top-0 grid h-[52px] w-[52px] place-items-center bg-[var(--color-primary)] text-[1.35rem] font-black text-white'
+// const rankBadgeAccentClass = 'bg-[var(--color-accent)]'
+// const restaurantBodyClass = 'px-[18px] pb-[18px] pt-4 max-[540px]:p-[14px]'
+// const restaurantTitleClass = 'mb-1.5 text-[1.08rem] font-black text-[var(--text-primary)]'
+// const restaurantMetaClass = 'mb-[5px] flex items-center gap-1 text-[0.88rem] text-[var(--text-secondary)]'
+// const restaurantScoreClass = 'font-black text-[var(--color-primary)]'
+// const restaurantReviewClass = 'text-[var(--text-secondary)]'
+// const restaurantAddressClass = 'mb-[14px] overflow-hidden text-ellipsis whitespace-nowrap text-[0.88rem] text-[var(--text-secondary)]'
+// const restaurantTagRowClass = 'flex flex-wrap gap-[7px]'
+// const restaurantTagClass = 'rounded-[7px] bg-[#FFF0E4] px-2 py-[5px] text-[0.78rem] font-extrabold text-[var(--color-primary)] max-[540px]:text-[0.72rem]'
 const quickPanelsClass = 'mb-[18px] grid grid-cols-2 gap-[18px] max-md:grid-cols-1'
 const quickCardBaseClass = 'flex min-h-[230px] items-center justify-between gap-[18px] overflow-hidden rounded-[10px] px-[38px] py-8 max-md:px-[22px] max-md:py-7'
 const quickMapCardClass = '[background:radial-gradient(circle_at_82%_70%,rgba(255,255,255,0.68),transparent_30%),linear-gradient(135deg,#FFF4A8,#FFE67C)]'
@@ -252,6 +255,10 @@ export default function Home() {
           <Link to="/menu" className={recommendMoreClass}>더보기 →</Link>
         </div>
         <div className={restaurantGridClass}>
+          {visibleRestaurants.slice(0, 4).map((r) => (
+            <RestaurantCard key={r.id} r={r} to={`/menu/${r.id}`} />
+          ))}
+          {/* Old inline card markup kept temporarily for reference.
           {visibleRestaurants.slice(0, 4).map((r, index) => (
             <Link to={`/menu/${r.id}`} className={restaurantCardClass} key={r.id}>
               <div className={restaurantImageWrapClass}>
@@ -296,7 +303,7 @@ export default function Home() {
                 </div>
               </div>
             </Link>
-          ))}
+          ))} */}
         </div>
       </section>
 

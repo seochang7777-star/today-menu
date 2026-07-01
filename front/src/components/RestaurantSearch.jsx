@@ -96,7 +96,7 @@ export default function RestaurantSearch({ userLoc, onRegister }) {
           onChange={(e) => setQuery(e.target.value)}
         />
         <button type="submit" disabled={loading} className="btn btn-primary" style={{ whiteSpace: 'nowrap' }}>
-          {loading ? '검색 중...' : '🔍 검색'}
+          {loading ? '검색 중...' : '⌕ 검색'}
         </button>
       </form>
 

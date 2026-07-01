@@ -66,10 +66,10 @@ export default function Header() {
               />
               <button
                 type="submit"
-                className="w-12 border-0 bg-[linear-gradient(135deg,var(--color-primary),#F98082)] text-[1.35rem] font-bold text-white"
+                className="w-12 border-0 bg-[linear-gradient(135deg,var(--color-primary),#F98082)] text-[1.8rem] font-bold text-white"
                 aria-label="검색"
               >
-                ⌕
+                <span className="relative -top-[2px] leading-none">⌕</span>
               </button>
             </form>
           </div>
