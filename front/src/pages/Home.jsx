@@ -285,7 +285,8 @@ export default function Home() {
                 <div className={restaurantTitleClass}>{r.name}</div>
                 <div className={restaurantMetaClass}>
                   <span className={restaurantScoreClass}>★</span>
-                  <span className={restaurantScoreClass}>{(r.avg_rating ?? 0).toFixed(1)}</span>
+                  <span className={restaurantScoreClass}>{(r.avg_rating ?? 0).toFixed(1)}
+                  {r.like_count > 0 && <span style={{fontSize:".72rem",color:"var(--color-primary)",marginLeft:4}}>❤️ {r.like_count}</span>}</span>
                   <span className={restaurantReviewClass}>({r.review_count ?? 0})</span>
                 </div>
                 <div className={restaurantAddressClass}>{r.category || '기타'} · {r.address || '오늘 뭐먹지 추천 맛집'}</div>

@@ -104,20 +104,33 @@ export default function PartyDetail() {
     <div style={{ textAlign: 'center', padding: 60, color: 'var(--text-muted)' }}>로딩 중...</div>
   )
 
+
+
   const handleVote = async (targetId, isPositive) => {
     if (voteRemaining <= 0) { setVoteMsg('오늘 투표 횟수(2회)를 모두 사용했습니다.'); return }
     try {
       const res = await voteManner(targetId, isPositive)
-      setVoteMsg(res.message)
-      setVoteRemaining(res.remaining)
+      setVoteMsg(res.message); setVoteRemaining(res.remaining)
       setVotedToday((prev) => [...prev, targetId])
       setTimeout(() => setVoteMsg(''), 3000)
-    } catch (e) {
-      setVoteMsg(e.response?.data?.message ?? '투표 실패')
-      setTimeout(() => setVoteMsg(''), 3000)
-    }
+    } catch (e) { setVoteMsg(e.response?.data?.message ?? '투표 실패'); setTimeout(() => setVoteMsg(''), 3000) }
   }
-
+  const handleLeaveParty = async () => {
+    if (!window.confirm('정말로 파티에서 퇴장하시겠습니까?')) return
+    try { await api.delete(`/api/party/${partyId}/leave`); alert('파티에서 퇴장했습니다.'); navigate('/party') }
+    catch (e) { alert(e.response?.data?.message || '퇴장 오류') }
+  }
+  const handleReport = async (targetId) => {
+    const reason = window.prompt('신고 사유를 입력해주세요:')
+    if (!reason?.trim()) return
+    try { await api.post(`/api/party/${partyId}/report`, { target_id: targetId, reason }); alert('신고 접수됐습니다.') }
+    catch (e) { alert(e.response?.data?.message || '신고 실패') }
+  }
+  const handleStatusChange = async (newStatus) => {
+    if (!window.confirm(newStatus === 'CLOSED' ? '모집을 마감하시겠습니까?' : '모집을 재개하시겠습니까?')) return
+    try { await api.patch(`/api/party/${partyId}/status`, { status: newStatus }); const d = await getParty(partyId); setParty(d) }
+    catch (e) { alert(e.response?.data?.message || '상태 변경 실패') }
+  }
   const handleJoin = async () => {
     try {
       await joinParty(partyId);

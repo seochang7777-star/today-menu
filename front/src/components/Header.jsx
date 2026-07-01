@@ -88,13 +88,13 @@ export default function Header() {
           <div className="flex items-center justify-end gap-[26px] text-[0.9rem] font-extrabold">
             {user ? (
               <button onClick={handleLogout} className={`${headerIconLink} max-md:hidden`}>
-                <img src="/img/icon/logout.png" className="h-[35px] w-[35px] object-contain" alt="logout" />
+                <img src="/img/logout.png" className="h-[35px] w-[35px] object-contain" alt="logout" />
               </button>
             ) : (
               <>
                 <Link to="/mypage" className={`${headerIconLink} max-md:hidden`} />
                 <Link to="/login" className={`${headerIconLink} max-md:hidden`}>
-                  <img src="/img/icon/login.png" className="h-[35px] w-[35px] object-contain" alt="login" />
+                  <img src="/img/login.png" className="h-[35px] w-[35px] object-contain" alt="login" />
                 </Link>
               </>
             )}
@@ -122,7 +122,7 @@ export default function Header() {
 
           <Link to="/mypage" className={`${headerIconLink} justify-self-end`}>
             <div className="inline-flex min-h-[42px] min-w-[178px] items-center justify-center rounded-2xl bg-[linear-gradient(135deg,var(--color-secondary),var(--color-accent))] px-[22px] text-[0.92rem] font-black text-[#5A3507] shadow-[0_8px_18px_rgba(254,185,92,0.25)] empty:invisible">
-              {user ? <span>{user.nickname}님 환영합니다</span> : null}
+              {user ? <span><Link to="/mypage" className="nav-welcome" style={{textDecoration:"none"}}>{user.nickname}님 환영합니다</Link></span> : null}
             </div>
           </Link>
         </div>
@@ -136,6 +136,7 @@ export default function Header() {
           />
           <div className="fixed bottom-0 right-0 top-0 z-[810] flex w-[min(320px,86vw)] flex-col bg-white shadow-[-18px_0_34px_rgba(0,0,0,0.14)]">
             <div className="flex items-center justify-between border-b border-[var(--border-color)] px-5 py-[18px] font-black">
+              <img src="/img/icon/logo.png" alt="" style={{ height: 28, width: 28, objectFit: 'contain' }} onError={(e) => { e.target.style.display='none' }} />
               <span>오늘 뭐먹지?</span>
               <button className="border-0 bg-transparent text-xl" onClick={() => setMobileOpen(false)}>×</button>
             </div>
@@ -146,7 +147,7 @@ export default function Header() {
                   {user.nickname?.[0] ?? '?'}
                 </div>
                 <div>
-                  <div>{user.nickname}님 환영합니다</div>
+                  <div><Link to="/mypage" className="nav-welcome" style={{textDecoration:"none"}}>{user.nickname}님 환영합니다</Link></div>
                   <small className="text-[var(--text-muted)]">{user.email}</small>
                 </div>
               </div>

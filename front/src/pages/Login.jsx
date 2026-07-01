@@ -156,6 +156,7 @@ export default function Login() {
         background: 'var(--bg-white)', borderRadius: 'var(--border-radius-xl)',
         padding: 40, width: '100%', maxWidth: 420, boxShadow: 'var(--shadow-lg)',
       }}>
+
         <div className="text-center mb-[28px]">
   {/* 기존 CSS 이름(.site-logo)을 쓰고, absolute 정렬에 필요한 속성 3개만 깔끔하게 덧붙입니다 */}
   <div className="site-logo relative justify-center min-h-[40px] pl-3">
@@ -172,6 +173,7 @@ export default function Login() {
 
         <h2 className="text-[1.4rem] font-extrabold mb-[6px] text-center text-gray-950">로그인</h2>
         <p className="text-[0.88rem] text-gray-400 text-center mb-[28px]">계정에 로그인해주세요</p>
+
 
         {/* 소셜 로그인 */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 20 }}>
@@ -236,14 +238,17 @@ export default function Login() {
               value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} />
           </div>
           {error && <div className="alert alert-danger" style={{ marginBottom: 12 }}>{error}</div>}
+
           <button
             type="submit"
             disabled={loading || !!socialLoading}
             className="w-full py-3 px-6 text-lg font-semibold rounded-[12px] bg-[var(--color-primary)] text-white hover:bg-[var(--color-primary-dark)] transition-colors mt-[8px] disabled:opacity-50 disabled:cursor-not-allowed"
           >
+
             {loading ? '로그인 중...' : '이메일로 로그인'}
           </button>
         </form>
+
 
         <hr className="border-0 border-t border-[var(--border-color)] my-[20px]" />
         <Link to="/register"
@@ -253,6 +258,7 @@ export default function Login() {
         </Link>
         <p className="text-center mt-[20px] text-[0.88rem] text-gray-400">
           <a href="#" className="text-[var(--color-primary)] font-semibold">비밀번호 찾기</a> · <a href="#" className="text-[var(--color-primary)] font-semibold">이메일 찾기</a>
+
         </p>
       </div>
     </div>

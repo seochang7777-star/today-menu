@@ -1,5 +1,6 @@
-@import "tailwindcss";
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800;900&display=swap');
+
+@import "tailwindcss";
 
 
 :root {
@@ -527,4 +528,128 @@ button {
 
 @media (max-width: 640px) {
   .stat-row { grid-template-columns: repeat(2, 1fr); }
+}
+
+/* ── 팀원(yeyeon) 병합 CSS ────────────────────────────────────────── */
+
+/* hero-layout (배너 + 트렌드) */
+.hero-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 280px;
+  gap: 24px;
+  margin-bottom: 30px;
+}
+@media (max-width: 1024px) { .hero-layout { grid-template-columns: 1fr; } }
+
+/* food-banner 슬라이더 스타일 */
+.food-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 52px 58px 52px 38px;
+  background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
+  color: #fff;
+  height: 100%;
+}
+.food-banner.alt  { background: linear-gradient(135deg, var(--color-accent), var(--color-primary)); }
+.food-banner.deep { background: linear-gradient(135deg, var(--color-warning), var(--color-primary)); }
+.banner-copy { position: relative; z-index: 2; max-width: 430px; }
+.banner-copy h1 { font-size: clamp(1.8rem, 3.5vw, 2.8rem); line-height: 1.12; font-weight: 900; letter-spacing: -0.02em; margin-bottom: 20px; }
+.banner-copy p   { font-size: 1rem; line-height: 1.8; font-weight: 700; margin-bottom: 28px; }
+.banner-actions  { display: flex; gap: 12px; flex-wrap: wrap; }
+.banner-food { width: min(40%, 280px); aspect-ratio: 1/1; object-fit: cover; border-radius: 999px; border: 10px solid rgba(255,255,255,.7); }
+.banner-dots { position: absolute; left: 50%; bottom: 18px; transform: translateX(-50%); display: flex; gap: 8px; }
+.banner-dots span { width: 10px; height: 10px; border: 2px solid #fff; border-radius: 999px; }
+.banner-dots span.active { background: #fff; }
+
+/* quick-panels */
+.quick-card {
+  min-height: 200px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 28px 32px;
+  border-radius: var(--border-radius-lg);
+  overflow: hidden;
+}
+.quick-card h3 { margin-bottom: 10px; font-size: 1.3rem; font-weight: 900; }
+.quick-card p  { margin-bottom: 18px; font-size: .92rem; font-weight: 600; line-height: 1.7; }
+.map-card { background: linear-gradient(135deg, #FFF9C4, #FFE57C); }
+.ai-card  { background: linear-gradient(135deg, #FFE8E8, #FFD0D2); }
+.map-illust, .robot-illust {
+  display: grid; place-items: center;
+  width: 120px; height: 120px; flex-shrink: 0;
+  border-radius: 999px; background: rgba(255,255,255,.5);
+  font-size: 4rem;
+}
+@media (max-width: 768px) { .quick-card { padding: 22px 18px; } .map-illust, .robot-illust { width: 80px; height: 80px; font-size: 2.8rem; } }
+
+/* ad-banner */
+.ad-banner { width: 100%; height: 260px; overflow: hidden; border-radius: var(--border-radius-lg); margin: 24px 0; background: var(--bg-surface); }
+.ad-banner-link { display: block; width: 100%; height: 100%; }
+.ad-banner img  { width: 100%; height: 100%; object-fit: cover; object-position: center; display: block; }
+
+/* rank-badge */
+.rank-badge { position: absolute; top: 0; left: 0; display: grid; place-items: center; width: 36px; height: 36px; color: #fff; font-size: .9rem; font-weight: 900; background: var(--color-primary); }
+.rank-2, .rank-4 { background: var(--color-accent); }
+
+/* heart-btn */
+.heart-btn { position: absolute; top: 10px; right: 10px; display: grid; place-items: center; width: 28px; height: 28px; border-radius: 999px; background: rgba(255,255,255,.9); color: var(--color-primary); font-size: 1.1rem; box-shadow: 0 2px 8px rgba(0,0,0,.12); }
+
+/* tag-row */
+.tag-row { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.tag-row span { padding: 4px 8px; border-radius: 6px; background: #FFF0E4; color: var(--color-primary); font-size: .75rem; font-weight: 700; }
+
+/* nav-welcome (팀원 스타일) */
+.nav-welcome {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-height: 36px; padding: 0 18px; border-radius: 14px;
+  background: linear-gradient(135deg, var(--color-warning), var(--color-accent));
+  color: var(--color-secondary); font-size: .88rem; font-weight: 900;
+  box-shadow: 0 4px 12px rgba(217,160,91,.25);
+}
+.nav-welcome:empty { visibility: hidden; }
+
+/* logo-clock */
+.logo-clock {
+  display: inline-grid; place-items: center;
+  width: 26px; height: 26px; font-size: .95rem;
+  border: 2px solid var(--color-primary); border-radius: 999px; background: #fff;
+}
+
+/* mobile drawer */
+.mobile-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.42); z-index: 800; }
+.mobile-drawer  { position: fixed; top: 0; right: 0; bottom: 0; width: min(320px,86vw); display: flex; flex-direction: column; background: #fff; z-index: 810; box-shadow: -18px 0 34px rgba(0,0,0,.14); }
+.mobile-drawer-head, .mobile-profile, .mobile-auth { padding: 18px 20px; border-bottom: 1px solid var(--border-color); }
+.mobile-drawer-head { display: flex; align-items: center; justify-content: space-between; font-weight: 900; }
+.mobile-drawer-head button { border: 0; background: transparent; font-size: 1.2rem; }
+.mobile-profile { display: flex; align-items: center; gap: 12px; background: var(--bg-surface); font-weight: 900; }
+.mobile-profile small { color: var(--text-muted); }
+.mobile-links { flex: 1; padding: 8px 0; overflow-y: auto; }
+.mobile-links a { display: block; padding: 14px 20px; border-bottom: 1px solid var(--bg-surface); font-weight: 700; }
+.mobile-auth { display: flex; flex-direction: column; gap: 8px; border-top: 1px solid var(--border-color); }
+
+/* btn-yellow, btn-light */
+.btn-yellow { background: linear-gradient(135deg, var(--color-warning), var(--color-accent)); color: #4B2D07; }
+.btn-light  { background: #fff; color: var(--color-primary); box-shadow: var(--shadow-sm); }
+
+/* header-icon-link */
+.header-icon-link {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  border: 0;
+  background: transparent;
+  color: var(--text-primary);
+  font-size: .75rem;
+  font-weight: 700;
+  cursor: pointer;
+  text-decoration: none;
+}
+.header-icon-link img {
+  width: 32px; height: 32px;
+  object-fit: contain;
 }

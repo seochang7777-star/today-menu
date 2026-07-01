@@ -61,13 +61,6 @@ class Party(db.Model):
     members  = db.relationship('PartyMember',   backref='party', cascade='all, delete-orphan')
     messages = db.relationship('ChatMessage',   backref='party', cascade='all, delete-orphan')
 
-    def refresh_status(self):
-        now = datetime.utcnow()
-        if self.status != StatusEnum.COMPLETED and self.meeting_time < now:
-            self.status = StatusEnum.COMPLETED
-        elif self.status == StatusEnum.RECRUITING and len(self.members) >= self.max_people:
-            self.status = StatusEnum.CLOSED
-        db.session.commit()
 
 class PartyMember(db.Model):
     __tablename__ = 'party_members'

@@ -962,7 +962,13 @@ def chatbot():
 - 홈 화면 → '내 주변 추천' 섹션에서 자동 표시
 - 챗봇 추천 탭 → 📍 버튼으로 위치 선택 후 질문
 
+■ 공지사항
+- 상단 메뉴 '공지사항' 또는 푸터 → 고객 → 공지사항 클릭
+- 서비스 업데이트, 점검 안내, 이벤트 정보 등 확인 가능
+- 최신 공지: 서비스 정식 오픈 안내, 파티 매칭 기능 업데이트, AI 챗봇 추천 고도화
+
 친절하고 명확한 한국어로 답변하세요.
+사용자 DB 정보를 활용해 개인화된 안내를 제공하세요.
 사용자 DB 정보를 활용해 개인화된 안내를 제공하세요.
 예: 찜한 식당이 있으면 "회원님이 찜하신 {liked_names} 관련 기능은..." 처럼 안내."""
 
@@ -1225,6 +1231,41 @@ def handle_send_message(data):
 def handle_disconnect():
     pass
 
+
+
+# ── 파티 탈퇴 API ─────────────────────────────────────────────────────────────
+@party_bp.route('/<int:party_id>/leave', methods=['DELETE'])
+@jwt_login_required
+def leave_party(party_id):
+    """파티 탈퇴 (호스트는 불가)"""
+    user_id = int(get_jwt_identity())
+    party   = Party.query.get_or_404(party_id)
+    member  = PartyMember.query.filter_by(party_id=party_id, user_id=user_id).first()
+    if not member:
+        return jsonify({'message': '파티 참여자가 아닙니다.'}), 404
+    if member.is_host:
+        return jsonify({'message': '호스트는 탈퇴할 수 없습니다. 파티를 종료해주세요.'}), 403
+    db.session.delete(member)
+    db.session.commit()
+    return jsonify({'message': '파티에서 탈퇴했습니다.'}), 200
+
+
+# ── 파티 상태 변경 API ──────────────────────────────────────────────────────────
+@party_bp.route('/<int:party_id>/status', methods=['PATCH'])
+@jwt_login_required
+def change_party_status(party_id):
+    """파티 모집 마감/재개 (호스트 전용)"""
+    user_id = int(get_jwt_identity())
+    party   = Party.query.get_or_404(party_id)
+    if party.host_id != user_id:
+        return jsonify({'message': '호스트만 상태를 변경할 수 있습니다.'}), 403
+    data       = request.get_json(force=True)
+    new_status = data.get('status')
+    if new_status not in ['RECRUITING', 'CLOSED']:
+        return jsonify({'message': '유효하지 않은 상태입니다.'}), 400
+    party.status = StatusEnum[new_status]
+    db.session.commit()
+    return jsonify({'message': f"파티 상태가 '{new_status}'로 변경되었습니다.", 'status': new_status}), 200
 
 
 # ── 매너온도 투표 API ────────────────────────────────────────────────────────

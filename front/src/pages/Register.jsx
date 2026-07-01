@@ -57,6 +57,7 @@ export default function Register() {
   <p className="text-[0.9rem] text-gray-400 mt-2">회원정보를 입력해주세요</p>
 </div>
 
+
         <form id="registerForm" onSubmit={handleSubmit}>
           {/* 이메일 */}
           <div className="form-group form-icon-wrap">
@@ -144,8 +145,9 @@ export default function Register() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full max-w-[320px] py-3 px-6 text-lg font-semibold rounded-[12px] bg-[#F46C6F] text-white hover:opacity-90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full  py-3 px-6 text-lg font-semibold rounded-[12px] bg-[#F46C6F] text-white hover:opacity-90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
+
               {loading ? '가입 중...' : '동의하기'}
             </button>
           </div>

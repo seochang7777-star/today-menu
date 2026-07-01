@@ -18,14 +18,14 @@ import MyPage        from './pages/MyPage'
 import MyPageEdit    from './pages/MyPageEdit'
 import Game          from './pages/Game'
 import NaverCallback from './pages/NaverCallback'
-import NotFound from './pages/NotFound' 
-import ScrollToTop from './components/ScrollToTop'
-import Company from './pages/Company';
-import Terms from './pages/Terms'
+
+import NotFound      from './pages/NotFound'
+import ScrollToTop   from './components/ScrollToTop'
+import Company       from './pages/Company'
+import Terms         from './pages/Terms'
 import Terms2 from './pages/Terms2'
-
-import Support from './pages/Support'
-
+import Support       from './pages/Support'
+import Notice        from './pages/Notice'
 export const AuthContext = createContext(null)
 export const useAuth = () => useContext(AuthContext)
 
@@ -45,9 +45,6 @@ function AuthProvider({ children }) {
     <AuthContext.Provider value={{
       user, loading,
       login:  (data) => {
-        // data = 로그인 응답 { access_token, refresh_token, user_id, nickname, ... }
-        //      또는 프로필 수정 응답 { user_id, nickname, ... } (토큰 없음)
-        // services.js에서 이미 TokenStore.setTokens() 호출 → 여기선 user 정보만 저장
         if (!data) return
         const { access_token, refresh_token, ...userInfo } = data
         setUser(Object.keys(userInfo).length ? userInfo : data)
@@ -73,11 +70,7 @@ export default function App() {
   return (
     <AuthProvider>
       <BrowserRouter>
-      <ScrollToTop />
-        {/*
-          #naverIdLogin — 네이버 SDK가 이 div 안에 버튼을 렌더링함
-          display:none 으로 숨겨두고 우리는 직접 버튼을 만들어 사용
-        */}
+        <ScrollToTop />
         <div id="naverIdLogin" style={{ display: 'none' }} />
 
         <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
@@ -98,12 +91,14 @@ export default function App() {
                 <Route path="/game"                    element={<Game />} />
                 <Route path="/auth/naver/callback"     element={<NaverCallback />} />
                 <Route path="/company"                 element={<Company />} />
-                <Route path="/Terms"                   element={<Terms />} />
-                <Route path="/Terms2"                  element={<Terms2 />} />
-                <Route path="/support"                 element={<Support />} />
-                {/* * NotFound는 항상 Route의 맨 마지막줄에 있어야함  */}
-                <Route path="*"                        element={<NotFound />} /> 
 
+                <Route path="/terms"                   element={<Terms />} />
+                <Route path="/terms2"                  element={<Terms2 />} />
+
+                <Route path="/support"                 element={<Support />} />
+                <Route path="/notice"                  element={<Notice />} />
+                {/* * NotFound는 항상 Route의 맨 마지막줄에 있어야함 */}
+                <Route path="*"                        element={<NotFound />} />
               </Routes>
             </div>
           </main>
