@@ -441,14 +441,18 @@ def list_parties():
         except Exception:
             pass
 
-    parties = Party.query.filter_by(status=status)\
-                         .order_by(Party.created_at.desc()).all()
+    parties = Party.query.filter_by(status=status).order_by(Party.created_at.desc()).all()
+    
+    for p in parties:
+        p.refresh_status()
+        
     return jsonify([serialize_party(p, viewer_id) for p in parties])
 
 
 @party_bp.route('/<int:party_id>', methods=['GET'])
 def get_party(party_id):
     party    = Party.query.get_or_404(party_id)
+    party.refresh_status()
     messages = ChatMessage.query.filter_by(party_id=party_id)\
                                 .order_by(ChatMessage.created_at).all()
     viewer_id = None
@@ -524,6 +528,21 @@ def party_chat(party_id):
     db.session.commit()
     return jsonify(serialize_message(msg)), 201
 
+@party_bp.route('/<int:party_id>/close', methods=['PATCH'])
+@jwt_login_required
+def manual_close_party(party_id):
+    user_id = int(get_jwt_identity())
+    party = Party.query.get_or_404(party_id)
+    
+    if party.host_id != user_id:
+        return jsonify({'message': '호스트만 마감할 수 있습니다.'}), 403
+    
+    if party.status != StatusEnum.RECRUITING:
+        return jsonify({'message': '이미 마감된 파티입니다.'}), 400
+        
+    party.status = StatusEnum.CLOSED
+    db.session.commit()
+    return jsonify(serialize_party(party, user_id)), 200
 
 @party_bp.route('/<int:party_id>/status', methods=['PATCH'])
 @admin_required
@@ -537,6 +556,49 @@ def update_party_status(party_id):
     db.session.commit()
     return jsonify(serialize_party(party))
 
+# 파티 강퇴 (Host 전용)
+@party_bp.route('/<int:party_id>/kick/<int:target_user_id>', methods=['DELETE'])
+@jwt_login_required
+def kick_member(party_id, target_user_id):
+    current_user_id = int(get_jwt_identity())
+    party = Party.query.get_or_404(party_id)
+    
+    if party.host_id != current_user_id:
+        return jsonify({'message': '호스트만 강퇴할 수 있습니다.'}), 403
+    
+    member = PartyMember.query.filter_by(party_id=party_id, user_id=target_user_id, is_host=False).first_or_404()
+    db.session.delete(member)
+    db.session.commit()
+    return jsonify({'message': '강퇴되었습니다.'}), 200
+
+# 파티 모임 종료 (Host 전용)
+@party_bp.route('/<int:party_id>/finish', methods=['PATCH'])
+@jwt_login_required
+def finish_party(party_id):
+    current_user_id = int(get_jwt_identity())
+    party = Party.query.get_or_404(party_id)
+    
+    if party.host_id != current_user_id:
+        return jsonify({'message': '호스트만 종료할 수 있습니다.'}), 403
+        
+    party.status = StatusEnum.COMPLETED
+    db.session.commit()
+    return jsonify({'message': '모임이 종료되었습니다.'}), 200
+
+# 불량 유저 신고 (공통)
+@party_bp.route('/<int:party_id>/report', methods=['POST'])
+@jwt_login_required
+def report_user(party_id):
+    reporter_id = int(get_jwt_identity())
+    data = request.get_json()
+    target_id = data.get('target_id')
+    reason = data.get('reason')
+    
+    # 신고 로직 (Report 모델 저장)
+    new_report = Report(reporter_id=reporter_id, target_id=target_id, reason=reason, party_id=party_id)
+    db.session.add(new_report)
+    db.session.commit()
+    return jsonify({'message': '신고가 접수되었습니다.'}), 201
 
 # ══════════════════════════════════════════════════════════════════════════════
 # MYPAGE
@@ -963,11 +1025,20 @@ def kakao_register_restaurant():
 from flask_socketio import join_room, leave_room, emit as socket_emit
 from app import socketio
 
+def is_user_in_party(user_id, party_id):
+    # 예: PartyMember 테이블에 해당 user_id와 party_id 조합이 존재하는지 확인
+    return PartyMember.query.filter_by(user_id=user_id, party_id=party_id).first() is not None
+
 @socketio.on('join')
 def handle_join(data):
-    """파티 채팅방 입장"""
-    room_id  = str(data.get('room_id', ''))
+    """파티 채팅방 입장 (참여자 검증 포함)"""
+    room_id = str(data.get('room_id', ''))
+    user_id = data.get('sender_id') 
     username = data.get('username', '익명')
+
+    if not user_id or not is_user_in_party(int(user_id), int(room_id)):
+        socket_emit('error', {'message': '참여자만 채팅방에 입장할 수 있습니다.'})
+        return 
 
     join_room(room_id)
 
@@ -1009,13 +1080,17 @@ def handle_leave(data):
 
 @socketio.on('send_message')
 def handle_send_message(data):
-    """메시지 전송 → DB 저장 + 실시간 브로드캐스트"""
+    """메시지 전송 → 참여자 검증 + DB 저장 + 브로드캐스트"""
     room_id   = str(data.get('room_id', ''))
     sender_id = data.get('sender_id')
     content   = data.get('content', '').strip()
 
     if not content or not sender_id:
         socket_emit('error', {'message': '메시지 또는 발신자 정보가 없습니다.'})
+        return
+
+    if not is_user_in_party(int(sender_id), int(room_id)):
+        socket_emit('error', {'message': '참여자만 메시지를 보낼 수 있습니다.'})
         return
 
     try:

@@ -109,6 +109,11 @@ export async function updatePartyStatus(partyId, status) {
   return data
 }
 
+export async function closeParty(partyId) {
+  const { data } = await api.patch(`/api/party/${partyId}/close`)
+  return data
+}
+
 // ── MYPAGE ────────────────────────────────────────────────────────────────────
 export async function getMyPage() {
   const { data } = await api.get('/api/mypage/')

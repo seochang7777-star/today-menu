@@ -1,7 +1,7 @@
 import io from 'socket.io-client'
 import { useState, useEffect, useRef } from 'react'
 import { Link, useParams, useNavigate, useSearchParams } from 'react-router-dom'
-import { getParty, joinParty, voteManner, getMannerVoteStatus } from '../api/services'
+import { getParty, joinParty, voteManner, getMannerVoteStatus, closeParty } from '../api/services'
 import { useAuth } from '../App'
 
 const CAT_ICON = { 한식:'🍚', 일식:'🍣', 중식:'🥟', 양식:'🥩', 분식:'🍜', 치킨:'🍗', 피자:'🍕', 카페:'☕' }
@@ -23,6 +23,10 @@ export default function PartyDetail() {
   const [votedToday,    setVotedToday]    = useState([])
   const [voteMsg,       setVoteMsg]       = useState('')
 
+  const isRecruiting = party ? party.status === 'RECRUITING' : false;
+  const isMember = party ? party.is_member : false;
+  const pct = party ? Math.min(Math.round((party.member_count / party.max_people) * 100), 100) : 0;
+
   // ── 파티 정보 로드 ─────────────────────────────────────────────────────────
   useEffect(() => {
     getParty(partyId)
@@ -37,7 +41,11 @@ export default function PartyDetail() {
 
   // ── 소켓 연결 ──────────────────────────────────────────────────────────────
   useEffect(() => {
-    if (!user) return
+    if (!party || !isMember || !user) return;
+
+    const isUserMember = party?.is_member;
+
+    if (!user || !isMember) return
 
     socket.current = io('http://localhost:5000', {
       transports: ['websocket', 'polling'],
@@ -48,6 +56,7 @@ export default function PartyDetail() {
     socket.current.emit('join', {
       room_id:  partyId,
       username: user.nickname,
+      sender_id: user.user_id,
     })
 
     // 이전 메시지 수신
@@ -66,11 +75,19 @@ export default function PartyDetail() {
 
     return () => {
       socket.current.emit('leave', { room_id: partyId, username: user.nickname })
-      socket.current.disconnect()
+      socket.current?.disconnect()
     }
-  }, [partyId, user])
+  }, [partyId, user, isMember])
 
   // ── 메시지 전송 ────────────────────────────────────────────────────────────
+    const handleTabClick = (key) => {
+    if (key === 'chat' && !isMember) {
+      alert("파티 참여자만 채팅을 이용할 수 있습니다.");
+      return;
+    }
+    setActiveTab(key);
+  }
+  
   const handleChat = (e) => {
     e.preventDefault()
     if (!chatInput.trim() || !socket.current) return
@@ -86,10 +103,6 @@ export default function PartyDetail() {
   if (!party) return (
     <div style={{ textAlign: 'center', padding: 60, color: 'var(--text-muted)' }}>로딩 중...</div>
   )
-
-  const isRecruiting = party.status === 'RECRUITING'
-  const isMember     = party.is_member
-  const pct = Math.min(Math.round((party.member_count / party.max_people) * 100), 100)
 
   const handleVote = async (targetId, isPositive) => {
     if (voteRemaining <= 0) { setVoteMsg('오늘 투표 횟수(2회)를 모두 사용했습니다.'); return }
@@ -107,11 +120,30 @@ export default function PartyDetail() {
 
   const handleJoin = async () => {
     try {
-      await joinParty(partyId)
-      const d = await getParty(partyId)
-      setParty(d); setMessages(d.messages ?? [])
-    } catch (e) { alert(e.response?.data?.message ?? '오류가 발생했습니다.') }
+      await joinParty(partyId);
+      const d = await getParty(partyId);
+      setParty(d); 
+      setMessages(d.messages ?? []);
+      
+      setActiveTab('chat'); 
+      alert("파티에 참여하였습니다! 채팅을 시작해보세요.");
+    } catch (e) { 
+      alert(e.response?.data?.message ?? '오류가 발생했습니다.'); 
+    }
   }
+
+  const handleCloseParty = async () => {
+  if (!window.confirm("정말로 파티 모집을 마감하시겠습니까?")) return;
+  try {
+    const updatedParty = await closeParty(partyId);
+    setParty(updatedParty); // 상태 업데이트로 즉시 UI 반영
+    alert("파티가 마감되었습니다.");
+  } catch (e) {
+    alert(e.response?.data?.message ?? "마감 처리 중 오류가 발생했습니다.");
+  }
+};
+
+
 
   const dummyReviews = [
     { nick: '김철수', score: 5, text: '분위기 좋고 음식도 맛있었어요! 다음에 또 참여하고 싶습니다.' },
@@ -121,46 +153,46 @@ export default function PartyDetail() {
 
   const tabs = [
     { key: 'info',   label: '파티 정보' },
-    { key: 'chat',   label: `💬 채팅 ${messages.length > 0 ? `(${messages.length})` : ''}` },
+    ...(isMember ? [{ key: 'chat', label: `💬 채팅 ${messages.length > 0 ? `(${messages.length})` : ''}` }] : []),
     { key: 'review', label: '리뷰' },
   ]
 
   return (
     <>
-      <Link to="/party" className="btn btn-sm btn-secondary" style={{ marginBottom: 16 }}>← 목록으로</Link>
+      <Link to="/party" className="btn btn-secondary mb-4">← 목록으로</Link>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 320px', gap: 24, alignItems: 'start' }}>
+      <div className="grid grid-cols-1 md:grid-cols-[1fr_320px] gap-6 items-start">
         {/* ── 메인 컬럼 ── */}
         <div>
           <div className="party-detail-hero">
-            <div style={{ textAlign: 'center' }}>
-              <div style={{ fontSize: '4rem' }}>{CAT_ICON[party.restaurant?.category] ?? '🍴'}</div>
-              <div style={{ fontWeight: 700, color: 'var(--text-secondary)', marginTop: 8 }}>배너</div>
+            <div className="text-center">
+              <div className="text-6xl">{CAT_ICON[party.restaurant?.category] ?? '🍴'}</div>
+              <div className="font-bold text-gray-500 mt-2">배너</div>
             </div>
           </div>
 
-          <div style={{ marginBottom: 16 }}>
-            <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap', marginBottom: 8 }}>
+          <div className="mb-4">
+            <div className="flex gap-2 items-center flex-wrap mb-2">
               <span className={`badge ${isRecruiting ? 'badge-success' : 'badge-muted'}`}>
                 {isRecruiting ? '모집 중' : party.status === 'CLOSED' ? '마감' : '완료'}
               </span>
               {isMember && <span className="badge badge-info">✅ 참여 중</span>}
             </div>
-            <h2 style={{ fontSize: '1.4rem', fontWeight: 900, marginBottom: 6 }}>{party.title}</h2>
-            <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', fontSize: '.85rem', color: 'var(--text-muted)' }}>
+            <h2 className="text-2xl font-black mb-1.5">{party.title}</h2>
+            <div className="flex gap-3 flex-wrap text-sm text-gray-500">
               <span>🍽️ {party.restaurant?.name ?? '식당 없음'}</span>
               <span>👤 {party.host?.nickname}</span>
-              <span>🕐 {party.meeting_time ? new Date(party.meeting_time).toLocaleString('ko-KR', { month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit' }) : ''}</span>
+              <span>🕐 {party.meeting_time ? new Date(party.meeting_time).toLocaleString('ko-KR') : ''}</span>
             </div>
           </div>
 
-          <div className="party-body-section" style={{ padding: '14px 18px', marginBottom: 14 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '.85rem', fontWeight: 600, marginBottom: 8 }}>
+          <div className="party-body-section p-4 mb-4">
+            <div className="flex justify-between text-sm font-semibold mb-2">
               <span>모집 현황</span><span>{party.member_count}/{party.max_people}명</span>
             </div>
-            <div className="progress-bar" style={{ height: 8 }}>
-              <div className={`progress-fill${party.member_count >= party.max_people ? ' full' : ''}`}
-                style={{ width: `${pct}%` }} />
+            <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+              <div className={`h-full bg-green-600 transition-all ${party.member_count >= party.max_people ? 'bg-red-500' : ''}`}
+                   style={{ width: `${pct}%` }} />
             </div>
           </div>
 
@@ -197,7 +229,7 @@ export default function PartyDetail() {
           )}
 
           {/* 채팅 탭 */}
-          {activeTab === 'chat' && (
+          {activeTab === 'chat' && isMember && (
             <div className="party-body-section">
               <h3 style={{ marginBottom: 14 }}>💬 파티 채팅</h3>
               <div ref={chatRef}
@@ -211,11 +243,27 @@ export default function PartyDetail() {
                   return (
                     <div key={i} style={{ alignSelf: mine ? 'flex-end' : 'flex-start', maxWidth: '75%' }}>
                       {!mine && <div style={{ fontSize: '.72rem', color: 'var(--text-muted)', marginBottom: 2 }}>{msg.sender?.nickname ?? '알 수 없음'}</div>}
-                      <div style={{ padding: '9px 13px', borderRadius: mine ? '12px 12px 3px 12px' : '12px 12px 12px 3px', background: mine ? 'var(--color-secondary)' : 'var(--bg-surface)', color: mine ? '#fff' : 'var(--text-primary)', fontSize: '.88rem', lineHeight: 1.5 }}>
+                      <div style={{ padding: '9px 13px', borderRadius: mine ? '12px 12px 3px 12px' : '12px 12px 12px 3px', background: mine ? 'var(--color-primary)' : 'var(--bg-surface)', color: mine ? '#fff' : 'var(--text-primary)', fontSize: '.88rem', lineHeight: 1.5 }}>
                         {msg.content}
                       </div>
                       <div style={{ fontSize: '.7rem', color: 'var(--text-light)', marginTop: 2, textAlign: mine ? 'right' : 'left' }}>
-                        {msg.created_at ? new Date(msg.created_at).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' }) : ''}
+                        {msg.created_at ? 
+                          (() => {
+                            // 1. 서버에서 받은 문자열을 Date 객체로 생성
+                            const date = new Date(msg.created_at);
+                            
+                            // 2. 현재 시간에서 한국 시간대인 9시간(9 * 60 * 60 * 1000 밀리초)을 더함
+                            // 이미 브라우저가 로컬 시간대로 해석했다면, UTC로 변환한 뒤 9시간을 더합니다.
+                            const kstDate = new Date(date.getTime() + (9 * 60 * 60 * 1000));
+                            
+                            // 3. 시간 형식으로 변환
+                            return kstDate.toLocaleTimeString('ko-KR', { 
+                                hour: '2-digit', 
+                                minute: '2-digit', 
+                                hour12: true 
+                            });
+                          })() 
+                        : ''}
                       </div>
                     </div>
                   )
@@ -269,22 +317,45 @@ export default function PartyDetail() {
         </div>
 
         {/* ── 사이드 컬럼 ── */}
-        <div style={{ position: 'sticky', top: 'calc(var(--header-h) + var(--nav-h) + 16px)' }}>
-          <div className="party-info-box" style={{ marginBottom: 14 }}>
-            <div style={{ fontSize: '.78rem', color: 'var(--text-muted)', marginBottom: 4 }}>파티 참여</div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
-              <span style={{ fontWeight: 800, fontSize: '1.1rem' }}>{party.restaurant?.name ?? '식당'}</span>
+        <div className="sticky top-[166px]">
+          <div className="party-info-box mb-4">
+            <div className="text-xs text-gray-500 mb-1">파티 참여</div>
+            <div className="flex justify-between items-center mb-4">
+              <span className="font-extrabold text-lg">{party.restaurant?.name ?? '식당'}</span>
               <span className={`badge ${isRecruiting ? 'badge-success' : 'badge-muted'}`}>
                 {isRecruiting ? '모집중' : '마감'}
               </span>
             </div>
+
+            {/* 1. 호스트 전용: 모집 중일 때 마감 버튼 */}
+            {party.is_host && isRecruiting && (
+              <button className="btn btn-warning btn-block" onClick={handleCloseParty} style={{ marginBottom: 10 }}>
+                🚫 모집 마감하기
+              </button>
+            )}
+
+            {/* 2. 참여자/호스트: 마감된 경우 채팅방 입장 */}
+            {!isRecruiting && isMember && (
+              <button className="btn btn-secondary btn-block" onClick={() => setActiveTab('chat')} style={{ marginBottom: 10 }}>
+                💬 채팅방 입장하기
+              </button>
+            )}
+
+            {/* 3. 일반 사용자/참여 대기: 참여하기 버튼 */}
             {!isMember && isRecruiting && user && (
               <button className="btn btn-primary btn-block btn-lg" onClick={handleJoin}>
                 🍽️ 파티 참여하기
               </button>
             )}
-            {isMember && <button className="btn btn-secondary btn-block" disabled>✅ 이미 참여 중</button>}
+
+            {/* 4. 이미 참여 중일 때 */}
+            {isMember && isRecruiting && (
+              <button className="btn btn-secondary btn-block" disabled>✅ 이미 참여 중</button>
+            )}
+
+            {/* 5. 비로그인 시 */}
             {!user && <Link to="/login" className="btn btn-primary btn-block">로그인 후 참여</Link>}
+
             <div style={{ marginTop: 12, display: 'flex', justifyContent: 'space-between', fontSize: '.82rem', color: 'var(--text-muted)' }}>
               <span>참여 인원</span>
               <span style={{ fontWeight: 700 }}>{party.member_count}/{party.max_people}명</span>
@@ -313,6 +384,19 @@ export default function PartyDetail() {
                   <div style={{ fontSize: '.75rem', color: 'var(--text-muted)' }}>{m.is_host ? '호스트' : '참여자'}</div>
                 </div>
                 {m.is_host && <span className="badge badge-primary" style={{marginRight:4}}>호스트</span>}
+              {party.is_host && !m.is_host && (
+                <button 
+                  onClick={() => {
+                    if (window.confirm(`${m.user?.nickname}님을 정말로 강퇴하시겠습니까?`)) {
+                      // 강퇴 API 함수 (기존에 구현하신 함수명으로 사용하세요)
+                      // handleKick(m.user.user_id);
+                    }
+                  }}
+                  style={{ marginRight: 8, fontSize: '0.7rem', padding: '2px 6px', color: '#e53e3e', border: '1px solid #e53e3e', borderRadius: 4, cursor: 'pointer' }}
+                >
+                  강퇴
+                </button>
+              )}
               {user && m.user?.user_id !== user.user_id && (
                 <div style={{display:'flex',gap:3,flexShrink:0}}>
                   <button onClick={() => handleVote(m.user.user_id, true)}

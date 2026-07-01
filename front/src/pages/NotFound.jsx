@@ -14,23 +14,17 @@ export default function NotFound() {
       padding: '20px',
       backgroundColor: 'var(--bg-background)'
     }}>
-      {/* 귀여운 에러 아이콘 스티커 느낌 */}
-      <div style={{
-        fontSize: '6rem',
-        marginBottom: '10px',
-        animation: 'bounce 2s infinite'
-      }}>
-        🚧
-      </div>
-
-      <h1 style={{
-        fontSize: '2.5rem',
-        fontWeight: 'bold',
-        color: '#374151',
-        marginBottom: '10px'
-      }}>
-        공사 중이거나 찾을 수 없는 페이지입니다
-      </h1>
+      
+      {/* 🌟 🚧 이모지 대신 public 폴더에 있는 시그니처 로고 이미지를 삽입했습니다 */}
+      <img 
+        src="/img/icon/not_found.png" 
+        alt="not_found" 
+        style={{
+          width: '420px',                  // 로고 가로 크기 (원하는 크기로 변경 가능)
+          height: 'auto',                  // 가로 세로 비율 유지
+          animation: 'bounce 2s infinite'  // 기존에 있던 통통 튀는 애니메이션 그대로 연동!
+        }} 
+      />
 
       <p style={{
         fontSize: '1.1rem',
@@ -39,9 +33,7 @@ export default function NotFound() {
         marginBottom: '30px',
         lineHeight: '1.6'
       }}>
-        요청하신 페이지가 존재하지 않거나, <br />
-        <strong>현재 팀원들이 열심히 개발 중인 공간</strong>입니다. <br />
-        조금만 기다려주시면 멋진 기능으로 찾아올게요!
+        죄송합니다. 현재 찾을 수 없는 페이지를 요청 하셨습니다.
       </p>
 
       {/* 버튼 구역 (이전/홈) */}
@@ -50,7 +42,7 @@ export default function NotFound() {
           onClick={() => navigate(-1)}
           style={{
             padding: '10px 20px',
-            borderRadius: '24px', // 삼성 스타일 라운딩
+            borderRadius: '24px', 
             border: '1px solid #d1d5db',
             backgroundColor: '#fff',
             color: '#374151',

@@ -107,7 +107,7 @@ export default function MyPageEdit() {
         allergies: form.allergies,
         gender: form.gender,    // ← 추가
         address: form.address,   // ← 추가
-        preferences: form.preferences,  // routes.py: data.get('preferences') → likes
+        likes: form.preferences,  // routes.py: data.get('preferences') → likes
         dislikes: form.dislikes,      // routes.py: data.get('dislikes')
       }
       const updated = await updateMyPageProfile(payload)

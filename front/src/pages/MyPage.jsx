@@ -1,11 +1,11 @@
 // src/pages/MyPage.jsx
 import { useState, useEffect, useRef } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-// 💡 withdrawUser (회원탈퇴 API) 함수를 임포트 목록에 추가했습니다.
-// withdrawUser를 지우고 원래대로 되돌립니다.
 import { getMyPage, toggleLike, saveFavoriteLocations, searchKakao } from '../api/services'
 import { useAuth } from '../App'
 import { processTags } from '../utils'
+
+const FAVORITE_LIMIT = 5   // 메뉴 찜목록 기본 표시 개수 (초과 시 '전체보기' 토글)
 
 export default function MyPage() {
   const navigate = useNavigate()
@@ -15,7 +15,7 @@ export default function MyPage() {
 
   const [data, setData] = useState(null)
   const [activeTab, setActiveTab] = useState('liked')
-  const [showAllFavorites, setShowAllFavorites] = useState(false)
+  const [showAllFavorites, setShowAllFavorites] = useState(false)   // 찜목록 전체보기 토글
   const [savedLocs, setSavedLocs] = useState([])
   const [locSearch, setLocSearch] = useState('')
   const [locResults, setLocResults] = useState([])
@@ -97,17 +97,17 @@ export default function MyPage() {
     }))
   }
 
+  // 통계 카드 '찜한 메뉴' 클릭 시 찜목록 섹션으로 스크롤 + 좋아요 탭 활성화 + 전체보기
   const handleFavoriteView = () => {
     setActiveTab('liked')
     setShowAllFavorites(true)
     favoriteMenusRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
   }
 
- // ── 회원 탈퇴 ────────────────────────────────────────────────────────────
+  // ── 회원 탈퇴 ────────────────────────────────────────────────────────────
   const handleWithdraw = async () => {
     if (!window.confirm('정말로 회원 탈퇴를 하시겠습니까?')) return
     try {
-      // 💡 존재하지 않는 외부 API 호출을 지우고, 기존 작성하셨던 인증 해제와 이동만 남깁니다.
       ctxLogout()
       alert('회원 탈퇴가 완료되었습니다.')
       navigate('/')
@@ -181,9 +181,8 @@ export default function MyPage() {
       <div className="stat-row">
         <button
           type="button"
-          className="stat-card"
+          className="stat-card cursor-pointer text-center transition hover:-translate-y-0.5 hover:border-[#ff6b6b] hover:shadow-md"
           onClick={handleFavoriteView}
-          style={{ cursor: 'pointer', textAlign: 'center' }}
         >
           <div className="stat-num">{likes.length}</div>
           <div className="stat-label">찜한 메뉴</div>
@@ -217,7 +216,7 @@ export default function MyPage() {
       {/* ── 프로필 + 매너점수 ── */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 360px', gap: 16, marginBottom: 16 }}>
         <div className="profile-section">
-          <div className="flex-between mb-16">
+          <div className="mb-4 flex items-center justify-between gap-3">
             <h3>프로필</h3>
             <Link to="/mypage/edit" className="btn btn-sm btn-secondary">수정</Link>
           </div>
@@ -245,7 +244,7 @@ export default function MyPage() {
         </div>
 
         <div className="profile-section">
-          <div className="flex-between mb-16">
+          <div className="mb-4 flex items-center justify-between gap-3">
             <h3>매너점수</h3>
           </div>
           <div style={{ display: 'flex', gap: 16, alignItems: 'center' }}>
@@ -293,9 +292,9 @@ export default function MyPage() {
 
       {/* ── 음식 취향 ── */}
       <div className="profile-section">
-        <div className="flex-between mb-16">
+        <div className="mb-4 flex items-center justify-between gap-3">
           <h3>🍽️ 나의 음식 취향</h3>
-            <Link to="/mypage/edit#food-preferences" className="btn btn-sm btn-secondary">수정 →</Link>
+          <Link to="/mypage/edit#food-preferences" className="btn btn-sm btn-secondary">수정 →</Link>
         </div>
         <div style={{ marginBottom: 16 }}>
           <div style={{ fontSize: '.82rem', fontWeight: 700, color: '#1890ff', marginBottom: 8 }}>👍 좋아하는 음식</div>
@@ -327,25 +326,24 @@ export default function MyPage() {
         </div>
       </div>
 
-      {/* ── 메뉴 찜목록 ── */}
-      <div className="profile-section" ref={favoriteMenusRef} id="favorite-menus">
-        <div className="flex-between mb-16">
+      {/* ── 메뉴 찜목록 (기본 FAVORITE_LIMIT개, 펼치기로 전체보기) ── */}
+      <div className="profile-section scroll-mt-28" ref={favoriteMenusRef} id="favorite-menus">
+        <div className="mb-4 flex items-center justify-between gap-3">
           <h3>메뉴 찜목록</h3>
-          <button type="button" onClick={handleFavoriteView} className="btn btn-sm btn-secondary">
-            선택보기 →
-          </button>
+          {liked_logs.length > FAVORITE_LIMIT && activeTab === 'liked' && (
+            <span className="text-xs text-gray-400">총 {liked_logs.length}개 중 {showAllFavorites ? liked_logs.length : FAVORITE_LIMIT}개 표시</span>
+          )}
         </div>
-        <div style={{ display: 'flex', gap: 6, marginBottom: 16 }}>
+        <div className="flex gap-1.5 mb-4">
           {[['liked', '좋아요'], ['disliked', '싫어요']].map(([key, label]) => (
             <button
               key={key}
               onClick={() => setActiveTab(key)}
-              style={{
-                padding: '7px 20px', borderRadius: 6, border: 'none', cursor: 'pointer',
-                fontWeight: 700, fontSize: '.88rem',
-                background: activeTab === key ? 'var(--color-secondary)' : 'var(--bg-surface)',
-                color: activeTab === key ? '#fff' : 'var(--text-muted)',
-              }}
+              className={`px-5 py-1.5 rounded-md text-sm font-bold transition-colors ${
+                activeTab === key
+                  ? 'bg-rose-500 text-white'
+                  : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
+              }`}
             >
               {label}
             </button>
@@ -354,31 +352,44 @@ export default function MyPage() {
 
         {activeTab === 'liked' && (
           liked_logs.length > 0 ? (
-            <div className="grid-4">
-              {(showAllFavorites ? liked_logs : liked_logs.slice(0, 4)).map((log) => (
-                <Link
-                  to={`/menu/${log.restaurant?.id ?? log.recommended_restaurant_id}`}
-                  className="card rest-card"
-                  key={log.log_id}
-                >
-                  <div className="card-img" style={{ fontSize: '2rem' }}>🍴</div>
-                  <div className="card-body">
-                    <span className="badge badge-primary">{log.restaurant?.category ?? '기타'}</span>
-                    <div className="card-title mt-8">{log.restaurant?.name ?? '식당'}</div>
-                    <div className="rest-addr" style={{ marginTop: 4 }}>
-                      {(log.restaurant?.address ?? '').slice(0, 20)}
-                      {(log.restaurant?.address?.length ?? 0) > 20 ? '...' : ''}
+            <>
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+                {(showAllFavorites ? liked_logs : liked_logs.slice(0, FAVORITE_LIMIT)).map((log) => (
+                  <Link
+                    to={`/menu/${log.restaurant?.id ?? log.recommended_restaurant_id}`}
+                    className="card rest-card"
+                    key={log.log_id}
+                  >
+                    <div className="card-img" style={{ fontSize: '2rem' }}>🍴</div>
+                    <div className="card-body">
+                      <span className="badge badge-primary">{log.restaurant?.category ?? '기타'}</span>
+                      <div className="card-title mt-8">{log.restaurant?.name ?? '식당'}</div>
+                      <div className="rest-addr" style={{ marginTop: 4 }}>
+                        {(log.restaurant?.address ?? '').slice(0, 20)}
+                        {(log.restaurant?.address?.length ?? 0) > 20 ? '...' : ''}
+                      </div>
                     </div>
-                  </div>
-                </Link>
-              ))}
-            </div>
+                  </Link>
+                ))}
+              </div>
+              {liked_logs.length > FAVORITE_LIMIT && (
+                <div className="flex justify-center mt-4">
+                  <button
+                    type="button"
+                    onClick={() => setShowAllFavorites((v) => !v)}
+                    className="px-5 py-1.5 rounded-md text-sm font-bold bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors"
+                  >
+                    {showAllFavorites ? '접기 ▲' : `전체 ${liked_logs.length}개 보기 ▼`}
+                  </button>
+                </div>
+              )}
+            </>
           ) : (
             <div className="empty-state">
               <div className="empty-icon">❤️</div>
               <p>아직 찜한 메뉴가 없습니다</p>
               <Link to="/menu" className="btn btn-primary btn-sm" style={{ marginTop: 12 }}>
-                メニュー 둘러보기
+                메뉴 둘러보기
               </Link>
             </div>
           )
@@ -404,7 +415,7 @@ export default function MyPage() {
 
       {/* ── 활동내역 ── */}
       <div className="profile-section">
-        <div className="flex-between mb-16">
+        <div className="mb-4 flex items-center justify-between gap-3">
           <h3>활동내역</h3>
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 12 }}>
@@ -413,16 +424,21 @@ export default function MyPage() {
               key={log.log_id}
               style={{ display: 'flex', gap: 14, padding: 14, background: 'var(--bg-white)', border: '1px solid var(--border-color)', borderRadius: 'var(--border-radius-lg)' }}
             >
-              <div style={{ width: 40, height: 40, borderRadius: '50%', background: '#FFF5F5', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.1rem', flexShrink: 0 }}>
-                🤖
-              </div>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: '.72rem', fontWeight: 700, color: 'var(--text-muted)', marginBottom: 2 }}>추천</div>
-                <div style={{ fontWeight: 700, fontSize: '.9rem' }}>{log.restaurant?.name ?? '식당 추천'}</div>
-                <div style={{ fontSize: '.8rem', color: 'var(--text-muted)', marginTop: 2 }}>
-                  {log.restaurant?.category ?? ''} · {log.is_liked ? '찜함' : '추천만'}
+              <Link
+                to={`/menu/${log.restaurant?.id ?? log.recommended_restaurant_id}`}
+                style={{ display: 'flex', gap: 14, flex: 1, minWidth: 0, textDecoration: 'none', color: 'inherit' }}
+              >
+                <div style={{ width: 40, height: 40, borderRadius: '50%', background: '#FFF5F5', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.1rem', flexShrink: 0 }}>
+                  🤖
                 </div>
-              </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: '.72rem', fontWeight: 700, color: 'var(--text-muted)', marginBottom: 2 }}>추천</div>
+                  <div style={{ fontWeight: 700, fontSize: '.9rem' }}>{log.restaurant?.name ?? '식당 추천'}</div>
+                  <div style={{ fontSize: '.8rem', color: 'var(--text-muted)', marginTop: 2 }}>
+                    {log.restaurant?.category ?? ''} · {log.is_liked ? '찜함' : '추천만'}
+                  </div>
+                </div>
+              </Link>
               <button
                 onClick={() => handleLike(log.log_id)}
                 style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.1rem' }}
@@ -462,7 +478,7 @@ export default function MyPage() {
 
       {/* ── 저장 장소 ── */}
       <div className="profile-section">
-        <div className="flex-between mb-16">
+        <div className="mb-4 flex items-center justify-between gap-3">
           <h3>
             📍 저장 장소{' '}
             <span style={{ fontSize: '.8rem', color: 'var(--text-muted)', fontWeight: 400 }}>
