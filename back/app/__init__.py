@@ -47,3 +47,18 @@ def create_app():
     app.register_blueprint(api_bp)
 
     return app
+
+
+# ALLOWED_ORIGINS = [
+#     'http://localhost:5173',
+#     'http://127.0.0.1:5173',
+#     'https://your-app.vercel.app',  # ← Vercel 배포 URL
+# ]
+
+# socketio = SocketIO(
+#     cors_allowed_origins=ALLOWED_ORIGINS,
+#     async_mode='eventlet',
+# )
+
+# CORS(app, supports_credentials=True,
+#      resources={r'/*': {'origins': ALLOWED_ORIGINS}})

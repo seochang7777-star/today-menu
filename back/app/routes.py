@@ -444,15 +444,30 @@ def list_parties():
     parties = Party.query.filter_by(status=status).order_by(Party.created_at.desc()).all()
     
     for p in parties:
-        p.refresh_status()
-        
+        now = datetime.utcnow()
+        if p.status != StatusEnum.COMPLETED and p.meeting_time < now:
+            p.status = StatusEnum.COMPLETED
+        elif p.status == StatusEnum.RECRUITING and len(p.members) >= p.max_people:
+            p.status = StatusEnum.CLOSED
+    try:
+        db.session.commit()
+    except Exception:
+        db.session.rollback()
     return jsonify([serialize_party(p, viewer_id) for p in parties])
 
 
 @party_bp.route('/<int:party_id>', methods=['GET'])
 def get_party(party_id):
     party    = Party.query.get_or_404(party_id)
-    party.refresh_status()
+    now = datetime.utcnow()
+    if party.status != StatusEnum.COMPLETED and party.meeting_time < now:
+        party.status = StatusEnum.COMPLETED
+        try: db.session.commit()
+        except Exception: db.session.rollback()
+    elif party.status == StatusEnum.RECRUITING and len(party.members) >= party.max_people:
+        party.status = StatusEnum.CLOSED
+        try: db.session.commit()
+        except Exception: db.session.rollback()
     messages = ChatMessage.query.filter_by(party_id=party_id)\
                                 .order_by(ChatMessage.created_at).all()
     viewer_id = None
@@ -585,20 +600,12 @@ def finish_party(party_id):
     db.session.commit()
     return jsonify({'message': '모임이 종료되었습니다.'}), 200
 
-# 불량 유저 신고 (공통)
+# 불량 유저 신고 (공통) - Report 모델 추가 전 임시 처리
 @party_bp.route('/<int:party_id>/report', methods=['POST'])
 @jwt_login_required
 def report_user(party_id):
-    reporter_id = int(get_jwt_identity())
-    data = request.get_json()
-    target_id = data.get('target_id')
-    reason = data.get('reason')
-    
-    # 신고 로직 (Report 모델 저장)
-    new_report = Report(reporter_id=reporter_id, target_id=target_id, reason=reason, party_id=party_id)
-    db.session.add(new_report)
-    db.session.commit()
-    return jsonify({'message': '신고가 접수되었습니다.'}), 201
+    # TODO: Report 모델 추가 후 구현 예정
+    return jsonify({'message': '신고가 접수되었습니다. (준비 중)'}), 201
 
 # ══════════════════════════════════════════════════════════════════════════════
 # MYPAGE
@@ -824,8 +831,84 @@ def chatbot():
         # 매너온도
         manner = user.manner_score
 
+        # ── 이용약관 + 개인정보처리방침 전문 (GPT 컨텍스트용) ───────────────
+        TERMS_SUMMARY = """
+[이용약관 전문]
+제1조(목적): AI 기반 맞춤형 식단 제안, 실시간 위치 기반 밥친구 파티 매칭, 로컬 골목상권 상생 마케팅 서비스 이용 관련 권리·의무·책임 규정.
+
+제2조(용어 정의):
+- 서비스: AI 메뉴 추천, 커뮤니티 파티 매칭, 소상공인 마케팅 지원 등 일체의 서비스
+- 회원: 약관에 동의하고 계정을 등록하여 서비스를 이용하는 자
+- 파티: 회원이 배달 최소주문금액 충족 또는 친목 도모를 목적으로 식당·시간을 지정하여 생성한 실시간 모임
+- 파트너 상인: 플랫폼에 입점하여 식당 정보 및 프로모션을 제공하는 소상공인
+- 게시물: 회원이 서비스 내 게시한 글·사진·채팅 등 모든 정보
+
+제3조(약관 변경): 7일 전 공지, 중대 변경 시 30일 전 고지. 이후 서비스 계속 이용 시 동의 간주.
+
+제4조(회원가입): 이메일/비밀번호/닉네임 필수. 타인 명의 도용·허위정보 기재 시 승인 거절 또는 이용계약 해지 가능. JWT 토큰 관리 소홀로 발생한 손해는 회원 책임.
+
+제5조(AI 추천 면책): OpenAI API 활용. AI 추천 결과는 완전무결 보장 불가. 식당 위생·실시간 영업 여부·맛 미보장. 알레르기 반응 등 소비 결과는 전적으로 회원 책임.
+
+제6조(파티 이용수칙):
+- 노쇼(No-Show) 금지
+- 파티 채팅에서 욕설·비방·성희롱·종교/정치적 포교 금지
+- 식사비 정산 회피·지연 금지
+- 위반 시 서비스 이용 제한, 파티 개설 권한 박탈 가능
+
+제7조(소상공인 보호): 악성 리뷰·허위사실 유포로 상인 영업 방해 금지.
+
+제8조(게시물 저작권): 게시물 저작권은 작성자에게 귀속. 타인 저작권 침해 시 회원 책임. 법령 위반·음란·명예훼손 게시물은 사전 통지 없이 삭제 가능.
+
+제9조(서비스 변경·중단): 정기 점검·외부 API 정책 변화·서버 점검 시 서비스 일부 수정·중단 가능. 불가항력 사유로 인한 데이터 유실은 면책.
+
+제10조(이용 제한·해지): 언제든지 탈퇴 가능. 약관 위반 시 경고→일시정지→영구이용정지 단계 조치.
+
+제11조(준거법): 대한민국 법률 적용. 분쟁 발생 시 민사소송법상 관할법원.
+"""
+        PRIVACY_SUMMARY = """
+[개인정보처리방침 전문]
+1조(총칙): 정보통신망법·개인정보보호법 준수. 약관 안내 페이지 동의 시 수집·이용 동의 간주.
+
+2조(수집 항목):
+- 필수: 이메일, 비밀번호, 닉네임
+- 자동 생성: JWT 토큰, 서비스 이용 기록, 접속 로그, 쿠키, IP 정보
+- 선택: GPS 위치 정보(카카오맵 API 이용 시)
+- 수집 방법: 회원가입 폼 입력, 서비스 이용 중 자동 생성 로그, 브라우저 쿠키
+
+3조(이용 목적):
+- 회원 관리·신원 확인 (JWT 기반 안전한 로그인)
+- 맞춤형 AI 서비스 제공 (OpenAI API 연동 메뉴 추천)
+- 위치 기반 파티 매칭 서비스 운영
+- 소상공인 상생 마케팅 활용
+
+4조(제3자 제공):
+- 원칙적으로 제3자 제공 불가
+- OpenAI API: 질문 텍스트만 전송, 이메일·패스워드 등 계정 식별 정보 절대 미포함
+- 카카오맵 API: 위경도 좌표만 연동, 화면 구현 후 휘발성 처리
+
+5조(보유 기간): 회원가입~탈퇴 시까지. 불량 이용 기록은 탈퇴 후 최대 3개월 격리 보관 후 영구 파기.
+
+6조(파기 방법): SQL Delete 명령어 실행 및 인덱스 정리로 복구 불가능하게 영구 삭제.
+
+7조(이용자 권리): 마이페이지에서 언제든지 열람·수정·삭제 가능. 탈퇴로 동의 철회 가능. 오류 정정 요청 시 완료 전까지 해당 정보 이용·제공 중단.
+
+8조(기술적 보호): 비밀번호 일방향 해시 처리, JWT 암호화 서명. 정기 백업 및 접근 권한 최소화.
+
+9조(개인정보 보호책임자):
+- 팀: today-menu 개발본부 데이터보안팀
+- 문의: support@today-menu.com
+"""
+
         system_prompt = f"""당신은 '오늘의 메뉴' 앱의 Q&A 안내 챗봇입니다.
-아래 사용자 정보와 앱 가이드를 바탕으로 친절하고 구체적으로 안내해주세요.
+아래 사용자 정보와 앱 가이드, 이용약관, 개인정보처리방침을 바탕으로 친절하고 구체적으로 안내해주세요.
+
+{TERMS_SUMMARY}
+{PRIVACY_SUMMARY}
+
+[답변 규칙]
+- 이용약관·개인정보처리방침 관련 질문은 위 내용을 바탕으로 정확히 답변하세요.
+- 앱 사용법 질문은 아래 가이드를 참고하세요.
+- 그 외 서비스와 무관한 질문(날씨, 정치, 연예 등)은 정중히 거절하세요.
 
 [현재 사용자 DB 정보]
 - 닉네임: {user.nickname}
@@ -912,7 +995,29 @@ def chatbot():
                 ))
                 db.session.commit()
 
-        return jsonify({'reply': reply}), 200
+        # ── 응답에서 식당명 추출 → 상세 정보 첨부 ──────────────────────
+        matched_restaurants = []
+        if mode == 'recommend':
+            # 전체 식당 중 응답에 이름이 언급된 것 찾기 (최대 3개)
+            all_rests_for_match = Restaurant.query.all()
+            for r in all_rests_for_match:
+                if r.name in reply:
+                    matched_restaurants.append({
+                        'id':       r.restaurant_id,
+                        'name':     r.name,
+                        'category': r.category,
+                        'address':  r.address,
+                        'avg_rating': r.avg_rating,
+                    })
+                    if len(matched_restaurants) >= 3:
+                        break
+
+        return jsonify({
+            'reply':        reply,
+            'restaurants':  matched_restaurants,
+            'manner_score': user.manner_score,
+            'wishlist':     [r for r in ctx['wishlist'].split(', ') if r and r != '없음'],
+        }), 200
 
     except Exception as e:
         return jsonify({'error': str(e)}), 500
