@@ -1,10 +1,10 @@
-// src/pages/Home.jsx
+﻿// src/pages/Home.jsx
 import { useState, useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
-import { getRestaurants, getNearby } from '../api/services'
+import { getRestaurants, getNearby, toggleLike } from '../api/services'
 import { useAuth } from '../App'
+import Cafeteria from '../components/Cafeteria'
 import KakaoMap from '../components/KakaoMap'
-import RestaurantCard from '../components/RestaurantCard'
 import RestaurantSearch from '../components/RestaurantSearch'
 
 const adBannerClass =
@@ -13,8 +13,26 @@ const adBannerLinkClass = 'block h-full w-full'
 const adBannerImageClass =
   'h-full w-full object-contain object-center'
 
-const CAT_ICON = { 한식: '🍚', 일식: '🍣', 중식: '🥡', 양식: '🥩', 분식: '🍜', 치킨: '🍗', 피자: '🍕', 카페: '☕' }
-const TREND_FOODS = ['삼겹살', '치킨', '짜장면', '순대국', '초밥', '파스타', '비빔밥', '떡볶이']
+const CAT_ICON = {
+  한식: '🍚',
+  일식: '🍣',
+  중식: '🥟',
+  양식: '🥩',
+  분식: '🍜',
+  치킨: '🍗',
+  피자: '🍕',
+  카페: '☕',
+}
+const TREND_FOODS = [
+  '라면',
+  '치킨',
+  '짜장면',
+  '떡볶이',
+  '초밥',
+  '파스타',
+  '비빔밥',
+  '샐러드',
+]
 
 const SAMPLE_RESTAURANTS = [
   {
@@ -49,7 +67,7 @@ const SAMPLE_RESTAURANTS = [
   },
   {
     id: 'sample-4',
-    name: '카페 모먼트',
+    name: '카페 모닝쉘',
     category: '카페',
     address: '서울 성동구 성수동',
     avg_rating: 4.7,
@@ -93,26 +111,27 @@ const categoryGridClass = 'mb-11 grid grid-cols-8 gap-3 max-lg:grid-cols-4 max-s
 const categoryItemClass = 'flex min-h-[90px] flex-col items-center justify-center gap-1.5 rounded-[10px] border border-[var(--border-color)] bg-white shadow-[0_8px_18px_rgba(42,29,26,0.07)] transition-all hover:-translate-y-1 hover:border-[var(--color-primary)] hover:shadow-[var(--shadow)]'
 const categoryIconClass = 'grid h-10 w-10 place-items-center text-[1.75rem]'
 const categoryLabelClass = 'text-[0.86rem] font-black text-[var(--text-primary)]'
-const recommendSectionClass = 'mb-[38px]'
-const recommendTitleWrapClass = 'mb-[18px] flex items-center justify-between font-black max-[540px]:items-end'
-const recommendTitleClass = 'relative text-[1.55rem] after:absolute after:left-0 after:bottom-[-8px] after:h-[3px] after:w-[34px] after:rounded-full after:bg-[var(--color-primary)] max-[540px]:text-[1.28rem]'
-const recommendMoreClass = 'text-[0.9rem] text-[#7D4213]'
-const restaurantGridClass = 'grid grid-cols-4 gap-[15px] max-lg:grid-cols-2 max-[540px]:grid-cols-2'
-// Restaurant card styles were moved to components/RestaurantCard.jsx.
-// Ranking badge classes were intentionally not moved because the shared card should not show order.
-// const restaurantCardClass = 'group overflow-hidden rounded-[8px] border border-[var(--border-color)] bg-white shadow-[var(--shadow-sm)] transition hover:-translate-y-1 hover:shadow-[var(--shadow)]'
-// const restaurantImageWrapClass = 'relative h-[154px] overflow-hidden bg-[#FFF4EA] max-[540px]:h-[130px]'
-// const restaurantImageClass = 'h-full w-full object-cover transition-transform duration-[280ms] group-hover:scale-105'
-// const rankBadgeBaseClass = 'absolute left-0 top-0 grid h-[52px] w-[52px] place-items-center bg-[var(--color-primary)] text-[1.35rem] font-black text-white'
-// const rankBadgeAccentClass = 'bg-[var(--color-accent)]'
-// const restaurantBodyClass = 'px-[18px] pb-[18px] pt-4 max-[540px]:p-[14px]'
-// const restaurantTitleClass = 'mb-1.5 text-[1.08rem] font-black text-[var(--text-primary)]'
-// const restaurantMetaClass = 'mb-[5px] flex items-center gap-1 text-[0.88rem] text-[var(--text-secondary)]'
-// const restaurantScoreClass = 'font-black text-[var(--color-primary)]'
-// const restaurantReviewClass = 'text-[var(--text-secondary)]'
-// const restaurantAddressClass = 'mb-[14px] overflow-hidden text-ellipsis whitespace-nowrap text-[0.88rem] text-[var(--text-secondary)]'
-// const restaurantTagRowClass = 'flex flex-wrap gap-[7px]'
-// const restaurantTagClass = 'rounded-[7px] bg-[#FFF0E4] px-2 py-[5px] text-[0.78rem] font-extrabold text-[var(--color-primary)] max-[540px]:text-[0.72rem]'
+const recommendSectionClass =
+  'mb-[38px]'
+
+const recommendTitleWrapClass =
+  'mb-[18px] flex items-center justify-between font-black max-[540px]:items-end'
+
+const recommendTitleClass =
+  'relative text-[1.55rem] after:absolute after:left-0 after:bottom-[-8px] after:h-[3px] after:w-[34px] after:rounded-full after:bg-[var(--color-primary)] max-[540px]:text-[1.28rem]'
+
+const recommendMoreClass =
+  'text-[0.9rem] text-[#7D4213]'
+
+const cafeteriaGridClass =
+  'grid grid-cols-4 gap-[15px] max-lg:grid-cols-2 max-[540px]:grid-cols-2'
+
+const rankBadgeBaseClass =
+  'absolute left-0 top-0 grid h-[52px] w-[52px] place-items-center bg-[var(--color-primary)] text-[1.35rem] font-black text-white'
+
+const rankBadgeAccentClass =
+  'bg-[var(--color-accent)]'
+  
 const quickPanelsClass = 'mb-[18px] grid grid-cols-2 gap-[18px] max-md:grid-cols-1'
 const quickCardBaseClass = 'flex min-h-[230px] items-center justify-between gap-[18px] overflow-hidden rounded-[10px] px-[38px] py-8 max-md:px-[22px] max-md:py-7'
 const quickMapCardClass = '[background:radial-gradient(circle_at_82%_70%,rgba(255,255,255,0.68),transparent_30%),linear-gradient(135deg,#FFF4A8,#FFE67C)]'
@@ -129,13 +148,14 @@ export default function Home() {
   const [locStatus, setLocStatus] = useState('idle')
   const [bannerIdx, setBannerIdx] = useState(0)
   const [showSearch, setShowSearch] = useState(false)
+  const [likedCafeteriaIds, setLikedCafeteriaIds] = useState(() => new Set())
   const bannerTimer = useRef(null)
 
   useEffect(() => {
     getRestaurants({ cat: '전체', page: 1 })
       .then((d) => setTrending(d.items?.length ? d.items : SAMPLE_RESTAURANTS))
       .catch((err) => {
-        console.error('trending 로드 실패:', err)
+        console.error('trending load failed:', err)
         setTrending(SAMPLE_RESTAURANTS)
       })
   }, [])
@@ -146,7 +166,7 @@ export default function Home() {
   }, [])
 
   const findNearby = () => {
-    if (!navigator.geolocation) return alert('위치 서비스 미지원')
+    if (!navigator.geolocation) return alert('위치 서비스를 사용할 수 없어요.')
     setLocStatus('loading')
     navigator.geolocation.getCurrentPosition(async ({ coords }) => {
       const loc = { lat: coords.latitude, lng: coords.longitude }
@@ -163,6 +183,25 @@ export default function Home() {
 
   const visibleRestaurants = trending.length ? trending : SAMPLE_RESTAURANTS
 
+  const handleCafeteriaLike = async (item) => {
+    if (item.log_id != null) {
+      const res = await toggleLike(item.log_id)
+      setTrending((prev) =>
+        prev.map((r) =>
+          r.id === item.id ? { ...r, is_liked: res.liked } : r
+        )
+      )
+      return
+    }
+
+    setLikedCafeteriaIds((prev) => {
+      const next = new Set(prev)
+      if (next.has(item.id)) next.delete(item.id)
+      else next.add(item.id)
+      return next
+    })
+  }
+
   return (
     <div className="home-page">
       <section className={heroLayoutClass}>
@@ -170,9 +209,13 @@ export default function Home() {
           <div className={`${slideBaseClass} ${slideBackgrounds[0]} ${bannerIdx === 0 ? slideActiveClass : ''}`}>
             <div className={bannerCopyClass}>
               <h1 className={bannerTitleClass}>
-                HAVE A G<span className={bannerTitleAccentClass}>🕘</span>OD TIME
+                HAVE A G<span className={bannerTitleAccentClass}>하</span>OD TIME
               </h1>
-              <p className={bannerTextClass}>AI가 추천하는 오늘의 베스트 맛집<br />지금, 당신의 취향을 찾아보세요!</p>
+              <p className={bannerTextClass}>
+                AI가 추천하는 오늘의 베스트 맛집
+                <br />
+                지금 당신의 취향을 찾아보세요
+              </p>
               <div className={bannerActionsClass}>
                 <Link to="/menu" className={heroButtonLightClass}>추천 맛집 보기 →</Link>
                 <Link to="/game" className={heroButtonYellowClass}>랜덤 메뉴 추천 🎲</Link>
@@ -197,7 +240,11 @@ export default function Home() {
           <div className={`${slideBaseClass} ${slideBackgrounds[1]} ${bannerIdx === 1 ? slideActiveClass : ''}`}>
             <div className={bannerCopyClass}>
               <h1 className={bannerTitleClass}>오늘의 밥친구</h1>
-              <p className={bannerTextClass}>혼밥 말고 같이 먹는 즐거움<br />가까운 맛집에서 바로 만나요.</p>
+              <p className={bannerTextClass}>
+                혼밥 말고 같이 먹는 즐거움
+                <br />
+                가까운 맛집에서 바로 만나요
+              </p>
               <div className={bannerActionsClass}>
                 <Link to="/party" className={heroButtonLightClass}>밥친구 찾기 →</Link>
                 <button type="button" className={heroButtonYellowClass} onClick={findNearby}>내 주변 찾기 📍</button>
@@ -213,7 +260,11 @@ export default function Home() {
           <div className={`${slideBaseClass} ${slideBackgrounds[2]} ${bannerIdx === 2 ? slideActiveClass : ''}`}>
             <div className={bannerCopyClass}>
               <h1 className={bannerTitleClass}>AI 메뉴 추천</h1>
-              <p className={bannerTextClass}>날씨, 시간, 취향을 분석해서<br />오늘 먹기 좋은 메뉴를 골라드려요.</p>
+              <p className={bannerTextClass}>
+                예산, 시간, 취향을 분석해서
+                <br />
+                오늘 먹기 좋은 메뉴를 골라드려요
+              </p>
               <div className={bannerActionsClass}>
                 <Link to="/game" className={heroButtonLightClass}>추천 받기 →</Link>
               </div>
@@ -252,58 +303,31 @@ export default function Home() {
       <section className={recommendSectionClass}>
         <div className={recommendTitleWrapClass}>
           <span className={recommendTitleClass}>오늘의 추천 맛집</span>
-          <Link to="/menu" className={recommendMoreClass}>더보기 →</Link>
+          <Link to="/menu" className={recommendMoreClass}>
+            더보기 →
+          </Link>
         </div>
-        <div className={restaurantGridClass}>
-          {visibleRestaurants.slice(0, 4).map((r) => (
-            <RestaurantCard key={r.id} r={r} to={`/menu/${r.id}`} />
-          ))}
-          {/* Old inline card markup kept temporarily for reference.
+
+        <div className={cafeteriaGridClass}>
           {visibleRestaurants.slice(0, 4).map((r, index) => (
-            <Link to={`/menu/${r.id}`} className={restaurantCardClass} key={r.id}>
-              <div className={restaurantImageWrapClass}>
-                <img
-                  className={restaurantImageClass}
-                  src={r.image ?? SAMPLE_RESTAURANTS[index % SAMPLE_RESTAURANTS.length].image}
-                  alt={r.name}
-                />
-                <span className={`${rankBadgeBaseClass} ${index === 1 || index === 3 ? rankBadgeAccentClass : ''}`}>
-                  {index + 1}
-                </span>
-                <span
-                  className="
-    absolute top-3 right-3
-    grid place-items-center
-    w-[30px] h-[30px]
-    rounded-full
-    bg-white/90
-    text-[#5B4038]
-    text-[1.7rem]
-    leading-none
-    shadow-[0_4px_12px_rgba(0,0,0,0.14)]
-  "
-                >
-                  ♡
-                </span>
+            <div className="relative" key={r.id}>
+              <Cafeteria
+                item={r}
+                to={`/menu/${r.id}`}
+                liked={Boolean(r.is_liked) || likedCafeteriaIds.has(r.id)}
+                onToggleLike={handleCafeteriaLike}
+                fallbackImage={SAMPLE_RESTAURANTS[index % SAMPLE_RESTAURANTS.length].image}
+              />
 
-              </div>
-
-              <div className={restaurantBodyClass}>
-                <div className={restaurantTitleClass}>{r.name}</div>
-                <div className={restaurantMetaClass}>
-                  <span className={restaurantScoreClass}>★</span>
-                  <span className={restaurantScoreClass}>{(r.avg_rating ?? 0).toFixed(1)}</span>
-                  <span className={restaurantReviewClass}>({r.review_count ?? 0})</span>
-                </div>
-                <div className={restaurantAddressClass}>{r.category || '기타'} · {r.address || '오늘 뭐먹지 추천 맛집'}</div>
-                <div className={restaurantTagRowClass}>
-                  {(r.tags ?? [`#${r.category || '맛집'}`, '#추천', '#오늘뭐먹지']).slice(0, 3).map((tag) => (
-                    <span className={restaurantTagClass} key={tag}>{tag}</span>
-                  ))}
-                </div>
-              </div>
-            </Link>
-          ))} */}
+              <span
+                className={`${rankBadgeBaseClass} ${
+                  index === 1 || index === 3 ? rankBadgeAccentClass : ''
+                }`}
+              >
+                {index + 1}
+              </span>
+            </div>
+          ))}
         </div>
       </section>
 
@@ -311,10 +335,14 @@ export default function Home() {
         <div className={`${quickCardBaseClass} ${quickMapCardClass}`}>
           <div>
             <h3 className={quickTitleClass}>📍 내 인생 맛집 찾기</h3>
-            <p className={quickTextClass}>지금 위치를 기반으로<br />인생맛집을 찾아보세요!</p>
+            <p className={quickTextClass}>
+              지금 위치를 기반으로
+              <br />
+              인생맛집을 찾아보세요
+            </p>
             <Link to="/menu" className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-[12px] bg-white px-6 text-[0.94rem] font-black text-[var(--color-primary)] shadow-[var(--shadow-sm)] transition-transform hover:-translate-y-0.5">
-              맛집 찾기 →</Link>
-
+              맛집 찾기 →
+            </Link>
           </div>
           <div className={quickIllustClass}>📍</div>
         </div>
@@ -322,11 +350,16 @@ export default function Home() {
         <div className={`${quickCardBaseClass} ${quickAiCardClass}`}>
           <div>
             <h3 className={quickTitleClass}>오늘 뭐먹지?</h3>
-            <p className={quickTextClass}>예산, 시간, 내 취향을 분석해서<br />오늘의 메뉴를 추천해드려요!</p>
+            <p className={quickTextClass}>
+              예산, 시간, 내 취향을 분석해서
+              <br />
+              오늘의 메뉴를 추천해드려요!
+            </p>
             <Link to="/game" className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-[12px] bg-white px-6 text-[0.94rem] font-black text-[var(--color-primary)] shadow-[var(--shadow-sm)] transition-transform hover:-translate-y-0.5">
-              추천 받기 →</Link>
+              추천 받기 →
+            </Link>
           </div>
-          <div className={quickIllustClass}>🤖</div>
+          <div className={quickIllustClass}>🎲</div>
         </div>
       </section>
 
@@ -369,7 +402,7 @@ export default function Home() {
                   />
                 </div>
               )}
-              {nearby.length === 0 && <div className="empty-state">주변 500m 내 식당이 없습니다.</div>}
+              {nearby.length === 0 && <div className="empty-state">주변 500m 안에 식당이 없습니다.</div>}
             </>
           )}
         </section>
