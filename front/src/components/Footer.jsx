@@ -42,7 +42,11 @@ export default function Footer() {
 
         {/* 1. 브랜드 */}
         <div>
-          <strong className={logoTextClass}>오늘 뭐먹지? ⏰</strong>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 18 }}>
+            <img src="/img/icon/logo.png" alt="오늘 뭐먹지?" style={{ height: 40, width: 40, objectFit: 'contain' }}
+              onError={(e) => { e.target.style.display='none' }} />
+            <strong style={{ fontSize: '1.18rem', fontWeight: 900, color: 'var(--text-primary)' }}>오늘 뭐먹지?</strong>
+          </div>
           <p className={footerTextClass}>AI가 추천하는<br />오늘의 베스트 맛집</p>
           <div className={socialRowClass}>
             <span>◎</span><span>f</span><span>t</span>

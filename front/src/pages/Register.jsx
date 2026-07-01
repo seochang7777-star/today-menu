@@ -43,10 +43,14 @@ export default function Register() {
   return (
     <div className="register-wrap">
       <div className="register-card">
-        <div className="reg-logo">
-          <div className="site-logo">🍽️ <span>오늘의 메뉴</span></div>
+        <div style={{ textAlign: 'center', marginBottom: 16 }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, marginBottom: 8 }}>
+            <img src="/img/icon/logo.png" alt="로고" style={{ height: 44, width: 44, objectFit: 'contain' }}
+              onError={(e) => { e.target.style.display='none' }} />
+            <span style={{ fontSize: '1.8rem', fontWeight: 900, letterSpacing: '-0.03em' }}>오늘 뭐먹지?</span>
+          </div>
+          <p style={{ fontSize: '.88rem', color: 'var(--text-muted)' }}>회원정보를 입력해주세요</p>
         </div>
-        <p className="reg-title">회원정보를 입력해주세요</p>
 
         <form id="registerForm" onSubmit={handleSubmit}>
           {/* 이메일 */}
@@ -130,11 +134,20 @@ export default function Register() {
 
           {error && <div className="alert alert-danger">{error}</div>}
 
-          <div className="submit-btn-wrap">
-            <button type="submit" disabled={loading} className="btn btn-primary btn-lg">
+          <div style={{ marginTop: 16 }}>
+            <button type="submit" disabled={loading}
+              style={{
+                width: '100%', padding: '16px 0',
+                background: loading ? 'var(--color-primary-dark)' : 'var(--color-primary)',
+                color: '#fff', border: 'none',
+                borderRadius: 999, fontSize: '1.05rem', fontWeight: 900,
+                cursor: loading ? 'not-allowed' : 'pointer',
+                boxShadow: '0 4px 16px rgba(244,108,111,0.35)',
+                transition: 'opacity .15s',
+                opacity: loading ? .7 : 1,
+              }}>
               {loading ? '가입 중...' : '동의하기'}
             </button>
-            <div className="size-note">1400px</div>
           </div>
         </form>
 

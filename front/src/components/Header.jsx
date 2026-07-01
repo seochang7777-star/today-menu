@@ -48,8 +48,9 @@ export default function Header() {
             className="inline-flex justify-self-start items-center gap-2 text-[1.72rem] font-black tracking-[-0.04em] text-[#0E0C0B] max-md:text-[1.35rem]"
             onClick={() => setMobileOpen(false)}
           >
-            <span className='text-{balack}'>오늘 뭐먹지?</span><span className='logo-clock'>⏰</span>
-            <span className="grid h-7 w-7 place-items-center rounded-full border-2 border-[var(--color-primary)] bg-white text-[1.05rem]">⏰</span>
+            <img src="/img/icon/logo.png" alt="오늘 뭐먹지?" style={{ height: 38, width: 38, objectFit: 'contain' }}
+              onError={(e) => { e.target.style.display='none' }} />
+            <span>오늘 뭐먹지?</span>
           </Link>
 
           <div className="max-md:hidden">
@@ -125,6 +126,7 @@ export default function Header() {
           />
           <div className="fixed bottom-0 right-0 top-0 z-[810] flex w-[min(320px,86vw)] flex-col bg-white shadow-[-18px_0_34px_rgba(0,0,0,0.14)]">
             <div className="flex items-center justify-between border-b border-[var(--border-color)] px-5 py-[18px] font-black">
+              <img src="/img/icon/logo.png" alt="" style={{ height: 28, width: 28, objectFit: 'contain' }} onError={(e) => { e.target.style.display='none' }} />
               <span>오늘 뭐먹지?</span>
               <button className="border-0 bg-transparent text-xl" onClick={() => setMobileOpen(false)}>×</button>
             </div>

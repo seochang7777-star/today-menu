@@ -157,13 +157,14 @@ export default function Login() {
         padding: 40, width: '100%', maxWidth: 420, boxShadow: 'var(--shadow-lg)',
       }}>
         <div style={{ textAlign: 'center', marginBottom: 28 }}>
-          <div className="site-logo" style={{ justifyContent: 'center', fontSize: '1.5rem' }}>
-            🍽️ <span>오늘의 메뉴</span>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, marginBottom: 12 }}>
+            <img src="/img/icon/logo.png" alt="로고" style={{ height: 44, width: 44, objectFit: 'contain' }}
+              onError={(e) => { e.target.style.display='none' }} />
+            <span style={{ fontSize: '1.8rem', fontWeight: 900, letterSpacing: '-0.03em' }}>오늘 뭐먹지?</span>
           </div>
+          <h2 style={{ fontSize: '1.3rem', fontWeight: 900, marginBottom: 6 }}>로그인</h2>
+          <p style={{ fontSize: '.88rem', color: 'var(--text-muted)' }}>계정에 로그인해주세요</p>
         </div>
-
-        <h2 className="auth-title">로그인</h2>
-        <p className="auth-sub">계정에 로그인해주세요</p>
 
         {/* 소셜 로그인 */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 20 }}>
@@ -220,13 +221,32 @@ export default function Login() {
           </div>
           {error && <div className="alert alert-danger" style={{ marginBottom: 12 }}>{error}</div>}
           <button type="submit" disabled={loading || !!socialLoading}
-            className="btn btn-primary btn-block btn-lg" style={{ marginTop: 8 }}>
+            style={{
+              width: '100%', padding: '15px 0', marginTop: 8,
+              background: 'var(--color-primary)', color: '#fff',
+              border: 'none', borderRadius: 999,
+              fontSize: '1rem', fontWeight: 900,
+              cursor: (loading || !!socialLoading) ? 'not-allowed' : 'pointer',
+              boxShadow: '0 4px 16px rgba(244,108,111,0.3)',
+              opacity: (loading || !!socialLoading) ? .7 : 1,
+              transition: 'opacity .15s',
+            }}>
             {loading ? '로그인 중...' : '이메일로 로그인'}
           </button>
         </form>
 
         <hr className="divider" style={{ margin: '20px 0' }} />
-        <Link to="/register" className="btn btn-secondary btn-block btn-lg">이메일로 회원가입</Link>
+        <Link to="/register"
+          style={{
+            display: 'block', width: '100%', padding: '15px 0', textAlign: 'center',
+            background: 'transparent', color: 'var(--color-primary)',
+            border: '2px solid var(--color-primary)', borderRadius: 999,
+            fontSize: '1rem', fontWeight: 900, textDecoration: 'none',
+            transition: 'all .15s',
+          }}
+          onMouseEnter={(e) => { e.currentTarget.style.background='var(--color-primary)'; e.currentTarget.style.color='#fff' }}
+          onMouseLeave={(e) => { e.currentTarget.style.background='transparent'; e.currentTarget.style.color='var(--color-primary)' }}
+        >이메일로 회원가입</Link>
         <p className="auth-footer">
           <a href="#">비밀번호 찾기</a> · <a href="#">이메일 찾기</a>
         </p>
