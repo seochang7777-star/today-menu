@@ -21,35 +21,3 @@ class Config:
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     JWT_SECRET_KEY                 = os.environ.get('JWT_SECRET_KEY') or 'super-secret-jwt-key'
     OPENAI_API_KEY                 = os.environ.get('OPENAI_API_KEY') or ''
-
-# 배포용 코드
-# import os
-# from pathlib import Path
-# from dotenv import load_dotenv
-
-# load_dotenv()
-
-# basedir = Path(__file__).resolve().parent
-# instance_dir = basedir / 'instance'
-# instance_dir.mkdir(exist_ok=True)
-
-# class Config:
-#     SECRET_KEY     = os.environ.get('SECRET_KEY') or 'dev-secret-key'
-#     JWT_SECRET_KEY = os.environ.get('JWT_SECRET_KEY') or 'super-secret-jwt-key'
-#     OPENAI_API_KEY = os.environ.get('OPENAI_API_KEY') or ''
-
-#     # ── DB 설정 ────────────────────────────────────────────────────────────
-#     # DATABASE_URL 있으면 Supabase, 없으면 로컬 SQLite
-#     _db_url = os.environ.get('DATABASE_URL', '')
-#     if _db_url.startswith('postgres://'):
-#         _db_url = _db_url.replace('postgres://', 'postgresql://', 1)
-
-#     SQLALCHEMY_DATABASE_URI = _db_url or (
-#         'sqlite:///' + str(instance_dir / 'dining.db').replace('\\', '/')
-#     )
-
-#     SQLALCHEMY_TRACK_MODIFICATIONS = False
-#     SQLALCHEMY_ENGINE_OPTIONS = {
-#         'pool_pre_ping': True,
-#         'pool_recycle':  300,
-#     }

@@ -109,16 +109,6 @@ export async function updatePartyStatus(partyId, status) {
   return data
 }
 
-export async function closeParty(partyId) {
-  const { data } = await api.patch(`/api/party/${partyId}/close`)
-  return data
-}
-
-export const kickMember = async (partyId, targetUserId) => {
-  const { data } = await api.delete(`/api/party/${partyId}/kick/${targetUserId}`);
-  return data;
-};
-
 // ── MYPAGE ────────────────────────────────────────────────────────────────────
 export async function getMyPage() {
   const { data } = await api.get('/api/mypage/')
@@ -140,6 +130,31 @@ export async function saveFavoriteLocations(locations) {
 // ── CHATBOT ───────────────────────────────────────────────────────────────────
 export async function sendChat(message, history = [], mode = 'recommend', lat = null, lng = null, loc_index = null) {
   const { data } = await api.post('/api/chat', { message, history, mode, lat, lng, loc_index })
+  return data
+}
+
+// ── PARTY ACTIONS ────────────────────────────────────────────────────────────
+/** 파티 모집 마감 */
+export async function closeParty(partyId) {
+  const { data } = await api.patch(`/api/party/${partyId}/status`, { status: 'CLOSED' })
+  return data
+}
+
+/** 파티 탈퇴 */
+export async function leaveParty(partyId) {
+  const { data } = await api.delete(`/api/party/${partyId}/leave`)
+  return data
+}
+
+/** 파티원 강퇴 */
+export async function kickPartyMember(partyId, targetUserId) {
+  const { data } = await api.delete(`/api/party/${partyId}/kick/${targetUserId}`)
+  return data
+}
+
+/** 파티원 신고 */
+export async function reportPartyMember(partyId, targetId, reason) {
+  const { data } = await api.post(`/api/party/${partyId}/report`, { target_id: targetId, reason })
   return data
 }
 

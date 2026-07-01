@@ -2,11 +2,6 @@ from . import db
 from datetime import datetime
 import enum
 
-party_kicked_users = db.Table('party_kicked_users',
-    db.Column('party_id', db.Integer, db.ForeignKey('parties.party_id'), primary_key=True),
-    db.Column('user_id', db.Integer, db.ForeignKey('users.user_id'), primary_key=True)
-)
-
 class RoleEnum(enum.Enum):
     USER  = "USER"
     ADMIN = "ADMIN"
