@@ -35,15 +35,33 @@ def create_app():
     socketio.init_app(app, async_mode='eventlet', cors_allowed_origins=['http://localhost:5173', 'http://127.0.0.1:5173'])
 
     # CORS는 socketio에서 처리하므로 supports_credentials만 설정
-    CORS(app, supports_credentials=True,
-         resources={r'/*': {'origins': ['http://localhost:5173', 'http://127.0.0.1:5173']}})
+    CORS(app, 
+         resources={r"/api/*": {"origins": ["http://localhost:5173", "http://127.0.0.1:5173"]}}, 
+         supports_credentials=True,
+         allow_headers=["Content-Type", "Authorization"],
+         methods=["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"])
 
     from app.routes import main_bp, auth_bp, menu_bp, party_bp, mypage_bp, api_bp
     app.register_blueprint(main_bp)
-    app.register_blueprint(auth_bp)
-    app.register_blueprint(menu_bp)
-    app.register_blueprint(party_bp)
-    app.register_blueprint(mypage_bp)
-    app.register_blueprint(api_bp)
+    app.register_blueprint(auth_bp, url_prefix='/api/auth')
+    app.register_blueprint(menu_bp, url_prefix='/api/menu')
+    app.register_blueprint(party_bp, url_prefix='/api/party')
+    app.register_blueprint(mypage_bp, url_prefix='/api/mypage')
+    app.register_blueprint(api_bp, url_prefix='/api')
 
     return app
+
+
+# ALLOWED_ORIGINS = [
+#     'http://localhost:5173',
+#     'http://127.0.0.1:5173',
+#     'https://your-app.vercel.app',  # ← Vercel 배포 URL
+# ]
+
+# socketio = SocketIO(
+#     cors_allowed_origins=ALLOWED_ORIGINS,
+#     async_mode='eventlet',
+# )
+
+# CORS(app, supports_credentials=True,
+#      resources={r'/*': {'origins': ALLOWED_ORIGINS}})

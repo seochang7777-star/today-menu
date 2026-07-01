@@ -16,3 +16,18 @@ export default defineConfig({
     },
   },
 })
+
+//  배포용 코드
+// export default defineConfig({
+//   plugins: [react(), tailwindcss()],
+//   server: {
+//     // 개발 환경에서만 proxy 동작
+//     proxy: {
+//       '/api':    { target: 'http://localhost:5000', changeOrigin: true },
+//       '/auth':   { target: 'http://localhost:5000', changeOrigin: true },
+//       '/menu':   { target: 'http://localhost:5000', changeOrigin: true },
+//       '/party':  { target: 'http://localhost:5000', changeOrigin: true },
+//       '/mypage': { target: 'http://localhost:5000', changeOrigin: true },
+//     }
+//   }
+// })

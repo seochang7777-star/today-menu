@@ -114,6 +114,11 @@ export async function closeParty(partyId) {
   return data
 }
 
+export const kickMember = async (partyId, targetUserId) => {
+  const { data } = await api.delete(`/api/party/${partyId}/kick/${targetUserId}`);
+  return data;
+};
+
 // ── MYPAGE ────────────────────────────────────────────────────────────────────
 export async function getMyPage() {
   const { data } = await api.get('/api/mypage/')
