@@ -133,7 +133,7 @@ button {
   background: #fff;
   box-shadow: var(--shadow-sm);
   transition: 0.18s ease;
-} */
+}
 
 .card:hover {
   transform: translateY(-4px);
@@ -156,7 +156,7 @@ button {
 
 .card:hover .card-img img {
   transform: scale(1.05);
-}
+} */
 
 .rank-badge {
   position: absolute;

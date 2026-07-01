@@ -122,20 +122,20 @@ export default function MyPageEdit() {
   }
 
   if (dataLoading) return (
-    <div style={{ textAlign: 'center', padding: 60, color: 'var(--text-muted)' }}>
+    <div className="text-center py-[60px] text-[var(--text-muted)]">
       로딩 중...
     </div>
   )
 
   return (
-    <div style={{ maxWidth: 600, width: '100%', margin: '0 auto' }}>
-      <Link to="/mypage" className="btn btn-sm btn-secondary" style={{ marginBottom: 16 }}>
+    <div className="max-w-[600px] w-full mx-auto">
+      <Link to="/mypage" className="btn btn-sm btn-secondary mb-4">
         ← 마이페이지
       </Link>
 
-      <h2 style={{ marginBottom: 24 }}>✏️ 프로필 수정</h2>
+      <h2 className="mb-6">✏️ 프로필 수정</h2>
 
-      <div style={{ background: 'var(--bg-white)', border: '1px solid var(--border-color)', borderRadius: 'var(--border-radius-xl)', padding: 32 }}>
+      <div className="bg-[var(--bg-white)] border border-[var(--border-color)] rounded-[var(--border-radius-xl)] p-8">
         <form onSubmit={handleSubmit}>
 
           {/* 닉네임 */}
@@ -153,19 +153,17 @@ export default function MyPageEdit() {
           {/* 성별 */}
           <div className="form-group">
             <label className="form-label">성별</label>
-            <div style={{ display: 'flex', gap: 8 }}>
+            <div className="flex gap-2">
               {['미설정', '남성', '여성', '기타'].map((g) => (
                 <button
                   type="button"
                   key={g}
                   onClick={() => setForm({ ...form, gender: g })}
-                  style={{
-                    padding: '6px 18px', borderRadius: 20, border: '1.5px solid',
-                    cursor: 'pointer', fontSize: '.85rem', fontWeight: 600,
-                    borderColor: form.gender === g ? 'var(--color-primary)' : 'var(--border-color)',
-                    background: form.gender === g ? 'var(--color-primary)' : 'var(--bg-white)',
-                    color: form.gender === g ? '#fff' : 'var(--text-secondary)',
-                  }}
+                  className={`px-[18px] py-1.5 rounded-full border-[1.5px] cursor-pointer text-[.85rem] font-semibold ${
+                    form.gender === g
+                      ? 'border-[var(--color-primary)] bg-[var(--color-primary)] text-white'
+                      : 'border-[var(--border-color)] bg-[var(--bg-white)] text-[var(--text-secondary)]'
+                  }`}
                 >
                   {g}
                 </button>
@@ -189,7 +187,7 @@ export default function MyPageEdit() {
           <div className="form-group">
             <label className="form-label">
               알러지 / 제외 재료
-              <span style={{ color: 'var(--text-muted)', fontWeight: 400 }}> (쉼표로 구분)</span>
+              <span className="text-[var(--text-muted)] font-normal"> (쉼표로 구분)</span>
             </label>
             <input
               type="text"
@@ -203,50 +201,47 @@ export default function MyPageEdit() {
           {/* 좋아하는 음식 */}
           <div className="form-group" id="food-preferences">
             <label className="form-label">👍 좋아하는 음식</label>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 10 }}>
+            <div className="flex flex-wrap gap-2 mb-2.5">
               {PREF_FOODS.map((food) => (
                 <button
                   type="button"
                   key={food}
                   onClick={() => togglePref(food)}
-                  style={{
-                    padding: '5px 14px', borderRadius: 20, border: '1.5px solid',
-                    cursor: 'pointer', fontSize: '.82rem', fontWeight: 600,
-                    borderColor: form.preferences.includes(food) ? '#1890ff' : 'var(--border-color)',
-                    background: form.preferences.includes(food) ? '#e6f7ff' : 'var(--bg-white)',
-                    color: form.preferences.includes(food) ? '#1890ff' : 'var(--text-secondary)',
-                  }}
+                  className={`px-3.5 py-[5px] rounded-full border-[1.5px] cursor-pointer text-[.82rem] font-semibold ${
+                    form.preferences.includes(food)
+                      ? 'border-[#1890ff] bg-[#e6f7ff] text-[#1890ff]'
+                      : 'border-[var(--border-color)] bg-[var(--bg-white)] text-[var(--text-secondary)]'
+                  }`}
                 >
                   {food}
                 </button>
               ))}
             </div>
-            <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
+            <div className="flex gap-2 mb-2">
               <input
                 type="text"
-                className="form-control"
+                className="form-control flex-1"
                 placeholder="직접 입력 후 Enter"
                 value={inputLike}
                 onChange={(e) => setInputLike(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddLike())}
-                style={{ flex: 1 }}
               />
-              <button type="button" className="btn btn-secondary btn-sm" onClick={handleAddLike} style={{ flexShrink: 0 }}>
+              <button type="button" className="btn btn-secondary btn-sm flex-shrink-0" onClick={handleAddLike}>
                 추가
               </button>
             </div>
             {form.preferences.length > 0 && (
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+              <div className="flex flex-wrap gap-1.5">
                 {form.preferences.map((item, idx) => (
                   <span
                     key={idx}
-                    style={{ background: '#e6f7ff', color: '#1890ff', border: '1px solid #91d5ff', padding: '4px 10px', borderRadius: 20, fontSize: '.78rem', display: 'flex', alignItems: 'center', gap: 4 }}
+                    className="bg-[#e6f7ff] text-[#1890ff] border border-[#91d5ff] px-2.5 py-1 rounded-full text-[.78rem] flex items-center gap-1"
                   >
                     {item}
                     <button
                       type="button"
                       onClick={() => handleRemoveLike(item)}
-                      style={{ border: 'none', background: 'none', color: '#1890ff', cursor: 'pointer', fontSize: '.85rem', padding: 0, fontWeight: 700 }}
+                      className="border-0 bg-transparent text-[#1890ff] cursor-pointer text-[.85rem] p-0 font-bold"
                     >
                       ×
                     </button>
@@ -259,50 +254,47 @@ export default function MyPageEdit() {
           {/* 기피하는 음식 */}
           <div className="form-group">
             <label className="form-label">👎 기피하는 음식</label>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 10 }}>
+            <div className="flex flex-wrap gap-2 mb-2.5">
               {DISLIKE_FOODS.map((food) => (
                 <button
                   type="button"
                   key={food}
                   onClick={() => toggleDislike(food)}
-                  style={{
-                    padding: '5px 14px', borderRadius: 20, border: '1.5px solid',
-                    cursor: 'pointer', fontSize: '.82rem', fontWeight: 600,
-                    borderColor: form.dislikes.includes(food) ? '#ff4d4f' : 'var(--border-color)',
-                    background: form.dislikes.includes(food) ? '#fff1f0' : 'var(--bg-white)',
-                    color: form.dislikes.includes(food) ? '#ff4d4f' : 'var(--text-secondary)',
-                  }}
+                  className={`px-3.5 py-[5px] rounded-full border-[1.5px] cursor-pointer text-[.82rem] font-semibold ${
+                    form.dislikes.includes(food)
+                      ? 'border-[#ff4d4f] bg-[#fff1f0] text-[#ff4d4f]'
+                      : 'border-[var(--border-color)] bg-[var(--bg-white)] text-[var(--text-secondary)]'
+                  }`}
                 >
                   {food}
                 </button>
               ))}
             </div>
-            <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
+            <div className="flex gap-2 mb-2">
               <input
                 type="text"
-                className="form-control"
+                className="form-control flex-1"
                 placeholder="직접 입력 후 Enter"
                 value={inputDislike}
                 onChange={(e) => setInputDislike(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddDislike())}
-                style={{ flex: 1 }}
               />
-              <button type="button" className="btn btn-secondary btn-sm" onClick={handleAddDislike} style={{ flexShrink: 0 }}>
+              <button type="button" className="btn btn-secondary btn-sm flex-shrink-0" onClick={handleAddDislike}>
                 추가
               </button>
             </div>
             {form.dislikes.length > 0 && (
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+              <div className="flex flex-wrap gap-1.5">
                 {form.dislikes.map((item, idx) => (
                   <span
                     key={idx}
-                    style={{ background: '#fff1f0', color: '#ff4d4f', border: '1px solid #ffa39e', padding: '4px 10px', borderRadius: 20, fontSize: '.78rem', display: 'flex', alignItems: 'center', gap: 4 }}
+                    className="bg-[#fff1f0] text-[#ff4d4f] border border-[#ffa39e] px-2.5 py-1 rounded-full text-[.78rem] flex items-center gap-1"
                   >
                     {item}
                     <button
                       type="button"
                       onClick={() => handleRemoveDislike(item)}
-                      style={{ border: 'none', background: 'none', color: '#ff4d4f', cursor: 'pointer', fontSize: '.85rem', padding: 0, fontWeight: 700 }}
+                      className="border-0 bg-transparent text-[#ff4d4f] cursor-pointer text-[.85rem] p-0 font-bold"
                     >
                       ×
                     </button>

@@ -118,7 +118,7 @@ export default function MyPage() {
 
   // ── 로딩 ─────────────────────────────────────────────────────────────────
   if (!data) return (
-    <div style={{ textAlign: 'center', padding: 60, color: 'var(--text-muted)' }}>
+    <div className="text-center py-[60px] text-[var(--text-muted)]">
       로딩 중...
     </div>
   )
@@ -135,28 +135,27 @@ export default function MyPage() {
 
   return (
     <>
-      <h1 style={{ fontSize: '2.4rem', fontWeight: 900, marginBottom: 24 }}>마이페이지</h1>
+      <h1 className="text-[2.4rem] font-black mb-6">마이페이지</h1>
 
       {/* ── HERO BANNER ── */}
       <div className="mypage-hero">
         <div className="mypage-hero-inner">
           <div className="profile-avatar">{user.nickname?.[0]}</div>
-          <div className="mypage-hero-text" style={{ flex: 1 }}>
-            <div style={{ fontSize: '.78rem', opacity: .55, textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 4 }}>
+          <div className="mypage-hero-text flex-1">
+            <div className="text-[.78rem] opacity-55 uppercase tracking-wider mb-1">
               MY PAGE
             </div>
             <h2>나의 메뉴 취향과 활동을 한눈에 확인하세요.</h2>
             <p>찜한 메뉴, 프로필, 추천 기록, 매칭 내역을 관리하는 마이페이지입니다.</p>
             <Link
               to="/mypage/edit"
-              className="btn btn-sm"
-              style={{ background: 'rgba(255,255,255,.15)', color: '#fff', border: '1px solid rgba(255,255,255,.3)' }}
+              className="btn btn-sm bg-white/15 text-white border border-white/30"
             >
               프로필 수정 →
             </Link>
           </div>
-          <div style={{ flexShrink: 0, textAlign: 'center' }}>
-            <div style={{ position: 'relative', width: 90, height: 90 }}>
+          <div className="flex-shrink-0 text-center">
+            <div className="relative w-[90px] h-[90px]">
               <svg width="90" height="90" viewBox="0 0 90 90">
                 <circle cx="45" cy="45" r={R} fill="none" stroke="rgba(255,255,255,.15)" strokeWidth="7" />
                 <circle cx="45" cy="45" r={R} fill="none" stroke="#F6AD55" strokeWidth="7"
@@ -164,15 +163,15 @@ export default function MyPage() {
                   strokeDasharray={circ}
                   strokeDashoffset={heroOffset}
                   transform="rotate(-90 45 45)"
-                  style={{ transition: 'stroke-dashoffset 1s' }}
+                  className="transition-[stroke-dashoffset] duration-1000"
                 />
               </svg>
-              <div className="manner-num" style={{ color: '#fff' }}>
+              <div className="manner-num text-white">
                 <span className="manner-val">{mannerScore}</span>
                 <small>°C</small>
               </div>
             </div>
-            <div style={{ color: 'rgba(255,255,255,.65)', fontSize: '.75rem', marginTop: 4 }}>매너온도</div>
+            <div className="text-white/65 text-xs mt-1">매너온도</div>
           </div>
         </div>
       </div>
@@ -186,41 +185,41 @@ export default function MyPage() {
         >
           <div className="stat-num">{likes.length}</div>
           <div className="stat-label">찜한 메뉴</div>
-          <div style={{ fontSize: '.72rem', color: 'var(--text-muted)', marginTop: 2 }}>
+          <div className="text-[.72rem] text-[var(--text-muted)] mt-0.5">
             좋아요 {likes.length}개 · 싫어요 {dislikes.length}개
           </div>
         </button>
         <div className="stat-card">
           <div className="stat-num">{rec_logs.length}</div>
           <div className="stat-label">추천 활동</div>
-          <div style={{ fontSize: '.72rem', color: 'var(--text-muted)', marginTop: 2 }}>
+          <div className="text-[.72rem] text-[var(--text-muted)] mt-0.5">
             최근 추천 {rec_logs.length}회
           </div>
         </div>
         <div className="stat-card">
           <div className="stat-num">{my_parties.length}</div>
           <div className="stat-label">매칭 기록</div>
-          <div style={{ fontSize: '.72rem', color: 'var(--text-muted)', marginTop: 2 }}>
+          <div className="text-[.72rem] text-[var(--text-muted)] mt-0.5">
             완료된 파티 {my_parties.length}건
           </div>
         </div>
         <div className="stat-card">
-          <div className="stat-num" style={{ color: 'var(--color-accent)' }}>{mannerScore}</div>
+          <div className="stat-num text-[var(--color-accent)]">{mannerScore}</div>
           <div className="stat-label">매너점수</div>
-          <div style={{ fontSize: '.72rem', color: 'var(--text-muted)', marginTop: 2 }}>
+          <div className="text-[.72rem] text-[var(--text-muted)] mt-0.5">
             당근처럼 {mannerScore}점
           </div>
         </div>
       </div>
 
       {/* ── 프로필 + 매너점수 ── */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 360px', gap: 16, marginBottom: 16 }}>
+      <div className="grid grid-cols-[1fr_360px] gap-4 mb-4">
         <div className="profile-section">
           <div className="mb-4 flex items-center justify-between gap-3">
             <h3>프로필</h3>
             <Link to="/mypage/edit" className="btn btn-sm btn-secondary">수정</Link>
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'auto 1fr', gap: 16, alignItems: 'start' }}>
+          <div className="grid grid-cols-[auto_1fr] gap-4 items-start">
             <div className="profile-avatar">{user.nickname?.[0]}</div>
             <div>
               {[
@@ -233,10 +232,10 @@ export default function MyPage() {
               ].map(([label, val]) => (
                 <div
                   key={label}
-                  style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid var(--bg-surface)', fontSize: '.88rem' }}
+                  className="flex justify-between py-2 border-b border-[var(--bg-surface)] text-[.88rem]"
                 >
-                  <span style={{ color: 'var(--text-muted)', fontWeight: 600 }}>{label}</span>
-                  <span style={{ fontWeight: 700 }}>{val}</span>
+                  <span className="text-[var(--text-muted)] font-semibold">{label}</span>
+                  <span className="font-bold">{val}</span>
                 </div>
               ))}
             </div>
@@ -247,8 +246,8 @@ export default function MyPage() {
           <div className="mb-4 flex items-center justify-between gap-3">
             <h3>매너점수</h3>
           </div>
-          <div style={{ display: 'flex', gap: 16, alignItems: 'center' }}>
-            <div ref={gauge2Ref} style={{ position: 'relative', width: 100, height: 100, flexShrink: 0 }}>
+          <div className="flex gap-4 items-center">
+            <div ref={gauge2Ref} className="relative w-[100px] h-[100px] flex-shrink-0">
               <svg width="100" height="100" viewBox="0 0 100 100">
                 <circle cx="50" cy="50" r="40" fill="none" stroke="var(--bg-surface)" strokeWidth="8" />
                 <circle
@@ -261,19 +260,19 @@ export default function MyPage() {
                   transform="rotate(-90 50 50)"
                 />
               </svg>
-              <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-                <span style={{ fontSize: '1.5rem', fontWeight: 800, lineHeight: 1 }}>{mannerScore}</span>
-                <small style={{ fontSize: '.65rem', color: 'var(--text-muted)' }}>점</small>
+              <div className="absolute inset-0 flex flex-col items-center justify-center">
+                <span className="text-2xl font-extrabold leading-none">{mannerScore}</span>
+                <small className="text-[.65rem] text-[var(--text-muted)]">점</small>
               </div>
             </div>
             <div>
-              <div style={{ fontWeight: 700, fontSize: '1rem', marginBottom: 6 }}>따뜻한 식사 메이트</div>
-              <p style={{ fontSize: '.82rem', color: 'var(--text-muted)', lineHeight: 1.6 }}>
+              <div className="font-bold text-base mb-1.5">따뜻한 식사 메이트</div>
+              <p className="text-[.82rem] text-[var(--text-muted)] leading-relaxed">
                 약속, 공감, 후기 기반으로 쌓아두는 점수
               </p>
             </div>
           </div>
-          <hr style={{ border: 'none', borderTop: '1px solid var(--border-color)', margin: '16px 0' }} />
+          <hr className="border-0 border-t border-[var(--border-color)] my-4" />
           {[
             ['파티 참여', (my_parties.length * 0.5).toFixed(1)],
             ['후기 작성', (liked_logs.length * 0.3).toFixed(1)],
@@ -281,10 +280,10 @@ export default function MyPage() {
           ].map(([label, val]) => (
             <div
               key={label}
-              style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', fontSize: '.82rem', color: 'var(--text-muted)' }}
+              className="flex justify-between py-1.5 text-[.82rem] text-[var(--text-muted)]"
             >
               <span>{label}</span>
-              <span style={{ fontWeight: 700, color: 'var(--color-success)' }}>+{val}°</span>
+              <span className="font-bold text-[var(--color-success)]">+{val}°</span>
             </div>
           ))}
         </div>
@@ -296,32 +295,32 @@ export default function MyPage() {
           <h3>🍽️ 나의 음식 취향</h3>
           <Link to="/mypage/edit#food-preferences" className="btn btn-sm btn-secondary">수정 →</Link>
         </div>
-        <div style={{ marginBottom: 16 }}>
-          <div style={{ fontSize: '.82rem', fontWeight: 700, color: '#1890ff', marginBottom: 8 }}>👍 좋아하는 음식</div>
+        <div className="mb-4">
+          <div className="text-[.82rem] font-bold text-[#1890ff] mb-2">👍 좋아하는 음식</div>
           {likes.length > 0 ? (
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+            <div className="flex flex-wrap gap-2">
               {likes.map((item, idx) => (
-                <span key={idx} style={{ background: '#e6f7ff', color: '#1890ff', border: '1px solid #91d5ff', padding: '4px 12px', borderRadius: 20, fontSize: '.82rem' }}>
+                <span key={idx} className="bg-[#e6f7ff] text-[#1890ff] border border-[#91d5ff] px-3 py-1 rounded-full text-[.82rem]">
                   {item}
                 </span>
               ))}
             </div>
           ) : (
-            <p style={{ fontSize: '.82rem', color: 'var(--text-muted)' }}>등록된 선호 음식이 없습니다.</p>
+            <p className="text-[.82rem] text-[var(--text-muted)]">등록된 선호 음식이 없습니다.</p>
           )}
         </div>
         <div>
-          <div style={{ fontSize: '.82rem', fontWeight: 700, color: '#ff4d4f', marginBottom: 8 }}>👎 기피하는 음식</div>
+          <div className="text-[.82rem] font-bold text-[#ff4d4f] mb-2">👎 기피하는 음식</div>
           {dislikes.length > 0 ? (
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+            <div className="flex flex-wrap gap-2">
               {dislikes.map((item, idx) => (
-                <span key={idx} style={{ background: '#fff1f0', color: '#ff4d4f', border: '1px solid #ffa39e', padding: '4px 12px', borderRadius: 20, fontSize: '.82rem' }}>
+                <span key={idx} className="bg-[#fff1f0] text-[#ff4d4f] border border-[#ffa39e] px-3 py-1 rounded-full text-[.82rem]">
                   {item}
                 </span>
               ))}
             </div>
           ) : (
-            <p style={{ fontSize: '.82rem', color: 'var(--text-muted)' }}>등록된 기피 음식이 없습니다.</p>
+            <p className="text-[.82rem] text-[var(--text-muted)]">등록된 기피 음식이 없습니다.</p>
           )}
         </div>
       </div>
@@ -360,11 +359,11 @@ export default function MyPage() {
                     className="card rest-card"
                     key={log.log_id}
                   >
-                    <div className="card-img" style={{ fontSize: '2rem' }}>🍴</div>
+                    <div className="card-img text-3xl">🍴</div>
                     <div className="card-body">
                       <span className="badge badge-primary">{log.restaurant?.category ?? '기타'}</span>
                       <div className="card-title mt-8">{log.restaurant?.name ?? '식당'}</div>
-                      <div className="rest-addr" style={{ marginTop: 4 }}>
+                      <div className="rest-addr mt-1">
                         {(log.restaurant?.address ?? '').slice(0, 20)}
                         {(log.restaurant?.address?.length ?? 0) > 20 ? '...' : ''}
                       </div>
@@ -388,7 +387,7 @@ export default function MyPage() {
             <div className="empty-state">
               <div className="empty-icon">❤️</div>
               <p>아직 찜한 메뉴가 없습니다</p>
-              <Link to="/menu" className="btn btn-primary btn-sm" style={{ marginTop: 12 }}>
+              <Link to="/menu" className="btn btn-primary btn-sm mt-3">
                 메뉴 둘러보기
               </Link>
             </div>
@@ -397,9 +396,9 @@ export default function MyPage() {
 
         {activeTab === 'disliked' && (
           dislikes.length > 0 ? (
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, padding: '16px 0' }}>
+            <div className="flex flex-wrap gap-2 py-4">
               {dislikes.map((d) => (
-                <span key={d} style={{ padding: '4px 12px', borderRadius: 16, background: '#FFF5F5', color: 'var(--color-danger)', fontSize: '.78rem', fontWeight: 600 }}>
+                <span key={d} className="px-3 py-1 rounded-2xl bg-[#FFF5F5] text-[var(--color-danger)] text-[.78rem] font-semibold">
                   {d}
                 </span>
               ))}
@@ -418,30 +417,30 @@ export default function MyPage() {
         <div className="mb-4 flex items-center justify-between gap-3">
           <h3>활동내역</h3>
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 12 }}>
+        <div className="grid gap-3" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))' }}>
           {rec_logs.slice(0, 3).map((log) => (
             <div
               key={log.log_id}
-              style={{ display: 'flex', gap: 14, padding: 14, background: 'var(--bg-white)', border: '1px solid var(--border-color)', borderRadius: 'var(--border-radius-lg)' }}
+              className="flex gap-3.5 p-3.5 bg-[var(--bg-white)] border border-[var(--border-color)] rounded-[var(--border-radius-lg)]"
             >
               <Link
                 to={`/menu/${log.restaurant?.id ?? log.recommended_restaurant_id}`}
-                style={{ display: 'flex', gap: 14, flex: 1, minWidth: 0, textDecoration: 'none', color: 'inherit' }}
+                className="flex gap-3.5 flex-1 min-w-0 no-underline text-inherit"
               >
-                <div style={{ width: 40, height: 40, borderRadius: '50%', background: '#FFF5F5', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.1rem', flexShrink: 0 }}>
+                <div className="w-10 h-10 rounded-full bg-[#FFF5F5] flex items-center justify-center text-lg flex-shrink-0">
                   🤖
                 </div>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: '.72rem', fontWeight: 700, color: 'var(--text-muted)', marginBottom: 2 }}>추천</div>
-                  <div style={{ fontWeight: 700, fontSize: '.9rem' }}>{log.restaurant?.name ?? '식당 추천'}</div>
-                  <div style={{ fontSize: '.8rem', color: 'var(--text-muted)', marginTop: 2 }}>
+                <div className="flex-1 min-w-0">
+                  <div className="text-[.72rem] font-bold text-[var(--text-muted)] mb-0.5">추천</div>
+                  <div className="font-bold text-[.9rem]">{log.restaurant?.name ?? '식당 추천'}</div>
+                  <div className="text-[.8rem] text-[var(--text-muted)] mt-0.5">
                     {log.restaurant?.category ?? ''} · {log.is_liked ? '찜함' : '추천만'}
                   </div>
                 </div>
               </Link>
               <button
                 onClick={() => handleLike(log.log_id)}
-                style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.1rem' }}
+                className="bg-transparent border-0 cursor-pointer text-lg"
               >
                 {log.is_liked ? '❤️' : '🤍'}
               </button>
@@ -451,15 +450,15 @@ export default function MyPage() {
             <Link
               to={`/party/${p.party_id}?tab=chat`}
               key={p.party_id}
-              style={{ display: 'flex', gap: 14, padding: 14, background: 'var(--bg-white)', border: '1px solid var(--border-color)', borderRadius: 'var(--border-radius-lg)', color: 'inherit', textDecoration: 'none' }}
+              className="flex gap-3.5 p-3.5 bg-[var(--bg-white)] border border-[var(--border-color)] rounded-[var(--border-radius-lg)] text-inherit no-underline"
             >
-              <div style={{ width: 40, height: 40, borderRadius: '50%', background: '#F0FFF4', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.1rem', flexShrink: 0 }}>
+              <div className="w-10 h-10 rounded-full bg-[#F0FFF4] flex items-center justify-center text-lg flex-shrink-0">
                 👥
               </div>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: '.72rem', fontWeight: 700, color: 'var(--text-muted)', marginBottom: 2 }}>매칭/파티</div>
-                <div style={{ fontWeight: 700, fontSize: '.9rem' }}>{p.title}</div>
-                <div style={{ fontSize: '.8rem', color: 'var(--text-muted)', marginTop: 2 }}>
+              <div className="flex-1 min-w-0">
+                <div className="text-[.72rem] font-bold text-[var(--text-muted)] mb-0.5">매칭/파티</div>
+                <div className="font-bold text-[.9rem]">{p.title}</div>
+                <div className="text-[.8rem] text-[var(--text-muted)] mt-0.5">
                   {p.restaurant?.name ?? ''} · {p.meeting_time
                     ? new Date(p.meeting_time).toLocaleString('ko-KR', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })
                     : ''}
@@ -468,7 +467,7 @@ export default function MyPage() {
             </Link>
           ))}
           {rec_logs.length === 0 && my_parties.length === 0 && (
-            <div className="empty-state" style={{ gridColumn: '1/-1' }}>
+            <div className="empty-state col-span-full">
               <div className="empty-icon">📋</div>
               <p>아직 활동 내역이 없습니다</p>
             </div>
@@ -481,33 +480,36 @@ export default function MyPage() {
         <div className="mb-4 flex items-center justify-between gap-3">
           <h3>
             📍 저장 장소{' '}
-            <span style={{ fontSize: '.8rem', color: 'var(--text-muted)', fontWeight: 400 }}>
+            <span className="text-[.8rem] text-[var(--text-muted)] font-normal">
               ({savedLocs.length}/3)
             </span>
           </h3>
         </div>
-        <p style={{ fontSize: '.82rem', color: 'var(--text-muted)', marginBottom: 14 }}>
+        <p className="text-[.82rem] text-[var(--text-muted)] mb-3.5">
           자주 가는 장소를 최대 3개 저장하면 챗봇에서 선택해 근처 맛집을 추천받을 수 있어요.
         </p>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 16 }}>
+        <div className="flex flex-col gap-2 mb-4">
           {savedLocs.map((loc, idx) => (
             <div
               key={idx}
-              style={{ display: 'flex', alignItems: 'center', gap: 12, background: 'var(--bg-surface)', borderRadius: 8, padding: '10px 14px', border: '1px solid var(--border-color)' }}
+              className="flex items-center gap-3 bg-[var(--bg-surface)] rounded-lg px-3.5 py-2.5 border border-[var(--border-color)]"
             >
-              <div style={{ width: 28, height: 28, borderRadius: '50%', flexShrink: 0, background: ['#E53E3E', '#3182CE', '#38A169'][idx], color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '.75rem', fontWeight: 800 }}>
+              <div
+                className="w-7 h-7 rounded-full flex-shrink-0 text-white flex items-center justify-center text-[.75rem] font-extrabold"
+                style={{ background: ['#E53E3E', '#3182CE', '#38A169'][idx] }}
+              >
                 {idx + 1}
               </div>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontWeight: 700, fontSize: '.9rem' }}>{loc.name}</div>
-                <div style={{ fontSize: '.75rem', color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              <div className="flex-1 min-w-0">
+                <div className="font-bold text-[.9rem]">{loc.name}</div>
+                <div className="text-[.75rem] text-[var(--text-muted)] overflow-hidden text-ellipsis whitespace-nowrap">
                   {loc.address}
                 </div>
               </div>
               <button
                 onClick={() => removeLoc(idx)}
-                style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', fontSize: '1rem', padding: 4, flexShrink: 0 }}
+                className="bg-transparent border-0 cursor-pointer text-[var(--text-muted)] text-base p-1 flex-shrink-0"
               >
                 ✕
               </button>
@@ -516,57 +518,54 @@ export default function MyPage() {
           {savedLocs.length < 3 && Array.from({ length: 3 - savedLocs.length }).map((_, i) => (
             <div
               key={`empty-${i}`}
-              style={{ display: 'flex', alignItems: 'center', gap: 12, background: 'transparent', borderRadius: 8, padding: '10px 14px', border: '1.5px dashed var(--border-color)' }}
+              className="flex items-center gap-3 bg-transparent rounded-lg px-3.5 py-2.5 border-[1.5px] border-dashed border-[var(--border-color)]"
             >
-              <div style={{ width: 28, height: 28, borderRadius: '50%', background: 'var(--bg-surface)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '.75rem', color: 'var(--text-light)', flexShrink: 0 }}>
+              <div className="w-7 h-7 rounded-full bg-[var(--bg-surface)] flex items-center justify-center text-[.75rem] text-[var(--text-light)] flex-shrink-0">
                 {savedLocs.length + i + 1}
               </div>
-              <div style={{ fontSize: '.82rem', color: 'var(--text-muted)' }}>장소를 추가하세요</div>
+              <div className="text-[.82rem] text-[var(--text-muted)]">장소를 추가하세요</div>
             </div>
           ))}
         </div>
 
         {savedLocs.length < 3 && (
           <div>
-            <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
+            <div className="flex gap-2 mb-2">
               <input
-                className="form-control"
-                style={{ flex: 1 }}
+                className="form-control flex-1"
                 placeholder="장소명 검색 (예: 우리집, 회사, 학교...)"
                 value={locSearch}
                 onChange={(e) => setLocSearch(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && searchPlace()}
               />
               <button
-                className="btn btn-secondary btn-sm"
+                className="btn btn-secondary btn-sm flex-shrink-0"
                 onClick={searchPlace}
                 disabled={locLoading}
-                style={{ flexShrink: 0 }}
               >
                 {locLoading ? '...' : '🔍 검색'}
               </button>
             </div>
             {locMsg && (
-              <div style={{ fontSize: '.8rem', padding: '6px 10px', borderRadius: 6, marginBottom: 8, background: locMsg.startsWith('✅') ? '#F0FFF4' : '#FFF5F5', color: locMsg.startsWith('✅') ? '#276749' : '#C53030' }}>
+              <div className={`text-[.8rem] px-2.5 py-1.5 rounded-md mb-2 ${locMsg.startsWith('✅') ? 'bg-[#F0FFF4] text-[#276749]' : 'bg-[#FFF5F5] text-[#C53030]'}`}>
                 {locMsg}
               </div>
             )}
             {locResults.length > 0 && (
-              <div style={{ border: '1px solid var(--border-color)', borderRadius: 8, overflow: 'hidden', maxHeight: 220, overflowY: 'auto' }}>
+              <div className="border border-[var(--border-color)] rounded-lg overflow-hidden max-h-[220px] overflow-y-auto">
                 {locResults.slice(0, 6).map((p) => (
                   <div
                     key={p.id}
-                    style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', borderBottom: '1px solid var(--bg-surface)', background: 'var(--bg-white)' }}
+                    className="flex items-center gap-2.5 px-3.5 py-2.5 border-b border-[var(--bg-surface)] bg-[var(--bg-white)]"
                   >
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontWeight: 700, fontSize: '.88rem' }}>{p.name}</div>
-                      <div style={{ fontSize: '.75rem', color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    <div className="flex-1 min-w-0">
+                      <div className="font-bold text-[.88rem]">{p.name}</div>
+                      <div className="text-[.75rem] text-[var(--text-muted)] overflow-hidden text-ellipsis whitespace-nowrap">
                         {p.address}
                       </div>
                     </div>
                     <button
-                      className="btn btn-primary btn-sm"
-                      style={{ fontSize: '.75rem', flexShrink: 0 }}
+                      className="btn btn-primary btn-sm text-[.75rem] flex-shrink-0"
                       onClick={() => addLoc(p)}
                     >
                       + 저장
@@ -580,13 +579,13 @@ export default function MyPage() {
       </div>
 
       {/* ── 회원 탈퇴 ── */}
-      <div style={{ marginTop: 56, borderTop: '1px solid var(--border-color)', paddingTop: 24, textAlign: 'right' }}>
-        <p style={{ color: 'var(--text-muted)', fontSize: '.85rem', marginBottom: 8 }}>
+      <div className="mt-14 border-t border-[var(--border-color)] pt-6 text-right">
+        <p className="text-[var(--text-muted)] text-[.85rem] mb-2">
           더 이상 서비스를 이용하고 싶지 않으신가요?
         </p>
         <button
           onClick={handleWithdraw}
-          style={{ background: '#E53E3E', color: '#fff', border: 'none', borderRadius: 4, padding: '6px 12px', fontSize: '.85rem', fontWeight: 700, cursor: 'pointer' }}
+          className="bg-[#E53E3E] text-white border-0 rounded px-3 py-1.5 text-[.85rem] font-bold cursor-pointer"
         >
           🚨 회원 탈퇴하기
         </button>
