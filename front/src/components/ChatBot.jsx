@@ -96,7 +96,7 @@ export default function ChatBot() {
   if (!user) return null
 
   const addMsg = (role, content, extra = {}) =>
-    setMessages((p) => [...p, { role, content, ts: Date.now(), ...extra }])
+    setMessages((p) => [...p, { role, content, ...extra }])
 
   const requestLocation = async () => {
     // ON → OFF 토글
@@ -142,9 +142,7 @@ export default function ChatBot() {
         messages.filter((m) => m.role === 'user' || m.role === 'assistant'),
         mode, sendLat, sendLng, sendLocIndex,
       )
-      addMsg('assistant', data.reply, {
-        restaurants: data.restaurants ?? []
-      })
+      addMsg('assistant', data.reply, { restaurants: data.restaurants ?? [] })
       if (data.manner_score != null) setMannerScore(data.manner_score)
       if (data.wishlist)             setWishlist(data.wishlist)
     } catch (e) {
@@ -410,9 +408,9 @@ export default function ChatBot() {
                   }}>
                   {m.content}
                 </div>
-                {/* 추천 식당 카드 */}
+                {/* 추천 식당 카드 링크 */}
                 {m.role === 'assistant' && m.restaurants?.length > 0 && (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6, margin: '4px 0 8px 8px' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6, margin: '6px 0 8px 4px' }}>
                     {m.restaurants.map((r) => (
                       <Link
                         key={r.id}
@@ -420,33 +418,33 @@ export default function ChatBot() {
                         onClick={() => setOpen(false)}
                         style={{
                           display: 'flex', alignItems: 'center', gap: 10,
+                          padding: '8px 12px',
                           background: 'var(--bg-white)',
-                          border: '1px solid var(--color-primary)',
-                          borderRadius: 10, padding: '8px 12px',
-                          textDecoration: 'none', color: 'inherit',
-                          boxShadow: 'var(--shadow-sm)',
+                          border: '1.5px solid var(--color-primary)',
+                          borderRadius: 10, textDecoration: 'none', color: 'inherit',
+                          boxShadow: '0 2px 8px rgba(244,108,111,0.12)',
                           transition: 'box-shadow .15s',
                         }}
-                        onMouseEnter={(e) => e.currentTarget.style.boxShadow = 'var(--shadow)'}
-                        onMouseLeave={(e) => e.currentTarget.style.boxShadow = 'var(--shadow-sm)'}
+                        onMouseEnter={(e) => e.currentTarget.style.boxShadow = '0 4px 14px rgba(244,108,111,0.25)'}
+                        onMouseLeave={(e) => e.currentTarget.style.boxShadow = '0 2px 8px rgba(244,108,111,0.12)'}
                       >
                         <div style={{
                           width: 36, height: 36, borderRadius: 8, flexShrink: 0,
                           background: 'var(--bg-surface)',
                           display: 'flex', alignItems: 'center', justifyContent: 'center',
-                          fontSize: '1.2rem',
+                          fontSize: '1.1rem',
                         }}>
                           {{'한식':'🍚','일식':'🍣','중식':'🥟','양식':'🥩','분식':'🍜','치킨':'🍗','피자':'🍕','카페':'☕'}[r.category] ?? '🍴'}
                         </div>
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <div style={{ fontWeight: 700, fontSize: '.85rem', marginBottom: 2 }}>{r.name}</div>
                           <div style={{ fontSize: '.72rem', color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                            {r.category} · ⭐ {(r.avg_rating ?? 0).toFixed(1)} · {r.address?.slice(0, 15)}{r.address?.length > 15 ? '...' : ''}
+                            {r.category} · ⭐ {(r.avg_rating ?? 0).toFixed(1)} · {(r.address ?? '').slice(0, 18)}{(r.address?.length ?? 0) > 18 ? '...' : ''}
                           </div>
                         </div>
-                        <div style={{ fontSize: '.72rem', color: 'var(--color-primary)', fontWeight: 700, flexShrink: 0 }}>
-                          상세 →
-                        </div>
+                        <span style={{ fontSize: '.72rem', color: 'var(--color-primary)', fontWeight: 700, flexShrink: 0 }}>
+                          상세보기 →
+                        </span>
                       </Link>
                     ))}
                   </div>

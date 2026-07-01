@@ -71,7 +71,7 @@ api.interceptors.response.use(
     isRefreshing = true
 
     try {
-      const { data } = await api.post('/api/auth/refresh', {}, {
+      const { data } = await axios.post('/api/auth/refresh', {}, {
         headers: { Authorization: `Bearer ${TokenStore.getRefresh()}` },
       })
       const newToken = data.access_token

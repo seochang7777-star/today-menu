@@ -111,6 +111,7 @@ const categoryGridClass = 'mb-11 grid grid-cols-8 gap-3 max-lg:grid-cols-4 max-s
 const categoryItemClass = 'flex min-h-[90px] flex-col items-center justify-center gap-1.5 rounded-[10px] border border-[var(--border-color)] bg-white shadow-[0_8px_18px_rgba(42,29,26,0.07)] transition-all hover:-translate-y-1 hover:border-[var(--color-primary)] hover:shadow-[var(--shadow)]'
 const categoryIconClass = 'grid h-10 w-10 place-items-center text-[1.75rem]'
 const categoryLabelClass = 'text-[0.86rem] font-black text-[var(--text-primary)]'
+
 const recommendSectionClass =
   'mb-[38px]'
 
@@ -132,6 +133,7 @@ const rankBadgeBaseClass =
 const rankBadgeAccentClass =
   'bg-[var(--color-accent)]'
   
+
 const quickPanelsClass = 'mb-[18px] grid grid-cols-2 gap-[18px] max-md:grid-cols-1'
 const quickCardBaseClass = 'flex min-h-[230px] items-center justify-between gap-[18px] overflow-hidden rounded-[10px] px-[38px] py-8 max-md:px-[22px] max-md:py-7'
 const quickMapCardClass = '[background:radial-gradient(circle_at_82%_70%,rgba(255,255,255,0.68),transparent_30%),linear-gradient(135deg,#FFF4A8,#FFE67C)]'
@@ -308,7 +310,9 @@ export default function Home() {
           </Link>
         </div>
 
+
         <div className={cafeteriaGridClass}>
+
           {visibleRestaurants.slice(0, 4).map((r, index) => (
             <div className="relative" key={r.id}>
               <Cafeteria
