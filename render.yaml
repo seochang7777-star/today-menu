@@ -1,0 +1,22 @@
+services:
+  - type: web
+    name: today-menu-backend
+    runtime: python
+    rootDir: back
+    buildCommand: pip install -r requirements.txt
+    startCommand: python run.py
+    envVars:
+      - key: FLASK_ENV
+        value: production
+      - key: SECRET_KEY
+        generateValue: true
+      - key: JWT_SECRET_KEY
+        generateValue: true
+      - key: DATABASE_URL
+        sync: false
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: KAKAO_REST_API_KEY
+        sync: false
+      - key: ALLOWED_ORIGINS
+        sync: false

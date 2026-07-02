@@ -2,6 +2,7 @@
 __pycache__/
 *.py[cod]
 
+
 # Virtual Environments
 .venv/
 venv/
@@ -19,7 +20,6 @@ logs/
 *.csv
 *.zip
 
-
 # ===== Frontend =====
 node_modules/
 build/
@@ -31,7 +31,8 @@ package-lock.json
 .idea/
 .DS_Store
 
-
 .env
 back/.env
 front/.env
+
+

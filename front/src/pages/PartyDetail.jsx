@@ -117,6 +117,7 @@ export default function PartyDetail() {
       setTimeout(() => setVoteMsg(''), 3000)
     } catch (e) { setVoteMsg(e.response?.data?.message ?? '투표 실패'); setTimeout(() => setVoteMsg(''), 3000) }
   }
+
   const handleKick = async (targetUserId) => {
     try {
       await api.delete(`/api/party/${partyId}/kick/${targetUserId}`)
@@ -150,6 +151,7 @@ export default function PartyDetail() {
     try { await api.patch(`/api/party/${partyId}/status`, { status: newStatus }); const d = await getParty(partyId); setParty(d) }
     catch (e) { alert(e.response?.data?.message || '상태 변경 실패') }
   }
+
   const handleJoin = async () => {
     try {
       await joinParty(partyId);
@@ -360,6 +362,28 @@ export default function PartyDetail() {
               </span>
             </div>
 
+            {/* 호스트 전용: 파티 종료 */}
+            {party.is_host && party.status === 'CLOSED' && (
+              <button
+                onClick={async () => {
+                  if (!window.confirm('파티를 종료하시겠습니까?')) return
+                  try {
+                    await api.patch(`/api/party/${partyId}/finish`)
+                    alert('파티가 종료되었습니다.')
+                    navigate('/party')
+                  } catch (e) { alert(e.response?.data?.message || '종료 실패') }
+                }}
+                style={{
+                  width: '100%', marginBottom: 8, padding: '10px 0',
+                  background: 'var(--color-secondary)', color: '#fff',
+                  border: 'none', borderRadius: 8,
+                  fontSize: '.88rem', fontWeight: 700, cursor: 'pointer',
+                }}
+              >
+                🏁 파티 종료하기
+              </button>
+            )}
+
             {/* 호스트 전용: 파티 취소 */}
             {party.is_host && party.status !== 'COMPLETED' && (
               <button
@@ -472,6 +496,7 @@ export default function PartyDetail() {
                   파티중단
                 </button>
               )}
+
               {user && m.user?.user_id !== user.user_id && (
                 <div style={{display:'flex',gap:3,flexShrink:0}}>
                   <button onClick={() => handleVote(m.user.user_id, true)}

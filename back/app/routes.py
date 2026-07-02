@@ -995,6 +995,7 @@ A. 마이페이지 최하단 '회원 탈퇴하기' 버튼을 누르세요.
 
 친절하고 명확한 한국어로 답변하세요.
 사용자 DB 정보를 활용해 개인화된 안내를 제공하세요.
+사용자 DB 정보를 활용해 개인화된 안내를 제공하세요.
 예: 찜한 식당이 있으면 "회원님이 찜하신 {liked_names} 관련 기능은..." 처럼 안내."""
 
     messages_to_send = [{'role': 'system', 'content': system_prompt}]
@@ -1353,4 +1354,3 @@ def manner_vote_status():
         'remaining': max(0, 2 - used),
         'votes':     [{'target_id': v.target_id, 'is_positive': v.is_positive} for v in votes],
     }), 200
-
