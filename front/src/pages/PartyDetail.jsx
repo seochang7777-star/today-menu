@@ -178,7 +178,6 @@ export default function PartyDetail() {
   }
 
 
-
   const dummyReviews = [
     { nick: '김철수', score: 5, text: '분위기 좋고 음식도 맛있었어요! 다음에 또 참여하고 싶습니다.' },
     { nick: '이영희', score: 4, text: '밥친구들이 다 친절했어요. 메뉴 선택도 좋았습니다.' },
@@ -472,6 +471,7 @@ export default function PartyDetail() {
                   강퇴
                 </button>
               )}
+
 
               {/* 일반 참여자 본인 탈퇴 버튼 */}
               {user && !party.is_host && m.user?.user_id === user.user_id && (

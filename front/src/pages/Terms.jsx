@@ -6,6 +6,7 @@ import { privacyContent } from "../data/privacyContent";
 export default function Terms() {
   const location = useLocation();
 
+
   // Footer에서 state.defaultTab 으로 진입 → 해당 탭만 표시
   // /terms 직접 접근 → 기본 'terms' (탭 선택 가능)
   const fromFooter = !!location.state?.defaultTab
@@ -88,5 +89,6 @@ export default function Terms() {
       </main>
 
     </div>
+
   )
 }

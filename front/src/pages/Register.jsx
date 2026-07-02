@@ -41,6 +41,7 @@ export default function Register() {
   }
 
   return (
+
     <div className="register-wrap">
       <div className="register-card">
         <div style={{ textAlign: 'center', marginBottom: 16 }}>
@@ -133,6 +134,7 @@ export default function Register() {
           </div>
 
           {error && <div className="alert alert-danger">{error}</div>}
+
 
           <div style={{ marginTop: 16 }}>
             <button type="submit" disabled={loading}

@@ -6,9 +6,9 @@ import { useAuth } from '../App'
 export default function Login() {
   const navigate = useNavigate()
   const { login: ctxLogin } = useAuth()
-  const [form,          setForm]          = useState({ email: '', password: '' })
-  const [error,         setError]         = useState('')
-  const [loading,       setLoading]       = useState(false)
+  const [form, setForm] = useState({ email: '', password: '' })
+  const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
   const [socialLoading, setSocialLoading] = useState('')  // 'kakao' | 'naver' | ''
 
   // ── 네이버 SDK 초기화 ─────────────────────────────────────────────────────
@@ -24,7 +24,7 @@ export default function Login() {
         const naverSdk = new window.naver.LoginWithNaverId({
           clientId,
           callbackUrl: `${window.location.origin}/auth/naver/callback`,
-          isPopup:     true,
+          isPopup: true,
           loginButton: { color: 'green', type: 3, height: 48 },
         })
         naverSdk.init()
@@ -43,8 +43,8 @@ export default function Login() {
 
   // ── 페이지가 콜백 URL일 경우 처리 (리다이렉트 방식 fallback) ─────────────
   useEffect(() => {
-    const raw   = window.location.hash
-    const qs    = raw.startsWith('#') ? raw.slice(1) : raw
+    const raw = window.location.hash
+    const qs = raw.startsWith('#') ? raw.slice(1) : raw
     const token = new URLSearchParams(qs).get('access_token')
     if (token) {
       setSocialLoading('naver')
@@ -101,7 +101,7 @@ export default function Login() {
     setSocialLoading('naver')
 
     const callbackUrl = encodeURIComponent(`${window.location.origin}/auth/naver/callback`)
-    const state       = Math.random().toString(36).slice(2)
+    const state = Math.random().toString(36).slice(2)
     // response_type=token → implicit flow (access_token을 hash로 직접 전달)
     const naverUrl = [
       'https://nid.naver.com/oauth2.0/authorize',
@@ -156,15 +156,24 @@ export default function Login() {
         background: 'var(--bg-white)', borderRadius: 'var(--border-radius-xl)',
         padding: 40, width: '100%', maxWidth: 420, boxShadow: 'var(--shadow-lg)',
       }}>
-        <div style={{ textAlign: 'center', marginBottom: 28 }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, marginBottom: 12 }}>
-            <img src="/img/icon/logo.png" alt="로고" style={{ height: 44, width: 44, objectFit: 'contain' }}
-              onError={(e) => { e.target.style.display='none' }} />
-            <span style={{ fontSize: '1.8rem', fontWeight: 900, letterSpacing: '-0.03em' }}>오늘 뭐먹지?</span>
-          </div>
-          <h2 style={{ fontSize: '1.3rem', fontWeight: 900, marginBottom: 6 }}>로그인</h2>
-          <p style={{ fontSize: '.88rem', color: 'var(--text-muted)' }}>계정에 로그인해주세요</p>
-        </div>
+
+        <div className="text-center mb-[28px]">
+  {/* 기존 CSS 이름(.site-logo)을 쓰고, absolute 정렬에 필요한 속성 3개만 깔끔하게 덧붙입니다 */}
+  <div className="site-logo relative justify-center min-h-[40px] pl-3">
+    
+    <img 
+      src="/img/icon/logo.png" 
+      alt="오늘 뭐먹지 로고" 
+      className="absolute right-full m h-7 w-auto object-contain" 
+    />
+    
+    <span>오늘 뭐먹지?</span>
+  </div>
+</div>
+
+        <h2 className="text-[1.4rem] font-extrabold mb-[6px] text-center text-gray-950">로그인</h2>
+        <p className="text-[0.88rem] text-gray-400 text-center mb-[28px]">계정에 로그인해주세요</p>
+
 
         {/* 소셜 로그인 */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 20 }}>
@@ -182,7 +191,7 @@ export default function Login() {
             <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
               <path fillRule="evenodd" clipRule="evenodd"
                 d="M10 2C5.582 2 2 4.91 2 8.5c0 2.278 1.418 4.277 3.568 5.496l-.91 3.38c-.08.298.262.528.518.356L9.33 15.33c.22.024.443.037.67.037 4.418 0 8-2.91 8-6.5S14.418 2 10 2z"
-                fill="#191919"/>
+                fill="#191919" />
             </svg>
             {socialLoading === 'kakao' ? '카카오 로그인 중...' : '카카오로 계속하기'}
           </button>
@@ -199,13 +208,22 @@ export default function Login() {
             }}>
             {/* 네이버 N 로고 */}
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-              <path d="M16.273 12.845L7.376 0H0v24h7.727V11.155L16.624 24H24V0h-7.727z" fill="#fff"/>
+              <path d="M16.273 12.845L7.376 0H0v24h7.727V11.155L16.624 24H24V0h-7.727z" fill="#fff" />
             </svg>
             {socialLoading === 'naver' ? '네이버 로그인 중...' : '네이버로 계속하기'}
           </button>
         </div>
 
-        <div className="auth-divider" style={{ margin: '20px 0' }}>이메일로 로그인</div>
+        <div className="flex items-center my-[16px] text-center text-gray-400 text-[0.82rem]">
+          {/* 왼쪽 선 */}
+          <div className="flex-1 h-[1px] bg-[var(--border-color)]"></div>
+
+          {/* 중앙 글자 (선과 답답하게 붙지 않도록 좌우 마진 px-3 추가) */}
+          <span className="px-3 shrink-0">이메일로 로그인</span>
+
+          {/* 오른쪽 선 */}
+          <div className="flex-1 h-[1px] bg-[var(--border-color)]"></div>
+        </div>
 
         {/* 이메일 로그인 */}
         <form onSubmit={handleSubmit}>
@@ -220,35 +238,27 @@ export default function Login() {
               value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} />
           </div>
           {error && <div className="alert alert-danger" style={{ marginBottom: 12 }}>{error}</div>}
-          <button type="submit" disabled={loading || !!socialLoading}
-            style={{
-              width: '100%', padding: '15px 0', marginTop: 8,
-              background: 'var(--color-primary)', color: '#fff',
-              border: 'none', borderRadius: 999,
-              fontSize: '1rem', fontWeight: 900,
-              cursor: (loading || !!socialLoading) ? 'not-allowed' : 'pointer',
-              boxShadow: '0 4px 16px rgba(244,108,111,0.3)',
-              opacity: (loading || !!socialLoading) ? .7 : 1,
-              transition: 'opacity .15s',
-            }}>
+
+          <button
+            type="submit"
+            disabled={loading || !!socialLoading}
+            className="w-full py-3 px-6 text-lg font-semibold rounded-[12px] bg-[var(--color-primary)] text-white hover:bg-[var(--color-primary-dark)] transition-colors mt-[8px] disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+
             {loading ? '로그인 중...' : '이메일로 로그인'}
           </button>
         </form>
 
-        <hr className="divider" style={{ margin: '20px 0' }} />
+
+        <hr className="border-0 border-t border-[var(--border-color)] my-[20px]" />
         <Link to="/register"
-          style={{
-            display: 'block', width: '100%', padding: '15px 0', textAlign: 'center',
-            background: 'transparent', color: 'var(--color-primary)',
-            border: '2px solid var(--color-primary)', borderRadius: 999,
-            fontSize: '1rem', fontWeight: 900, textDecoration: 'none',
-            transition: 'all .15s',
-          }}
-          onMouseEnter={(e) => { e.currentTarget.style.background='var(--color-primary)'; e.currentTarget.style.color='#fff' }}
-          onMouseLeave={(e) => { e.currentTarget.style.background='transparent'; e.currentTarget.style.color='var(--color-primary)' }}
-        >이메일로 회원가입</Link>
-        <p className="auth-footer">
-          <a href="#">비밀번호 찾기</a> · <a href="#">이메일 찾기</a>
+          className="block w-full py-3 px-6 text-lg font-semibold text-center rounded-[12px] bg-[#FEB95C] text-white hover:bg-[#E8A548] transition-colors shadow-sm"
+        >
+          이메일로 회원가입
+        </Link>
+        <p className="text-center mt-[20px] text-[0.88rem] text-gray-400">
+          <a href="#" className="text-[var(--color-primary)] font-semibold">비밀번호 찾기</a> · <a href="#" className="text-[var(--color-primary)] font-semibold">이메일 찾기</a>
+
         </p>
       </div>
     </div>
