@@ -44,44 +44,14 @@ export default function Support() {
 
   // 4. 1:1 문의사항 로컬 목록 상태
   const [inquiries, setInquiries] = useState(() => {
+    const _d = [
+      { id: 1, title: "방장이 약속 장소에 나오지 않았어요.", content: "오늘 점심 파티 약속인데 방장님이 아무 말 없이 안 나오셨어요.", writer: "leewh", date: "2026-06-30", answer: "안녕하세요, 투데이메뉴 관리자입니다. 패널티 시스템을 즉시 가동하겠습니다." },
+      { id: 2, title: "룰렛 게임 판이 도중에 멈추는 현상이 있습니다.", content: "모바일 크롬 브라우저로 룰렛 돌릴 때 화면이 멈추는데 확인 부탁드립니다.", writer: "gildong", date: "2026-06-29", answer: null }
+    ];
     try {
       const saved = localStorage.getItem('today_menu_inquiries');
-      return saved ? JSON.parse(saved) : []); 
-  
-  // 🌟 서버에서 데이터 가져오기
-  useEffect(() => {
-    const fetchInquiries = async () => {
-      try {
-        const response = await fetch('/api/support/inquiries'); 
-        if (response.ok) {
-          const data = await response.json();
-          setInquiries(data);
-        }
-      } catch (error) {
-        console.error("문의 목록을 가져오는 중 오류 발생:", error);
-      }
-    };
-
-    fetchInquiries();
-  }, []);
-    } catch { return []); 
-  
-  // 🌟 서버에서 데이터 가져오기
-  useEffect(() => {
-    const fetchInquiries = async () => {
-      try {
-        const response = await fetch('/api/support/inquiries'); 
-        if (response.ok) {
-          const data = await response.json();
-          setInquiries(data);
-        }
-      } catch (error) {
-        console.error("문의 목록을 가져오는 중 오류 발생:", error);
-      }
-    };
-
-    fetchInquiries();
-  }, []); }
+      return saved ? JSON.parse(saved) : _d;
+    } catch { return _d; }
   });
 
 
