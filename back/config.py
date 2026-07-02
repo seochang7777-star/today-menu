@@ -32,3 +32,4 @@ class Config:
         **({'connect_args': {'prepare_threshold': 0}} if _is_psycopg else {}),
     }
 
+
