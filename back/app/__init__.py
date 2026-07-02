@@ -35,7 +35,6 @@ def create_app():
     app.config.from_object('config.Config')
     Path(app.instance_path).mkdir(parents=True, exist_ok=True)
 
-    # DB URI 확인
     db_uri = app.config.get('SQLALCHEMY_DATABASE_URI', '')
     print(f"[APP] Using DB: {db_uri[:60]}")
 
@@ -67,9 +66,5 @@ def create_app():
             print("[APP] DB tables created successfully")
         except Exception as e:
             print(f"[APP] DB ERROR: {e}")
-            # SQLite면 종료
-            if 'sqlite' in db_uri:
-                print("[APP] FATAL: Using SQLite instead of PostgreSQL!")
-                sys.exit(1)
 
     return app
