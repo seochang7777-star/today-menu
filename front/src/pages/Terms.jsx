@@ -5,26 +5,6 @@ import { privacyContent } from "../data/privacyContent";
 
 export default function Terms() {
   const location = useLocation();
-<<<<<<< HEAD
-  
-  const initialTab = location.state?.defaultTab || "terms";
-  const [tab, setTab] = useState(initialTab);
-
-  useEffect(() => {
-    if (location.state?.defaultTab) {
-      setTab(location.state.defaultTab);
-    }
-  }, [location]);
-
-  useEffect(() => {
-    window.scrollTo({
-      top: 0,
-      behavior: "smooth" // 💡 스크롤이 부드럽게 위로 올라가는 효과 (원치 않으시면 제거 가능)
-    });
-  }, [tab]);
-
-  const data = tab === "terms" ? termsContent : privacyContent;
-=======
 
   // Footer에서 state.defaultTab 으로 진입 → 해당 탭만 표시
   // /terms 직접 접근 → 기본 'terms' (탭 선택 가능)
@@ -45,7 +25,6 @@ export default function Terms() {
   const data     = tab === "terms" ? termsContent : privacyContent
   const subTitle = tab === "terms" ? "today-menu 서비스 이용약관" : "개인정보 처리방침"
   const pageTitle = tab === "terms" ? "이용약관" : "개인정보처리방침"
->>>>>>> main
 
   return (
     // 전체 배경 흰색, 글자 검은색 모노톤 유지
