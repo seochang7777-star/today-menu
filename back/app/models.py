@@ -182,4 +182,3 @@ class Review(db.Model):
             'nickname':      self.writer.nickname if self.writer else '알 수 없음',
             'created_at':    self.created_at.strftime('%Y-%m-%d') if self.created_at else '',
         }
-
