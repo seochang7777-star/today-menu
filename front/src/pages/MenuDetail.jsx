@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import ReviewModal from '../components/ReviewModal'
 import { Link, useParams, useNavigate } from 'react-router-dom'
 import { getRestaurant } from '../api/services'
 import { useAuth } from '../App'
@@ -12,6 +13,7 @@ export default function MenuDetail() {
   const { user } = useAuth()
   const navigate = useNavigate()
   const [rest, setRest] = useState(null)
+  const [showReview, setShowReview] = useState(false)
 
   useEffect(() => {
     getRestaurant(restId).then(setRest).catch(() => navigate('/menu'))
@@ -53,6 +55,12 @@ export default function MenuDetail() {
                 <span style={{ fontWeight: 700 }}>{(rest.avg_rating ?? 0).toFixed(1)}</span>
                 <span style={{ color: 'var(--text-muted)', fontSize: '.88rem' }}>
                   리뷰 {Math.floor((rest.avg_rating ?? 0) * 20)}개
+                <button
+                  onClick={() => setShowReview(true)}
+                  style={{ marginLeft: 8, padding: '2px 10px', background: 'var(--color-primary)', color: '#fff', border: 'none', borderRadius: 6, fontSize: '.78rem', fontWeight: 700, cursor: 'pointer' }}
+                >
+                  리뷰 보기/쓰기
+                </button>
                 </span>
               </div>
 
@@ -130,5 +138,12 @@ export default function MenuDetail() {
         </div>
       </div>
     </>
+      {showReview && rest && (
+        <ReviewModal
+          restId={rest.id}
+          restName={rest.name}
+          onClose={() => setShowReview(false)}
+        />
+      )}
   )
 }
