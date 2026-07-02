@@ -6,15 +6,15 @@ instance_dir = basedir / 'instance'
 instance_dir.mkdir(exist_ok=True)
 
 _db_url = os.environ.get('DATABASE_URL', '')
-_db_url = _db_url.replace('?pgbouncer=true', '').replace('&pgbouncer=true', '')
-
-if _db_url.startswith('postgres://'):
-    _db_url = _db_url.replace('postgres://', 'postgresql://', 1)
-
-if _db_url.startswith('postgresql://') and '+' not in _db_url:
-    _db_url = _db_url.replace('postgresql://', 'postgresql+psycopg://', 1)
-
-print(f"[CONFIG] Final URI = {_db_url[:60]}")
+if _db_url:
+    _db_url = _db_url.replace('?pgbouncer=true', '').replace('&pgbouncer=true', '')
+    if _db_url.startswith('postgres://'):
+        _db_url = _db_url.replace('postgres://', 'postgresql://', 1)
+    if _db_url.startswith('postgresql://') and '+' not in _db_url:
+        _db_url = _db_url.replace('postgresql://', 'postgresql+psycopg://', 1)
+    print(f"[CONFIG] Final URI = {_db_url[:60]}")
+else:
+    print("WARNING: DATABASE_URL not set - using SQLite")
 
 class Config:
     SECRET_KEY     = os.environ.get('SECRET_KEY') or 'dev-secret-key'
@@ -25,9 +25,6 @@ class Config:
     )
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     SQLALCHEMY_ENGINE_OPTIONS = {
-        'pool_pre_ping':    True,
-        'pool_recycle':     300,
-        'connect_args':     {
-            'prepare_threshold': None,  # prepared statement 비활성화
-        }
+        'pool_pre_ping': True,
+        'pool_recycle':  300,
     }
