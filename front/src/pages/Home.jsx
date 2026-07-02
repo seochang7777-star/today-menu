@@ -17,7 +17,7 @@ const TREND_FOODS = ['삼겹살', '치킨', '짜장면', '순대국', '초밥', 
 
 const SAMPLE_RESTAURANTS = [
   {
-    id: 'sample-1',
+    id: '1',
     name: '홍대 고기집',
     category: '한식',
     address: '서울 마포구 홍대입구',
@@ -27,7 +27,7 @@ const SAMPLE_RESTAURANTS = [
     tags: ['#홍대', '#데이트', '#고기맛집'],
   },
   {
-    id: 'sample-2',
+    id: '2',
     name: '연남 파스타',
     category: '양식',
     address: '서울 마포구 연남동',
@@ -37,7 +37,7 @@ const SAMPLE_RESTAURANTS = [
     tags: ['#연남동', '#파스타', '#데이트'],
   },
   {
-    id: 'sample-3',
+    id: '3',
     name: '중화루',
     category: '중식',
     address: '서울 중구 명동',
@@ -47,7 +47,7 @@ const SAMPLE_RESTAURANTS = [
     tags: ['#중식', '#짜장면', '#가성비'],
   },
   {
-    id: 'sample-4',
+    id: '4',
     name: '카페 모먼트',
     category: '카페',
     address: '서울 성동구 성수동',
