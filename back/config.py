@@ -29,4 +29,3 @@ class Config:
         'pool_recycle':  300,
     }
 
-

@@ -49,7 +49,7 @@ export default function Header() {
             onClick={() => setMobileOpen(false)}
           >
             <img src="/img/icon/logo.png" alt="오늘 뭐먹지?" style={{ height: 38, width: 38, objectFit: 'contain' }}
-              onError={(e) => { e.target.style.display='none' }} />
+              onError={(e) => { e.target.style.display = 'none' }} />
             <span>오늘 뭐먹지?</span>
           </Link>
 
@@ -75,16 +75,37 @@ export default function Header() {
             </form>
           </div>
 
-          <div className="flex items-center justify-end gap-[26px] text-[0.9rem] font-extrabold">
+          <div className="flex items-center justify-end text-[0.9rem] font-extrabold" >
+            <Link
+              to="/mypage"
+              className={`${headerIconLink} group mr-0 max-md:hidden`}
+            >
+              <img
+                src="/img/icon/mypage.png"
+                className="h-[35px] w-[35px] object-contain"
+                alt="mypage"
+              />
+              <span className="whitespace-nowrap text-[0.74rem] font-extrabold leading-none text-[#7D6A63] transition-colors group-hover:text-[var(--color-primary)]">
+                마이페이지
+              </span>
+            </Link>
+
             {user ? (
-              <button onClick={handleLogout} className={`${headerIconLink} max-md:hidden`}>
+              <button onClick={handleLogout} className={`${headerIconLink} group mr-1 max-md:hidden`}>
                 <img src="/img/logout.png" className="h-[35px] w-[35px] object-contain" alt="logout" />
+                <span className="whitespace-nowrap text-[0.74rem] font-extrabold leading-none text-[#7D6A63] transition-colors group-hover:text-[var(--color-primary)]">
+                로그아웃
+              </span>
               </button>
             ) : (
               <>
-                <Link to="/mypage" className={`${headerIconLink} max-md:hidden`} />
-                <Link to="/login" className={`${headerIconLink} max-md:hidden`}>
-                  <img src="/img/login.png" className="h-[35px] w-[35px] object-contain" alt="login" />
+                <Link to="/login" className={`${headerIconLink} group mr-1 max-md:hidden`}>
+                  <img src="/img/login.png" 
+                  className="h-[35px] w-[35px] object-contain" 
+                  alt="login" />
+                  <span className="whitespace-nowrap text-[0.74rem] font-extrabold leading-none text-[#7D6A63] transition-colors group-hover:text-[var(--color-primary)]">
+                로그인
+              </span>
                 </Link>
               </>
             )}
@@ -110,13 +131,20 @@ export default function Header() {
             ))}
           </div>
 
-          <Link to="/mypage" className={`${headerIconLink} justify-self-end`}>
-            <div className="inline-flex min-h-[42px] min-w-[178px] items-center justify-center rounded-2xl bg-[linear-gradient(135deg,var(--color-secondary),var(--color-accent))] px-[22px] text-[0.92rem] font-black text-[#5A3507] shadow-[0_8px_18px_rgba(254,185,92,0.25)] empty:invisible">
-              {user ? <span><Link to="/mypage" className="nav-welcome" style={{textDecoration:"none"}}>{user.nickname}님 환영합니다</Link></span> : null}
+          {user ? (
+            <div className="justify-self-end">
+              <div className="inline-flex min-h-[42px] min-w-[178px] items-center justify-center rounded-2xl bg-[linear-gradient(135deg,var(--color-secondary),var(--color-accent))] px-[22px] text-[0.92rem] font-black text-[#5A3507] shadow-[0_8px_18px_rgba(254,185,92,0.25)]">
+                <span>{user.nickname}님 환영합니다</span>
+              </div>
             </div>
-          </Link>
+          ) : (
+            <div className="justify-self-end text-[0.92rem] font-bold text-[var(--text-light)]">
+              로그인을 하세요
+            </div>
+          )}
         </div>
       </nav>
+
 
       {mobileOpen && (
         <>
@@ -126,7 +154,6 @@ export default function Header() {
           />
           <div className="fixed bottom-0 right-0 top-0 z-[810] flex w-[min(320px,86vw)] flex-col bg-white shadow-[-18px_0_34px_rgba(0,0,0,0.14)]">
             <div className="flex items-center justify-between border-b border-[var(--border-color)] px-5 py-[18px] font-black">
-              <img src="/img/icon/logo.png" alt="" style={{ height: 28, width: 28, objectFit: 'contain' }} onError={(e) => { e.target.style.display='none' }} />
               <span>오늘 뭐먹지?</span>
               <button className="border-0 bg-transparent text-xl" onClick={() => setMobileOpen(false)}>×</button>
             </div>
@@ -137,7 +164,7 @@ export default function Header() {
                   {user.nickname?.[0] ?? '?'}
                 </div>
                 <div>
-                  <div><Link to="/mypage" className="nav-welcome" style={{textDecoration:"none"}}>{user.nickname}님 환영합니다</Link></div>
+                  <div>{user.nickname}님 환영합니다</div>
                   <small className="text-[var(--text-muted)]">{user.email}</small>
                 </div>
               </div>
@@ -157,7 +184,7 @@ export default function Header() {
               <Link
                 to="/mypage"
                 onClick={() => setMobileOpen(false)}
-                className="block border-b border-[#FFF0E9] px-5 py-[15px] font-black"
+                className="block border-b border-[#FFF0E9] px-[5px] py-[15px] font-black"
               >
                 마이페이지
               </Link>

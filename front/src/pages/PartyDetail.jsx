@@ -193,6 +193,7 @@ const handleCancelParty = async () => {
     try { await api.patch(`/api/party/${partyId}/status`, { status: newStatus }); const d = await getParty(partyId); setParty(d) }
     catch (e) { alert(e.response?.data?.message || '상태 변경 실패') }
   }
+
   const handleJoin = async () => {
     try {
       await joinParty(partyId);
@@ -250,6 +251,7 @@ const handleDeleteParty = async () => {
 const handleJoinParty = async () => {
   await handleJoin();
 };
+
 
   const dummyReviews = [
     { nick: '김철수', score: 5, text: '분위기 좋고 음식도 맛있었어요! 다음에 또 참여하고 싶습니다.' },
@@ -560,6 +562,7 @@ const handleJoinParty = async () => {
 
                 </button>
               )}
+
 
 
               {/* 일반 참여자 본인 탈퇴 버튼 */}
