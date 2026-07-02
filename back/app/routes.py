@@ -768,6 +768,37 @@ def nearby():
     return jsonify(result)
 
 
+@api_bp.route('/like/create', methods=['POST'])
+@jwt_login_required
+def create_like_log():
+    """식당 찜하기 — 추천로그 없을 때 새로 생성"""
+    user_id = int(get_jwt_identity())
+    data    = request.get_json(force=True)
+    rest_id = data.get('restaurant_id')
+    if not rest_id:
+        return jsonify({'message': 'restaurant_id 필요'}), 400
+
+    # 이미 로그 있으면 재사용
+    existing = RecommendationLog.query.filter_by(
+        user_id=user_id, recommended_restaurant_id=rest_id
+    ).first()
+    if existing:
+        existing.is_liked = True
+        db.session.commit()
+        return jsonify({'log_id': existing.log_id, 'liked': True}), 200
+
+    # 새 로그 생성
+    log = RecommendationLog(
+        user_id=user_id,
+        recommended_restaurant_id=rest_id,
+        is_liked=True,
+        input_context={'source': 'home_like'},
+    )
+    db.session.add(log)
+    db.session.commit()
+    return jsonify({'log_id': log.log_id, 'liked': True}), 201
+
+
 @api_bp.route('/like/<int:log_id>', methods=['POST'])
 @jwt_login_required
 def like_rec(log_id):
