@@ -133,7 +133,6 @@ export default function Menu() {
         </div>
       </div>
 
-
       {/* 검색창-2 */}
       <div className="mb-8 flex flex-wrap items-center justify-between gap-3">
         <div className="w-full max-w-[420px]">

@@ -171,7 +171,7 @@ export default function Support() {
   );
 
   // 🔢 [페이지네이션 핵심 수식] 페이지당 1개 슬라이싱 연산
-  const itemsPerPage = 5;
+  const itemsPerPage = 1;
   const totalPages = Math.ceil(filteredInquiries.length / itemsPerPage) || 1;
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
@@ -238,13 +238,13 @@ export default function Support() {
 
           {/* ✍️ 오른쪽 끝 구석에 깔끔히 박힌 모달 오픈 버튼 */}
           {(activeTab === "all" || activeTab === "inquiry") && (
-            <button
-              onClick={() => { setIsInquiryModalOpen(true); setFormError(""); }}
-              className="w-full sm:w-auto px-5 py-2 font-black text-xs sm:text-sm rounded-full shadow-md transition-all flex items-center justify-center gap-1" style={{ background: "var(--color-primary)", color: "#fff" }}
-            >
-              <span>✍️</span> 1:1 문의하기
-            </button>
-          )}
+  <button
+    onClick={() => { setIsInquiryModalOpen(true); setFormError(""); }}
+    className="w-full sm:w-auto px-5 py-2.5 bg-[var(--color-primary)] hover:bg-[var(--color-primary-dark)] text-white font-bold text-sm rounded-[12px] shadow-sm transition-colors flex items-center justify-center gap-1.5"
+  >
+    <span>✍️</span> 1:1 문의하기
+  </button>
+)}
         </div>
 
         {/* 4. FAQ 목록 출력 */}

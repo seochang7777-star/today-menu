@@ -30,7 +30,6 @@ export default function Footer() {
           </div>
           <p className={footerTextClass}>AI가 추천하는<br />오늘의 베스트 맛집</p>
           <div className={socialRowClass}>
-            <span>◎</span><span>f</span><span>t</span>
           </div>
         </div>
 
