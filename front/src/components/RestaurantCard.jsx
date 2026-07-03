@@ -4,7 +4,14 @@ import RestaurantImage from './RestaurantImage'
 const cardClass =
   'block overflow-hidden rounded-[8px] border border-[var(--border-color)] bg-white text-inherit no-underline shadow-[var(--shadow-sm)] transition hover:-translate-y-1 hover:shadow-[var(--shadow)]'
 const imageWrapClass = 'h-[250px] overflow-hidden bg-[#FFF4EA] max-[540px]:h-[130px]'
+//하트버튼을 위해서 body 안에서 배지를 감싸는 row를 하나 만듬
 const bodyClass = 'px-[18px] pb-[18px] pt-7 max-[540px]:p-[14px]'
+const topRowClass = 'mb-5 flex items-center justify-between gap-3'
+const likeButtonClass =
+  'grid h-9 w-9 place-items-center rounded-full bg-white text-[2rem] leading-none text-[#1E9BFF] transition hover:scale-105 active:scale-95'
+const likedButtonClass = 'text-[var(--color-primary)]'
+
+// const bodyClass = 'px-[18px] pb-[18px] pt-7 max-[540px]:p-[14px]'
 const categoryBadgeClass =
   'inline-flex rounded-[var(--border-radius)] bg-[var(--color-primary)] px-2 py-[5px] text-[0.78rem] font-extrabold text-white'
 const titleClass = 'mt-5 mb-1.5 text-[1.08rem] font-black text-[var(--text-primary)]'
@@ -32,6 +39,8 @@ export default function RestaurantCard({
   showPhone = true,
   className = '',
   onClick,
+  liked = false,
+  onToggleLike,
 }) {
   const navigate = useNavigate()
   const item = restaurant ?? r
@@ -43,6 +52,13 @@ export default function RestaurantCard({
   //const category = item.category || ''는 식당 데이터에 카테고리가 있으면 그 값을 쓰고, 없으면 빈 문자열을 쓰겠다는 뜻이에요.
   const category = item.category || ''
   const reviewCount = item.review_count ?? Math.floor(rating * 10)
+
+  const handleLikeClick = (event) => {
+    event.preventDefault()
+    event.stopPropagation()
+    onToggleLike?.(item)
+  }
+
   const content = (
     <>
       <div className={imageWrapClass}>
@@ -55,9 +71,22 @@ export default function RestaurantCard({
       </div>
 
       <div className={bodyClass}>
-        <span className={categoryBadgeClass}>{category}</span>
+        <div className={topRowClass}>
+          <span className={categoryBadgeClass}>{category}</span>
+
+          <button
+            type="button"
+            className={`${likeButtonClass} ${liked ? likedButtonClass : ''}`}
+            onClick={handleLikeClick}
+            aria-label={liked ? '찜 해제' : '찜하기'}
+          >
+            {liked ? '♥' : '♡'}
+          </button>
+        </div>
+
         <div className={titleClass}>{item.name}</div>
         <div className={metaClass}>
+
           <span className={scoreClass}>{getStars(rating)}</span>
           <span className={scoreClass}>{rating.toFixed(1)}</span>
         </div>
@@ -91,7 +120,7 @@ export default function RestaurantCard({
 
   if (to) {
     return (
-      <div className={mergedClassName} onClick={()=>{navigate(to)}}
+      <div className={mergedClassName} onClick={() => { navigate(to) }}
       // onClick={onClick}
       >
         {content}

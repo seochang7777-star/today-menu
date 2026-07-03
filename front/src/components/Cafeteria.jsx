@@ -1,9 +1,9 @@
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 
 const cardClass =
-  'group block overflow-hidden rounded-[8px] border border-[var(--border-color)] bg-white text-inherit no-underline shadow-[var(--shadow-sm)] transition hover:-translate-y-1 hover:shadow-[var(--shadow)]'
+  'group block h-full overflow-hidden rounded-[8px] border border-[var(--border-color)] bg-white text-inherit no-underline shadow-[var(--shadow-sm)] transition hover:-translate-y-1 hover:shadow-[var(--shadow)]'
 const imageWrapClass =
-  'relative h-[154px] overflow-hidden bg-[#FFF4EA] max-[540px]:h-[130px]'
+  'relative h-[250px] overflow-hidden bg-[#FFF4EA] max-[540px]:h-[130px]'
 const imageClass =
   'h-full w-full object-cover transition-transform duration-[280ms] group-hover:scale-105'
 const likeButtonClass =

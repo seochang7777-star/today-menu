@@ -113,6 +113,30 @@ class RecommendationLog(db.Model):
     recommended_restaurant_id = db.Column(db.Integer, db.ForeignKey('restaurants.restaurant_id'), nullable=False)
     is_liked                  = db.Column(db.Boolean, default=False)
 
+class Favorite(db.Model):
+    """사용자가 찜한 식당 목록"""
+    __tablename__ = 'favorites'
+    
+    __table_args__ = (
+        db.UniqueConstraint('user_id', 'restaurant_id', name='_one_fav_per_user_restaurant'),
+    )
+
+    favorite_id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.user_id'), nullable=False)
+    restaurant_id = db.Column(db.Integer, db.ForeignKey('restaurants.restaurant_id'), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    user = db.relationship('User', backref=db.backref('favorites', cascade='all, delete-orphan'))
+    restaurant = db.relationship('Restaurant', backref=db.backref('favorited_by', cascade='all, delete-orphan'))
+
+    def to_dict(self):
+        return {
+            'favorite_id': self.favorite_id,
+            'restaurant_id': self.restaurant_id,
+            'restaurant_name': self.restaurant.name,
+            'created_at': self.created_at.strftime('%Y-%m-%d')
+        }
+
 class Report(db.Model):
     __tablename__ = 'reports'
     __table_args__ = (

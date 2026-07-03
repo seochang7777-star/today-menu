@@ -1,5 +1,6 @@
 import os
 from pathlib import Path
+from datetime import timedelta
 
 basedir      = Path(__file__).resolve().parent
 instance_dir = basedir / 'instance'
@@ -31,5 +32,5 @@ class Config:
         'pool_recycle':  300,
         **({'connect_args': {'prepare_threshold': 0}} if _is_psycopg else {}),
     }
-
-
+    JWT_TOKEN_LOCATION = ["headers"]
+    JWT_ACCESS_TOKEN_EXPIRES = timedelta(hours=1)

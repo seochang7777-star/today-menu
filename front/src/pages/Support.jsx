@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
+import { TokenStore } from '../api/axiosInstance';
 
 export default function Support() {
   const location = useLocation();
@@ -62,54 +63,70 @@ export default function Support() {
   };
 
   // ✍️ 일반 회원 질문 생성 (모달 내부에서 작동)
+  // ✍️ 일반 회원 질문 생성 (수정된 버전)
   const handleCreateInquiry = async (e) => {
-  e.preventDefault();
-  setFormError("");
+    e.preventDefault();
+    setFormError("");
 
+    const token = TokenStore.getAccess();
 
-  const token = localStorage.getItem('token');
-  console.log("현재 토큰값:", token);
-
-  if (userRole !== "user") return;
-
-  if (newTitle.trim().length < 4) {
-    setFormError("제목은 최소 4자 이상 입력해 주세요.");
-    return;
-  }
-  if (newContent.trim().length < 10) {
-    setFormError("내용은 상세한 확인을 위해 10자 이상 적어주세요.");
-    return;
-  }
-
-  try {
-    const response = await fetch('/api/support/inquiries', {
-      method: 'POST',
-      headers: { 
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${localStorage.getItem('token')}`
-      },
-      body: JSON.stringify({
-        title: newTitle.trim(),
-        content: newContent.trim()
-      })
-    });
-
-    if (response.ok) {
-      const savedInquiry = await response.json();
-      const updated = [savedInquiry, ...inquiries];
-    setInquiries(updated);
-    try { localStorage.setItem('today_menu_inquiries', JSON.stringify(updated)); } catch {}
-      setNewTitle("");
-      setNewContent("");
-      setIsInquiryModalOpen(false);
-      alert("문의사항이 서버에 정상적으로 등록되었습니다.");
-    } else {
-      setFormError("서버 저장에 실패했습니다.");
+    if (!token || token === "null" || token === "undefined") {
+      setFormError("로그인 세션이 만료되었습니다. 다시 로그인해 주세요.");
+      return;
     }
-  } catch (error) {
-    setFormError("네트워크 연결 오류가 발생했습니다.");
-  }
-};
+
+    const trimmedTitle = newTitle.trim();
+    const trimmedContent = newContent.trim();
+    
+    if (trimmedTitle.length < 4) {
+      setFormError("제목은 최소 4자 이상 입력해 주세요.");
+      return;
+    }
+    if (trimmedContent.length < 10) {
+      setFormError("내용은 상세한 확인을 위해 10자 이상 적어주세요.");
+      return;
+    }
+
+    try {
+      const response = await fetch('http://localhost:5000/api/support/inquiries', {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          title: trimmedTitle,
+          content: trimmedContent
+        })
+      });
+
+      const result = await response.json();
+      
+      if (response.ok) {
+          const updated = [result, ...inquiries];
+          setInquiries(updated);
+          try {
+              localStorage.setItem('today_menu_inquiries', JSON.stringify(updated));
+          } catch (e) {
+              console.error("로컬 스토리지 저장 실패", e);
+          }
+          setNewTitle("");
+          setNewContent("");
+          setIsInquiryModalOpen(false);
+          alert("문의사항이 등록되었습니다.");
+          const fetchList = await fetch('http://localhost:5000/api/support/inquiries');
+          const newList = await fetchList.json();
+          setInquiries(newList);
+      } else {
+          // 서버에서 422 에러가 올 경우 상세 내용 출력
+          console.error("서버 에러:", result);
+          setFormError(result.msg || "문의 등록에 실패했습니다.");
+      }
+    } catch (error) {
+      console.error("네트워크 에러:", error);
+      setFormError("네트워크 오류 발생");
+    }
+  };
 
   // 👑 관리자 답변 등록
   const handleAddAnswer = async (id) => {

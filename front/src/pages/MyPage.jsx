@@ -1,7 +1,7 @@
 // src/pages/MyPage.jsx
 import { useState, useEffect, useRef } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
-import { getMyPage, toggleLike, saveFavoriteLocations, searchKakao } from '../api/services'
+import { Link, useNavigate, useLocation } from 'react-router-dom'
+import { getMyPage, toggleLike, saveFavoriteLocations, searchKakao, toggleFavoriteAction } from '../api/services'
 import RestaurantImage from '../components/RestaurantImage'
 import { useAuth } from '../App'
 import { processTags } from '../utils'
@@ -13,6 +13,7 @@ export default function MyPage() {
   const { logout: ctxLogout } = useAuth()
   const gauge2Ref = useRef(null)
   const favoriteMenusRef = useRef(null)
+  const location = useLocation();
 
   const [data, setData] = useState(null)
   const [showAllFavorites, setShowAllFavorites] = useState(false)
@@ -24,14 +25,14 @@ export default function MyPage() {
 
   // ── 데이터 로드 ───────────────────────────────────────────────────────────
   useEffect(() => {
-    getMyPage()
-      .then((d) => {
-        console.log(d)
-        setData(d)
-        setSavedLocs(d.user.saved_locations ?? [])
-      })
-      .catch((err) => console.error('마이페이지 로드 실패:', err))
-  }, [])
+  getMyPage()
+    .then((d) => {
+      console.log("서버에서 받은 전체 데이터:", d);
+      setData(d);
+      setSavedLocs(d.user.saved_locations ?? []);
+    })
+    .catch((err) => console.error('마이페이지 로드 실패:', err));
+}, [location.pathname]);
 
   // ── 매너 게이지 SVG 애니메이션 ───────────────────────────────────────────
   useEffect(() => {
@@ -89,13 +90,12 @@ export default function MyPage() {
 
   // ── 찜 토글 ──────────────────────────────────────────────────────────────
   const handleLike = async (logId) => {
-    const res = await toggleLike(logId)
-    setData((d) => ({
-      ...d,
-      rec_logs: d.rec_logs.map((r) =>
-        r.log_id === logId ? { ...r, is_liked: res.liked } : r
-      ),
-    }))
+    toggleFavoriteAction({
+      id: item.id,
+      list: trending,
+      setter: setTrending,
+      type: 'restaurant'
+    });
   }
 
   // 통계 카드 '찜한 메뉴' 클릭 시 찜목록 섹션으로 스크롤
@@ -123,11 +123,22 @@ export default function MyPage() {
     </div>
   )
 
-  const { user = {}, my_parties = [], rec_logs = [] } = data
-  const likes = processTags(user.preferences?.likes)
-  const dislikes = processTags(user.preferences?.dislikes)
-  const liked_logs = rec_logs.filter((r) => r.is_liked)
-  const mannerScore = user.manner_score
+  const { user = {}, my_parties = [], rec_logs = [], liked_logs: apiLikedLogs = [] } = data || {};
+
+  const likes = processTags(user.preferences?.likes);
+  const dislikes = processTags(user.preferences?.dislikes);
+  const mannerScore = user.manner_score;
+
+  const allLikedLogs = [
+    ...apiLikedLogs,
+    ...rec_logs.filter((r) => r.is_liked && !apiLikedLogs.find(f => f.log_id === r.log_id))
+  ];
+
+  const displayLikedLogs = Array.from(
+    new Map(
+      allLikedLogs.map(item => [item.restaurant?.id ?? item.log_id, item])
+    ).values()
+  );
 
   const R = 36
   const circ = 2 * Math.PI * R
@@ -184,10 +195,10 @@ export default function MyPage() {
           className="stat-card cursor-pointer text-center transition hover:-translate-y-0.5 hover:border-[#ff6b6b] hover:shadow-md"
           onClick={handleFavoriteView}
         >
-          <div className="stat-num">{liked_logs.length}</div>
+          <div className="stat-num">{displayLikedLogs.length}</div>
           <div className="stat-label">찜한 메뉴</div>
           <div style={{ fontSize: '.72rem', color: 'var(--text-muted)', marginTop: 2 }}>
-            총 {liked_logs.length}개 찜함
+            총 {displayLikedLogs.length}개 찜함
           </div>
         </button>
         <div className="stat-card">
@@ -208,7 +219,7 @@ export default function MyPage() {
           <div className="stat-num" style={{ color: 'var(--color-accent)' }}>{mannerScore}</div>
           <div className="stat-label">매너점수</div>
           <div style={{ fontSize: '.72rem', color: 'var(--text-muted)', marginTop: 2 }}>
-            당근처럼 {mannerScore}점
+            {mannerScore}점
           </div>
         </div>
       </div>
@@ -277,7 +288,7 @@ export default function MyPage() {
           <hr style={{ border: 'none', borderTop: '1px solid var(--border-color)', margin: '16px 0' }} />
           {[
             ['파티 참여', (my_parties.length * 0.5).toFixed(1)],
-            ['후기 작성', (liked_logs.length * 0.3).toFixed(1)],
+            ['후기 작성', (displayLikedLogs.length * 0.3).toFixed(1)],
             ['약속 이행', '1.0'],
           ].map(([label, val]) => (
             <div
@@ -331,17 +342,17 @@ export default function MyPage() {
       <div className="profile-section scroll-mt-28" ref={favoriteMenusRef} id="favorite-menus">
         <div className="mb-4 flex items-center justify-between gap-3">
           <h3>메뉴 찜목록</h3>
-          {liked_logs.length > FAVORITE_LIMIT && (
+          {displayLikedLogs.length > FAVORITE_LIMIT && (
             <span className="text-xs text-gray-400">
-              총 {liked_logs.length}개 중 {showAllFavorites ? liked_logs.length : FAVORITE_LIMIT}개 표시
+              총 {displayLikedLogs.length}개 중 {showAllFavorites ? displayLikedLogs.length : FAVORITE_LIMIT}개 표시
             </span>
           )}
         </div>
 
-        {liked_logs.length > 0 ? (
+        {displayLikedLogs.length > 0 ? (
           <>
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-              {(showAllFavorites ? liked_logs : liked_logs.slice(0, FAVORITE_LIMIT)).map((log) => (
+              {(showAllFavorites ? displayLikedLogs : displayLikedLogs.slice(0, FAVORITE_LIMIT)).map((log) => (
                 <Link
                   to={`/menu/${log.restaurant?.id ?? log.recommended_restaurant_id}`}
                   className="card rest-card"
@@ -363,14 +374,14 @@ export default function MyPage() {
                 </Link>
               ))}
             </div>
-            {liked_logs.length > FAVORITE_LIMIT && (
+            {displayLikedLogs.length > FAVORITE_LIMIT && (
               <div className="flex justify-center mt-4">
                 <button
                   type="button"
                   onClick={() => setShowAllFavorites((v) => !v)}
                   className="px-5 py-1.5 rounded-md text-sm font-bold bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors"
                 >
-                  {showAllFavorites ? '접기 ▲' : `전체 ${liked_logs.length}개 보기 ▼`}
+                  {showAllFavorites ? '접기 ▲' : `전체 ${displayLikedLogs.length}개 보기 ▼`}
                 </button>
               </div>
             )}

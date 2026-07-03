@@ -93,6 +93,7 @@ export default function App() {
                 <Route path="/game"                    element={<Game />} />
                 <Route path="/auth/naver/callback"     element={<NaverCallback />} />
                 <Route path="/company"                 element={<Company />} />
+                {/* <Route path="/map" element={<MapPage />} /> */}
 
                 <Route path="/terms"                   element={<Terms />} />
                 <Route path="/support"                 element={<Support />} />
