@@ -1622,10 +1622,10 @@ def answer_inquiry(id):
 # ── FAVORITES API ────────────────────────────────────────────────────────
 
 @api_bp.route('/favorites', methods=['POST'])
-@jwt_required()
+@jwt_login_required
 def toggle_favorite():
-    user_id = get_jwt_identity()
-    data = request.get_json()
+    user_id = int(get_jwt_identity())
+    data = request.get_json(force=True)
     restaurant_id = data.get('restaurant_id')
 
     if not restaurant_id:
@@ -1648,7 +1648,7 @@ def toggle_favorite():
         return jsonify({"status": "added", "msg": "찜 목록에 추가되었습니다."}), 201
     
 @api_bp.route('/favorites', methods=['GET'])
-@jwt_required()
+@jwt_login_required
 def get_my_favorites():
     user_id = get_jwt_identity()
     favorites = Favorite.query.filter_by(user_id=user_id).all()
