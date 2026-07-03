@@ -17,7 +17,7 @@ if _db_url.startswith('postgresql://') and '+' not in _db_url:
 
 print(f"[CONFIG] Final URI = {_db_url[:60]}")
 
-_is_psycopg = 'psycopg' in _db_url
+_is_psycopg = 'psycopg' in os.environ.get('DATABASE_URL', '')
 
 class Config:
     SECRET_KEY     = os.environ.get('SECRET_KEY') or 'dev-secret-key'
