@@ -16,7 +16,7 @@ from app import db
 from app.models import (
     User, Restaurant, Party, PartyMember,
     ChatMessage, RecommendationLog, MannerVote, StatusEnum, RoleEnum,
-    Report, Inquiry, Review
+    Report, Inquiry, Review, Favorite
 )
 
 # ── 블루프린트 ────────────────────────────────────────────────────────────────
@@ -718,6 +718,7 @@ def mypage():
                             .order_by(Party.created_at.desc()).limit(5).all()
     rec_logs   = RecommendationLog.query.filter_by(user_id=user_id)\
                                         .order_by(RecommendationLog.log_id.desc()).limit(10).all()
+    liked_logs = RecommendationLog.query.filter_by(user_id=user_id, is_liked=True).all()
     return jsonify({
         'user':       serialize_user(user),
         'my_parties': [serialize_party(p, user_id) for p in my_parties],
@@ -729,6 +730,12 @@ def mypage():
                 'input_context': r.input_context,
             }
             for r in rec_logs
+        ],
+        'liked_logs': [    # 찜한 전체 목록 추가
+            {
+                'log_id': r.log_id,
+                'restaurant': serialize_restaurant(r.restaurant) if r.restaurant else None
+            } for r in liked_logs
         ],
     })
 
@@ -1565,6 +1572,11 @@ def manner_vote_status():
     }), 200
 
 
+# ══════════════════════════════════════════════════════════════════════════════
+# SUPPORT
+# ══════════════════════════════════════════════════════════════════════════════
+
+
 # 1. 문의글 목록 불러오기 (GET)
 @support_bp.route('/inquiries', methods=['GET'])
 def get_inquiries():
@@ -1573,30 +1585,30 @@ def get_inquiries():
 
 # 2. 문의글 등록하기 (POST)
 @support_bp.route('/inquiries', methods=['POST'])
-@jwt_login_required
+@jwt_login_required 
 def create_inquiry():
+    print(f"DEBUG: 현재 사용자 ID -> {get_jwt_identity()}")
     data = request.get_json()
-    if not data:
-        return jsonify({"msg": "JSON 데이터가 전달되지 않았습니다."}), 422
-    
-    title = data.get('title')
-    content = data.get('content')
-    
-    if not title or not content:
-        return jsonify({"msg": "제목(title)이나 내용(content)이 없습니다."}), 422
+
+    if not data or 'title' not in data or 'content' not in data:
+        return jsonify({"msg": "제목과 내용을 모두 입력해주세요."}), 422
     
     try:
+        user_identity = get_jwt_identity()
+        print(f"DEBUG: 사용자 ID -> {user_identity}")
+        
         new_inquiry = Inquiry(
-            title=title,
-            content=content,
-            user_id=int(get_jwt_identity())
+            title=data['title'],
+            content=data['content'],
+            user_id=int(user_identity) 
         )
         db.session.add(new_inquiry)
         db.session.commit()
         return jsonify(new_inquiry.to_dict()), 201
     except Exception as e:
         db.session.rollback()
-        return jsonify({"msg": f"데이터베이스 저장 오류: {str(e)}"}), 500
+        print(f"DEBUG: DB 에러 발생 -> {str(e)}")
+        return jsonify({"msg": f"서버 저장 오류: {str(e)}"}), 500
 
 # 3. 관리자 답변 달기 (PATCH)
 @support_bp.route('/inquiries/<int:id>/answer', methods=['PATCH'])
@@ -1606,3 +1618,48 @@ def answer_inquiry(id):
     inquiry.answer = request.json['answer']
     db.session.commit()
     return jsonify(inquiry.to_dict()), 200
+
+# ── FAVORITES API ────────────────────────────────────────────────────────
+
+@api_bp.route('/favorites', methods=['POST'])
+@jwt_required()
+def toggle_favorite():
+    user_id = get_jwt_identity()
+    data = request.get_json()
+    restaurant_id = data.get('restaurant_id')
+
+    if not restaurant_id:
+        return jsonify({"msg": "식당 ID가 필요합니다."}), 400
+
+    # 이미 찜한 상태인지 확인
+    favorite = Favorite.query.filter_by(
+        user_id=user_id, 
+        restaurant_id=restaurant_id
+    ).first()
+
+    if favorite:
+        db.session.delete(favorite)
+        db.session.commit()
+        return jsonify({"status": "removed", "msg": "찜 목록에서 제거되었습니다."}), 200
+    else:
+        new_favorite = Favorite(user_id=user_id, restaurant_id=restaurant_id)
+        db.session.add(new_favorite)
+        db.session.commit()
+        return jsonify({"status": "added", "msg": "찜 목록에 추가되었습니다."}), 201
+    
+@api_bp.route('/favorites', methods=['GET'])
+@jwt_required()
+def get_my_favorites():
+    user_id = get_jwt_identity()
+    favorites = Favorite.query.filter_by(user_id=user_id).all()
+    
+    result = [
+        {
+            "id": f.restaurant.restaurant_id,
+            "name": f.restaurant.name,
+            "category": f.restaurant.category,
+            "avg_rating": f.restaurant.avg_rating,
+            "image": getattr(f.restaurant, 'image', None) 
+        } for f in favorites
+    ]
+    return jsonify(result), 200

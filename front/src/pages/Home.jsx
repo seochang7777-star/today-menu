@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
-import { createLikeLog, getNearby, getRestaurants, getTrending, toggleLike } from '../api/services'
+import { createLikeLog, getNearby, getRestaurants, getTrending, toggleFavorite, getMyFavorites, toggleFavoriteAction } from '../api/services'
 import { useAuth } from '../App'
 import KakaoMap from '../components/KakaoMap'
 import RestaurantSearch from '../components/RestaurantSearch'
@@ -133,6 +133,17 @@ export default function Home() {
   const bannerTimer = useRef(null)
 
   useEffect(() => {
+    if (user) {
+      getMyFavorites()
+        .then((data) => {
+          const ids = new Set(data.map(item => item.id));
+          setLikedCafeteriaIds(ids);
+        })
+        .catch(err => console.error('찜 목록 로드 실패:', err));
+    }
+  }, [user]);
+
+  useEffect(() => {
     getRestaurants({ cat: '전체', page: 1 })
       .then((d) => setTrending(d.items?.length ? d.items : SAMPLE_RESTAURANTS))
       .catch((err) => {
@@ -164,40 +175,16 @@ export default function Home() {
 
   const visibleRestaurants = trending.length ? trending : SAMPLE_RESTAURANTS
 
-  const handleCafeteriaLike = async (item) => {
-    try {
-      if (item.log_id != null) {
-        // 이미 추천 로그 있으면 찜 토글
-        const res = await toggleLike(item.log_id)
-        setTrending((prev) =>
-          prev.map((r) =>
-            r.id === item.id ? { ...r, is_liked: res.liked } : r
-          )
-        )
-      } else {
-        // 추천 로그 없으면 API로 생성 후 찜
-        const res = await createLikeLog(item.id)
-        setTrending((prev) =>
-          prev.map((r) =>
-            r.id === item.id ? { ...r, is_liked: true, log_id: res.log_id } : r
-          )
-        )
-        setLikedCafeteriaIds((prev) => {
-          const next = new Set(prev)
-          next.add(item.id)
-          return next
-        })
-      }
-    } catch {
-      // 비로그인 시 로컬만 토글
-      setLikedCafeteriaIds((prev) => {
-        const next = new Set(prev)
-        if (next.has(item.id)) next.delete(item.id)
-        else next.add(item.id)
-        return next
-      })
-    }
-  }
+  const handleCafeteriaLike = (item) => {
+    toggleFavoriteAction({
+      id: item.id,
+      list: trending,
+      setter: setTrending,
+      type: 'restaurant'
+    });
+  };
+
+
 
   return (
     <div className="home-page">
@@ -312,8 +299,8 @@ export default function Home() {
               <Cafeteria
                 item={r}
                 to={`/menu/${r.id}`}
-                liked={Boolean(r.is_liked) || likedCafeteriaIds.has(r.id)}
-                onToggleLike={handleCafeteriaLike}
+                liked={Boolean(r.is_liked)} 
+                onToggleLike={() => handleCafeteriaLike(r)}
                 fallbackImage={SAMPLE_RESTAURANTS[index % SAMPLE_RESTAURANTS.length].image}
               />
 
@@ -420,4 +407,4 @@ export default function Home() {
       </section>
     </div>
   )
-}
+  }
