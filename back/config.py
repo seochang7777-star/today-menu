@@ -28,9 +28,9 @@ class Config:
     )
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     SQLALCHEMY_ENGINE_OPTIONS = {
-        'pool_pre_ping': True,
+        'pool_pre_ping': False,
         'pool_recycle':  300,
         **({'connect_args': {'prepare_threshold': 0}} if _is_psycopg else {}),
     }
-    JWT_TOKEN_LOCATION = ["headers"]
+    JWT_TOKEN_LOCATION       = ["headers"]
     JWT_ACCESS_TOKEN_EXPIRES = timedelta(hours=1)
