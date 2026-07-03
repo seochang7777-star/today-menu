@@ -1650,16 +1650,21 @@ def toggle_favorite():
 @api_bp.route('/favorites', methods=['GET'])
 @jwt_login_required
 def get_my_favorites():
-    user_id = int(get_jwt_identity())
-    favorites = Favorite.query.filter_by(user_id=user_id).all()
-    
-    result = [
-        {
-            "id": f.restaurant.restaurant_id,
-            "name": f.restaurant.name,
-            "category": f.restaurant.category,
-            "avg_rating": f.restaurant.avg_rating,
-            "image": getattr(f.restaurant, 'image', None) 
-        } for f in favorites
-    ]
+    user_id   = int(get_jwt_identity())
+    from sqlalchemy.orm import joinedload
+    favorites = Favorite.query.options(
+        joinedload(Favorite.restaurant)
+    ).filter(Favorite.user_id == user_id).all()
+
+    result = []
+    for f in favorites:
+        if f.restaurant:
+            result.append({
+                'id':         f.restaurant.restaurant_id,
+                'name':       f.restaurant.name,
+                'category':   f.restaurant.category,
+                'avg_rating': f.restaurant.avg_rating,
+                'address':    f.restaurant.address or '',
+                'image':      getattr(f.restaurant, 'image', None),
+            })
     return jsonify(result), 200
