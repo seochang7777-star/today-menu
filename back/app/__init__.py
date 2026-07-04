@@ -31,12 +31,22 @@ def create_app():
         instance_relative_config=True,
         instance_path=str(Path(__file__).resolve().parent.parent / 'instance')
     )
-
     app.config.from_object('config.Config')
     Path(app.instance_path).mkdir(parents=True, exist_ok=True)
 
     db_uri = app.config.get('SQLALCHEMY_DATABASE_URI', '')
     print(f"[APP] Using DB: {db_uri[:60]}")
+
+    # ── psycopg prepare_threshold 강제 설정 ──────────────────────────────────
+    # pgbouncer Transaction mode에서 DuplicatePreparedStatement 방지
+    if 'psycopg' in db_uri:
+        engine_opts = app.config.get('SQLALCHEMY_ENGINE_OPTIONS', {})
+        connect_args = engine_opts.get('connect_args', {})
+        connect_args['prepare_threshold'] = 0
+        engine_opts['connect_args'] = connect_args
+        engine_opts['pool_pre_ping'] = False
+        app.config['SQLALCHEMY_ENGINE_OPTIONS'] = engine_opts
+        print("[APP] psycopg prepare_threshold=0 적용")
 
     db.init_app(app)
     migrate.init_app(app, db)
@@ -47,8 +57,6 @@ def create_app():
         cors_allowed_origins=_allowed_origins(),
         supports_credentials=True,
     )
-
-
     CORS(app,
          supports_credentials=True,
          resources={r'/*': {'origins': _allowed_origins()}})
@@ -61,7 +69,6 @@ def create_app():
     app.register_blueprint(mypage_bp)
     app.register_blueprint(api_bp)
     app.register_blueprint(support_bp)
-
 
     with app.app_context():
         try:
