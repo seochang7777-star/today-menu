@@ -129,13 +129,11 @@ export default function MyPage() {
     try {
       if (log?.log_id) {
         await toggleLike(log.log_id)
-      } else {
-        await toggleFavoriteAction({
-          id: targetId,
-          list: [],
-          setter: () => {},
-          type: 'log'
-        })
+      } else if (targetId) {
+        // log_id 없으면 favorites API로 해제
+        const { data: res } = await import('../api/axiosInstance').then(m =>
+          m.default.post('/api/favorites', { restaurant_id: targetId })
+        )
       }
     } catch {
       // 실패 시 데이터 재로드
