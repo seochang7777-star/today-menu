@@ -83,6 +83,7 @@
 
 - **도보 / 자동차** 경로 안내
 - **카카오T 택시** 연동 기준 맵 안내
+- 카카오 자전거 등 **타 플랫폼 연결** 지원
 - 저장 장소(집·직장 등) 등록으로 주변 식당 즉시 안내
 
 ---
@@ -119,6 +120,57 @@
 - 푸터에서 사이트 이용 안내 전반 확인 가능
 
 ---
+
+
+---
+
+## 📸 화면 구성
+
+> 아래 이미지를 클릭하면 크게 볼 수 있습니다.
+
+### 🏠 홈 화면
+![홈 화면](./docs/screenshots/home.png)
+> 오늘의 추천 맛집, 카테고리 필터, 근처 식당 안내
+
+### 🔐 로그인 / 회원가입
+| 로그인 | 회원가입 |
+|---|---|
+| ![로그인](./docs/screenshots/login.png) | ![회원가입](./docs/screenshots/register.png) |
+
+### 🍱 메뉴 목록 / 상세
+| 메뉴 목록 | 메뉴 상세 + 리뷰 |
+|---|---|
+| ![메뉴 목록](./docs/screenshots/menu.png) | ![메뉴 상세](./docs/screenshots/menu_detail.png) |
+
+### 👥 파티
+| 파티 목록 | 파티 상세 + 채팅 |
+|---|---|
+| ![파티 목록](./docs/screenshots/party.png) | ![파티 상세](./docs/screenshots/party_detail.png) |
+
+### 🤖 AI 챗봇
+![챗봇](./docs/screenshots/chatbot.png)
+> 개인화 메뉴 추천 / Q&A 모드
+
+### 👤 마이페이지
+| 마이페이지 | 매너온도 상세 |
+|---|---|
+| ![마이페이지](./docs/screenshots/mypage.png) | ![매너온도](./docs/screenshots/manner.png) |
+
+### 🎮 게임
+| 룰렛 | 월드컵 |
+|---|---|
+| ![룰렛](./docs/screenshots/game_roulette.png) | ![월드컵](./docs/screenshots/game_worldcup.png) |
+
+| 스무고개 | 뽑기 |
+|---|---|
+| ![스무고개](./docs/screenshots/game_twentyq.png) | ![뽑기](./docs/screenshots/game_scratch.png) |
+
+### 🛎️ 고객센터
+![고객센터](./docs/screenshots/support.png)
+
+---
+
+> 📁 스크린샷은 `docs/screenshots/` 폴더에 저장해주세요.
 
 ## 🛠️ 기술 스택
 
