@@ -20,6 +20,7 @@ export default function MyPage() {
   const [savedLocs, setSavedLocs] = useState([])
   const [locSearch, setLocSearch] = useState('')
   const [locResults, setLocResults] = useState([])
+  const [pageLoading, setPageLoading] = useState(true)
   const [locLoading, setLocLoading] = useState(false)
   const [locMsg, setLocMsg] = useState('')
 
@@ -55,8 +56,9 @@ export default function MyPage() {
         };
         setData(merged);
         setSavedLocs(d.user?.saved_locations ?? []);
+        setPageLoading(false);
       })
-      .catch((err) => console.error('마이페이지 로드 실패:', err));
+      .catch((err) => { console.error('마이페이지 로드 실패:', err); setPageLoading(false); });
   }, [location.pathname]);
 
   // ── 매너 게이지 SVG 애니메이션 ───────────────────────────────────────────
@@ -164,8 +166,8 @@ export default function MyPage() {
     ...rec_logs.filter(r =>
       r.is_liked &&
       !apiLikedLogs.find(f =>
-        (f.restaurant?.restaurant_id ?? f.restaurant?.id) ===
-        (r.restaurant?.restaurant_id ?? r.restaurant?.id)
+        (f.restaurant?.id ?? f.restaurant?.restaurant_id) ===
+        (r.restaurant?.id ?? r.restaurant?.restaurant_id)
       )
     )
   ];
@@ -173,7 +175,7 @@ export default function MyPage() {
   const displayLikedLogs = Array.from(
     new Map(
       allLikedLogs.map(item => [
-        item.restaurant?.restaurant_id ?? item.restaurant?.id ?? item.log_id,
+        item.restaurant?.id ?? item.restaurant?.restaurant_id ?? item.log_id,
         item
       ])
     ).values()
@@ -401,7 +403,7 @@ export default function MyPage() {
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
               {(showAllFavorites ? displayLikedLogs : displayLikedLogs.slice(0, FAVORITE_LIMIT)).map((log) => (
                 <Link
-                  to={`/menu/${log.restaurant?.restaurant_id ?? log.restaurant?.id ?? log.recommended_restaurant_id}`}
+                  to={`/menu/${log.restaurant?.id ?? log.restaurant?.restaurant_id ?? log.recommended_restaurant_id}`}
                   className="card rest-card"
                   key={log.log_id ?? log.restaurant?.restaurant_id}
                 >
@@ -456,7 +458,7 @@ export default function MyPage() {
               style={{ display: 'flex', gap: 14, padding: 14, background: 'var(--bg-white)', border: '1px solid var(--border-color)', borderRadius: 'var(--border-radius-lg)' }}
             >
               <Link
-                to={`/menu/${log.restaurant?.restaurant_id ?? log.restaurant?.id ?? log.recommended_restaurant_id}`}
+                to={`/menu/${log.restaurant?.id ?? log.restaurant?.restaurant_id ?? log.recommended_restaurant_id}`}
                 style={{ display: 'flex', gap: 14, flex: 1, minWidth: 0, textDecoration: 'none', color: 'inherit' }}
               >
                 <div style={{ width: 40, height: 40, borderRadius: '50%', background: '#FFF5F5', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.1rem', flexShrink: 0 }}>
