@@ -1439,6 +1439,62 @@ def change_party_status(party_id):
 
 
 
+
+# ══════════════════════════════════════════════════════════════════════════════
+# NOTICES — 공지사항
+# ══════════════════════════════════════════════════════════════════════════════
+
+@api_bp.route('/notices', methods=['GET'])
+def get_notices():
+    """공지사항 목록 조회 (전체)"""
+    notices = Notice.query.order_by(Notice.created_at.desc()).all()
+    return jsonify([n.to_dict() for n in notices]), 200
+
+
+@api_bp.route('/notices', methods=['POST'])
+@jwt_login_required
+def create_notice():
+    """공지사항 작성 (관리자 전용)"""
+    user_id = int(get_jwt_identity())
+    user    = User.query.get_or_404(user_id)
+
+    if user.role.value != 'admin':
+        return jsonify({'message': '관리자만 공지사항을 작성할 수 있습니다.'}), 403
+
+    data    = request.get_json(force=True)
+    title   = data.get('title', '').strip()
+    content = data.get('content', '').strip()
+    category = data.get('category', '서비스').strip()
+
+    if not title or not content:
+        return jsonify({'message': '제목과 내용을 입력해주세요.'}), 400
+
+    notice = Notice(
+        title=title,
+        content=content,
+        category=category,
+        author_id=user_id,
+    )
+    db.session.add(notice)
+    db.session.commit()
+    return jsonify({'message': '공지사항이 등록되었습니다.', 'notice': notice.to_dict()}), 201
+
+
+@api_bp.route('/notices/<int:notice_id>', methods=['DELETE'])
+@jwt_login_required
+def delete_notice(notice_id):
+    """공지사항 삭제 (관리자 전용)"""
+    user_id = int(get_jwt_identity())
+    user    = User.query.get_or_404(user_id)
+
+    if user.role.value != 'admin':
+        return jsonify({'message': '관리자만 삭제할 수 있습니다.'}), 403
+
+    notice = Notice.query.get_or_404(notice_id)
+    db.session.delete(notice)
+    db.session.commit()
+    return jsonify({'message': '공지사항이 삭제되었습니다.'}), 200
+
 # ── REVIEW API ─────────────────────────────────────────────────────────────────
 @menu_bp.route('/<int:rest_id>/reviews', methods=['GET'])
 def get_reviews(rest_id):
