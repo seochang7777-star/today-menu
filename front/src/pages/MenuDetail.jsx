@@ -43,13 +43,6 @@ function Stars({ value, size = 'text-sm', interactive = false, onSelect, hovered
         )
       })}
     </div>
-      {showReview && (
-        <ReviewModal
-          restId={rest?.restaurant_id ?? rest?.id}
-          restName={rest?.name}
-          onClose={() => setShowReview(false)}
-        />
-      )}
   )
 }
 
@@ -239,8 +232,8 @@ export default function MenuDetail() {
             </p>
             {rest.business_hours && (
               <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 10, fontSize: '.85rem' }}>
-                <span style={{ color: 'var(--text-muted)' }}>🕐</span>
-                <span style={{ fontWeight: 700, color: 'var(--text-secondary)' }}>{rest.business_hours}</span>
+                <span>🕐</span>
+                <span style={{ fontWeight: 700 }}>{rest.business_hours}</span>
               </div>
             )}
 
@@ -256,7 +249,7 @@ export default function MenuDetail() {
                       category: rest.category,
                     },
                   ]}
-                  height="260px"
+                  height="220px"
                 />
 
                 <a
@@ -409,5 +402,12 @@ export default function MenuDetail() {
         </main>
       </div>
     </div>
+      {showReview && (
+        <ReviewModal
+          restId={rest?.restaurant_id ?? rest?.id}
+          restName={rest?.name}
+          onClose={() => setShowReview(false)}
+        />
+      )}
   )
 }
