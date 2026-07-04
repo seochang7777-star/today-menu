@@ -269,7 +269,7 @@ export default function MyPage() {
         </div>
 
         <div className="profile-section">
-          {user?.role === 'admin' && (
+          {user?.role?.toLowerCase() === 'admin' && (
             <div style={{ marginBottom: 16 }}>
               <Link to="/admin"
                 style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '12px 16px', background: '#FFF5F5', border: '1px solid #FED7D7', borderRadius: 10, textDecoration: 'none', fontWeight: 700, color: 'var(--color-danger)' }}>
