@@ -14,6 +14,7 @@ function Stars({ value, size = 'text-sm', interactive = false, onSelect, hovered
   const active = hovered || clampRating(value)
 
   return (
+    <>
     <div className={`inline-flex items-center gap-[1px] ${size}`} aria-label={`별점 ${active}점`}>
       {[1, 2, 3, 4, 5].map((score) => {
         const filled = score <= active
@@ -409,5 +410,6 @@ export default function MenuDetail() {
           onClose={() => setShowReview(false)}
         />
       )}
+    </>
   )
 }
