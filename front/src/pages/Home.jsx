@@ -177,17 +177,16 @@ export default function Home() {
 
   const visibleRestaurants = trending.length ? trending : SAMPLE_RESTAURANTS
 
-  const handleCafeteriaLike = (item) => {
-    const isCurrentlyLiked = Boolean(item.is_liked) || likedCafeteriaIds.has(item.id)
-    // likedCafeteriaIds 업데이트
+  const handleCafeteriaLike = (r) => {
+    const isLiked = Boolean(r.is_liked) || likedCafeteriaIds.has(r.id)
     setLikedCafeteriaIds(prev => {
       const next = new Set(prev)
-      if (isCurrentlyLiked) next.delete(item.id)
-      else next.add(item.id)
+      if (isLiked) next.delete(r.id)
+      else next.add(r.id)
       return next
     })
     toggleFavoriteAction({
-      id: item.id,
+      id: r.id,
       list: trending,
       setter: setTrending,
       type: 'restaurant'
