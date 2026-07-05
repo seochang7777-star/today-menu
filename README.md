@@ -161,7 +161,7 @@
 | ![파티 목록](./docs/screenshots/party.jpeg) | ![파티 상세](./docs/screenshots/party_detail.jpeg) |
 
 ###  AI 챗봇
-![챗봇](./docs/screenshots/chatbot.jpeg)
+![챗봇](./docs/screenshots/chatbot.png)
 > 개인화 메뉴 추천 / Q&A 모드
 
 ###  마이페이지
