@@ -848,6 +848,10 @@ def admin_users():
 @api_bp.route('/admin/users/<int:user_id>', methods=['DELETE'])
 @admin_required
 def admin_delete_user(user_id):
+    user = User.query.get_or_404(user_id)
+    db.session.delete(user)
+    db.session.commit()
+    return jsonify({'message': '탈퇴 처리되었습니다.'}), 200
 
 @api_bp.route('/admin/reviews', methods=['GET'])
 @admin_required
