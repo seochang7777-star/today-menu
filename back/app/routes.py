@@ -17,7 +17,7 @@ from app.models import (  # noqa
 
     User, Restaurant, Party, PartyMember,
     ChatMessage, RecommendationLog, MannerVote, StatusEnum, RoleEnum,
-    Report, Inquiry, Review, Favorite, Notice
+    Report, Inquiry, Review, Favorite, Notice, Menu, Category
 )
 
 # ── 블루프린트 ────────────────────────────────────────────────────────────────
@@ -417,12 +417,25 @@ def delete_restaurant(rest_id):
 def random_menus():
     count = min(request.args.get('count', 64, type=int), 128)
     cat   = request.args.get('cat', '전체')
-    query = Restaurant.query
-    if cat != '전체':
-        query = query.filter_by(category=cat)
+
     from sqlalchemy import func
+    query = db.session.query(Menu, Category).join(
+        Category, Menu.category_id == Category.id
+    )
+    if cat != '전체':
+        query = query.filter(Category.name == cat)
+
     items = query.order_by(func.random()).limit(count).all()
-    return jsonify({'items': [serialize_restaurant(r) for r in items]}), 200
+
+    result = []
+    for menu, category in items:
+        result.append({
+            'id':       menu.id,
+            'name':     menu.menu_name,
+            'category': category.name,
+        })
+
+    return jsonify({'items': result}), 200
 
 
 @main_bp.route('/api/menu/trending', methods=['GET'])

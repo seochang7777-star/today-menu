@@ -336,11 +336,7 @@ function TwentyQ({ menus }) {
           <div style={{ background: 'linear-gradient(135deg,#EBF8FF,#BEE3F8)', borderRadius: 16, padding: '24px 20px', marginBottom: 16 }}>
             <div style={{ fontSize: '2.5rem', marginBottom: 8 }}>{catIcon(guess.category)}</div>
             <div style={{ fontWeight: 900, fontSize: '1.4rem', marginBottom: 4 }}>{guess.name}</div>
-            <div style={{ fontSize: '.82rem', color: 'var(--text-muted)' }}>{guess.category} · {guess.address}</div>
-            <Link to={`/menu/${guess.id}`}
-              style={{ display: 'inline-block', marginTop: 12, padding: '6px 20px', background: '#3182CE', color: '#fff', borderRadius: 20, fontSize: '.82rem', fontWeight: 700, textDecoration: 'none' }}>
-              식당 보러가기 →
-            </Link>
+            <div style={{ fontSize: '.82rem', color: 'var(--text-muted)', marginTop: 4 }}>{guess.category}</div>
           </div>
           <button onClick={() => setReveal(!reveal)}
             style={{ fontSize: '.82rem', color: 'var(--text-muted)', background: 'none', border: '1px solid var(--border-color)', padding: '6px 14px', borderRadius: 8, cursor: 'pointer', marginBottom: 12 }}>
@@ -409,11 +405,7 @@ function WorldCup({ menus }) {
       <div style={{ background: 'linear-gradient(135deg,#FFFFF0,#FEFCBF)', border: '3px solid var(--color-accent)', borderRadius: 20, padding: '28px 24px', margin: '16px 0', display: 'inline-block', minWidth: 200 }}>
         <div style={{ fontSize: '3.5rem', marginBottom: 8 }}>{catIcon(champion.category)}</div>
         <div style={{ fontWeight: 900, fontSize: '1.5rem' }}>{champion.name}</div>
-        <div style={{ fontSize: '.82rem', color: 'var(--text-muted)', marginTop: 4 }}>{champion.category} · {champion.address}</div>
-        <Link to={`/menu/${champion.id}`}
-          style={{ display: 'inline-block', marginTop: 14, padding: '8px 24px', background: 'var(--color-accent)', color: '#fff', borderRadius: 20, fontSize: '.88rem', fontWeight: 700, textDecoration: 'none' }}>
-          식당 보러가기 →
-        </Link>
+        <div style={{ fontSize: '.82rem', color: 'var(--text-muted)', marginTop: 4 }}>{champion.category}</div>
       </div>
       <div><button className="btn btn-secondary" onClick={init}>🔄 다시하기</button></div>
     </div>
@@ -545,10 +537,8 @@ function ScratchCard({ menus }) {
       {done && prize && (
         <div style={{ textAlign: 'center', animation: 'popIn .4s ease' }}>
           <div style={{ fontWeight: 900, fontSize: '1rem', color: 'var(--color-accent)', marginBottom: 8 }}>🎉 당첨!</div>
-          <Link to={`/menu/${prize.id}`}
-            style={{ display: 'inline-block', padding: '8px 24px', background: 'var(--color-accent)', color: '#fff', borderRadius: 20, fontSize: '.88rem', fontWeight: 700, textDecoration: 'none' }}>
-            식당 보러가기 →
-          </Link>
+          <div style={{ fontWeight: 900, fontSize: '1.2rem', color: 'var(--text-primary)' }}>{prize.name}</div>
+          <div style={{ fontSize: '.85rem', color: 'var(--text-muted)', marginTop: 4 }}>{prize.category}</div>
         </div>
       )}
       <button onClick={initCard}
@@ -563,41 +553,61 @@ function ScratchCard({ menus }) {
 // 게임 5 — 사다리타기
 // ══════════════════════════════════════════════════════════════════════════════
 function Ladder({ menus }) {
-  const MAX = 6
+  const MAX    = 6
+  const NUM_ROWS = 10
+  const COLORS = ['#E53E3E','#DD6B20','#F6AD55','#38A169','#3182CE','#6B46C1']
+
   const canvasRef = useRef(null)
-  const [items,      setItems]      = useState([])   // 메뉴 목록
-  const [inputVal,   setInputVal]   = useState('')
-  const [rungs,      setRungs]      = useState([])   // 사다리 가로줄
-  const [result,     setResult]     = useState(null) // { topIdx, bottomIdx }
-  const [animPath,   setAnimPath]   = useState(null) // 현재 하이라이트 경로
-  const [fetching,   setFetching]   = useState(false)
+  const [items,    setItems]    = useState([])
+  const [inputVal, setInputVal] = useState('')
+  // ladder: { rungs: [{row,col}], yPositions: [y0,y1,...] } — yPositions는 실제 픽셀 Y값
+  const [ladder,   setLadder]   = useState({ rungs: [], yPositions: [] })
+  const [result,   setResult]   = useState(null)
+  const [animPath, setAnimPath] = useState(null)
+  const [fetching, setFetching] = useState(false)
 
-  const NUM_ROWS = 9   // 세로 구간 수
-  const COLORS   = ['#E53E3E','#DD6B20','#F6AD55','#38A169','#3182CE','#6B46C1']
+  // ── 사다리 생성 핵심 규칙 ─────────────────────────────────────────────────
+  // 규칙: 같은 row에서 어떤 세로줄도 좌우 동시에 연결 금지 (Y자 교차 방지)
+  const buildLadder = useCallback((n, canvasH) => {
+    const PAD = 36, TOP = 52, BOT = canvasH - 52
 
-  // ── 사다리 가로줄 생성 ────────────────────────────────────────────────────
-  const generateRungs = useCallback((n) => {
-    const r = []
+    // 1) 각 row의 Y 위치를 불균등하게 생성
+    //    → 구간을 NUM_ROWS+1 등분 후, 각 구간 내 랜덤 위치 선택
+    const segH = (BOT - TOP) / (NUM_ROWS + 1)
+    const yPositions = Array.from({ length: NUM_ROWS }, (_, i) => {
+      const base = TOP + (i + 1) * segH
+      // 각 구간의 ±35% 범위 내 랜덤
+      const jitter = segH * (0.15 + Math.random() * 0.7 - 0.35)
+      return Math.round(base + jitter)
+    })
+
+    // 2) 가로줄 생성: connectedLines로 Y자 교차 완전 방지
+    const rungs = []
     for (let row = 0; row < NUM_ROWS; row++) {
-      let last = -2
-      const cols = Array.from({ length: n - 1 }, (_, i) => i).sort(() => Math.random() - .5)
-      for (const col of cols) {
-        if (col !== last + 1 && Math.random() > .45) {
-          r.push({ row, col })
-          last = col
+      const connectedLines = new Set() // 이 row에서 이미 연결된 세로줄
+      const gaps = Array.from({ length: n - 1 }, (_, i) => i)
+        .sort(() => Math.random() - 0.5)
+
+      for (const gap of gaps) {
+        // gap은 세로줄 gap과 gap+1을 연결
+        // 두 세로줄 모두 아직 이 row에서 연결 안 됐을 때만 추가
+        if (!connectedLines.has(gap) && !connectedLines.has(gap + 1) && Math.random() > 0.38) {
+          rungs.push({ row, col: gap })
+          connectedLines.add(gap)
+          connectedLines.add(gap + 1)
         }
       }
     }
-    return r
+    return { rungs, yPositions }
   }, [])
 
   // ── 경로 추적 ─────────────────────────────────────────────────────────────
-  const tracePath = useCallback((topIdx, rungList) => {
+  const tracePath = useCallback((topIdx, rungs) => {
     let col = topIdx
     const path = [{ row: -1, col }]
     for (let row = 0; row < NUM_ROWS; row++) {
-      const goRight = rungList.find(r => r.row === row && r.col === col)
-      const goLeft  = rungList.find(r => r.row === row && r.col === col - 1)
+      const goRight = rungs.find(r => r.row === row && r.col === col)
+      const goLeft  = rungs.find(r => r.row === row && r.col === col - 1)
       if      (goRight) col += 1
       else if (goLeft)  col -= 1
       path.push({ row, col })
@@ -608,7 +618,7 @@ function Ladder({ menus }) {
   // ── 캔버스 그리기 ─────────────────────────────────────────────────────────
   const draw = useCallback((highlightPath = null) => {
     const canvas = canvasRef.current
-    if (!canvas || items.length < 2) return
+    if (!canvas || items.length < 2 || ladder.yPositions.length === 0) return
     const ctx  = canvas.getContext('2d')
     const W    = canvas.width
     const H    = canvas.height
@@ -621,9 +631,9 @@ function Ladder({ menus }) {
     ctx.clearRect(0, 0, W, H)
 
     const xOf = (col) => PAD + col * step
-    const yOf = (row) => TOP + (row + 1) * ((BOT - TOP) / (NUM_ROWS + 1))
+    const yOf = (row) => ladder.yPositions[row] ?? (TOP + (row + 1) * (BOT - TOP) / (NUM_ROWS + 1))
 
-    // ── 세로줄 ───────────────────────────────────────────────────────────────
+    // 세로줄
     for (let i = 0; i < n; i++) {
       ctx.beginPath()
       ctx.moveTo(xOf(i), TOP)
@@ -633,17 +643,17 @@ function Ladder({ menus }) {
       ctx.stroke()
     }
 
-    // ── 가로줄 ───────────────────────────────────────────────────────────────
-    rungs.forEach(({ row, col }) => {
+    // 가로줄
+    ladder.rungs.forEach(({ row, col }) => {
       ctx.beginPath()
-      ctx.moveTo(xOf(col), yOf(row))
+      ctx.moveTo(xOf(col),     yOf(row))
       ctx.lineTo(xOf(col + 1), yOf(row))
-      ctx.strokeStyle = '#B0A098'
+      ctx.strokeStyle = '#A09090'
       ctx.lineWidth   = 3
       ctx.stroke()
     })
 
-    // ── 하이라이트 경로 ───────────────────────────────────────────────────────
+    // 하이라이트 경로
     if (highlightPath && highlightPath.length >= 2) {
       const color = COLORS[highlightPath[0].col % COLORS.length]
       ctx.strokeStyle = color
@@ -656,7 +666,6 @@ function Ladder({ menus }) {
         const prev = highlightPath[i - 1]
         const cur  = highlightPath[i]
         const y    = yOf(cur.row)
-        // 가로 이동
         if (prev.col !== cur.col) {
           ctx.lineTo(xOf(prev.col), y)
           ctx.lineTo(xOf(cur.col), y)
@@ -668,29 +677,29 @@ function Ladder({ menus }) {
       ctx.stroke()
     }
 
-    // ── 상단 라벨 (번호) ──────────────────────────────────────────────────────
+    // 상단 번호
     for (let i = 0; i < n; i++) {
-      const isHighlight = highlightPath && highlightPath[0].col === i
+      const hl = highlightPath && highlightPath[0].col === i
       ctx.beginPath()
       ctx.arc(xOf(i), TOP - 14, 14, 0, 2 * Math.PI)
-      ctx.fillStyle = isHighlight ? COLORS[i % COLORS.length] : '#F3E7DD'
+      ctx.fillStyle = hl ? COLORS[i % COLORS.length] : '#F3E7DD'
       ctx.fill()
-      ctx.fillStyle = isHighlight ? '#fff' : '#7A5C52'
+      ctx.fillStyle = hl ? '#fff' : '#7A5C52'
       ctx.font      = 'bold 12px sans-serif'
       ctx.textAlign = 'center'
       ctx.fillText(i + 1, xOf(i), TOP - 10)
     }
 
-    // ── 하단 라벨 (메뉴명) ────────────────────────────────────────────────────
+    // 하단 메뉴명
     for (let i = 0; i < n; i++) {
-      const isResult = highlightPath && highlightPath[highlightPath.length - 1].col === i
-      ctx.fillStyle = isResult ? COLORS[highlightPath[0].col % COLORS.length] : '#5E4A44'
-      ctx.font      = `bold ${isResult ? 12 : 11}px sans-serif`
+      const isRes = highlightPath && highlightPath[highlightPath.length - 1].col === i
+      ctx.fillStyle = isRes ? COLORS[highlightPath[0].col % COLORS.length] : '#5E4A44'
+      ctx.font      = `bold ${isRes ? 12 : 11}px sans-serif`
       ctx.textAlign = 'center'
       const label = items[i].length > 5 ? items[i].slice(0, 5) + '…' : items[i]
       ctx.fillText(label, xOf(i), BOT + 20)
     }
-  }, [items, rungs])
+  }, [items, ladder])
 
   useEffect(() => { draw(animPath) }, [draw, animPath])
 
@@ -703,7 +712,7 @@ function Ladder({ menus }) {
     setInputVal('')
     setResult(null)
     setAnimPath(null)
-    setRungs(generateRungs(next.length))
+    setLadder(buildLadder(next.length, 420))
   }
 
   const removeItem = (idx) => {
@@ -711,7 +720,8 @@ function Ladder({ menus }) {
     setItems(next)
     setResult(null)
     setAnimPath(null)
-    if (next.length >= 2) setRungs(generateRungs(next.length))
+    if (next.length >= 2) setLadder(buildLadder(next.length, 420))
+    else setLadder({ rungs: [], yPositions: [] })
   }
 
   // ── 랜덤 메뉴 불러오기 ───────────────────────────────────────────────────
@@ -723,7 +733,7 @@ function Ladder({ menus }) {
         setItems(names)
         setResult(null)
         setAnimPath(null)
-        setRungs(generateRungs(names.length))
+        setLadder(buildLadder(names.length, 420))
       })
       .catch(() => {})
       .finally(() => setFetching(false))
@@ -734,13 +744,13 @@ function Ladder({ menus }) {
     if (items.length < 2) return
     setResult(null)
     setAnimPath(null)
-    setRungs(generateRungs(items.length))
+    setLadder(buildLadder(items.length, 420))
   }
 
   // ── 번호 클릭 → 경로 추적 ────────────────────────────────────────────────
   const handlePick = (topIdx) => {
     if (items.length < 2) return
-    const { bottomIdx, path } = tracePath(topIdx, rungs)
+    const { bottomIdx, path } = tracePath(topIdx, ladder.rungs)
     setAnimPath(path)
     setResult({ topIdx, bottomIdx })
   }
@@ -895,7 +905,11 @@ export default function Game() {
 
   return (
     <div className="game-wrap" style={{ maxWidth: 640 }}>
-      <h1 style={{ fontSize: '2rem', fontWeight: 900, marginBottom: 6 }}>🎮 게임창</h1>
+      <h1 style={{ fontSize: '2rem', fontWeight: 900, marginBottom: 6, display: 'flex', alignItems: 'center', gap: 10 }}>
+        <img src="/img/icon/logo.png" alt="오늘 뭐먹지?" style={{ height: 38, width: 38, objectFit: 'contain' }}
+          onError={(e) => { e.target.style.display = 'none' }} />
+        🎮 게임창
+      </h1>
       <p style={{ color: 'var(--text-muted)', fontSize: '.88rem', marginBottom: 24 }}>
         게임으로 오늘 메뉴를 정해보세요!
       </p>
