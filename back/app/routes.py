@@ -340,6 +340,40 @@ def naver_login():
     access_token, refresh_token, user = _social_login_or_register(email, nickname, 'naver')
     return jsonify({'access_token': access_token, 'refresh_token': refresh_token, **serialize_user(user)}), 200
 
+# ── 비밀번호 찾기 ─────────────────────────────────────────────────────────────
+@auth_bp.route('/reset-password-direct', methods=['POST'])
+def reset_password_direct():
+    data = request.get_json()
+    
+    # 프론트엔드 payload와 매핑
+    email        = data.get('email', '').strip()
+    nickname     = data.get('nickname', '').strip()
+    new_password = data.get('new_password', '')
+    new_password2 = data.get('new_password2', '')
+
+    # 1. 빈 값 방어 코드
+    if not email or not nickname or not new_password or not new_password2:
+        return jsonify({'message': '모든 항목을 입력해주세요.'}), 400
+
+    # 2. 새 비밀번호 일치 여부 체크
+    if new_password != new_password2:
+        return jsonify({'message': '새 비밀번호가 일치하지 않습니다.'}), 400
+
+    # 3. 🔍 핵심: 이메일과 닉네임이 동시에 일치하는 유저가 존재하는지 찾기
+    user = User.query.filter_by(email=email, nickname=nickname).first()
+    
+    # 일치하는 유저가 없으면 보안상 뜬구름 잡지 않고 즉시 튕겨냅니다.
+    if not user:
+        return jsonify({'message': '입력하신 이메일과 닉네임 정보가 일치하는 회원이 없습니다.'}), 404
+
+    # 4. 안전하게 암호화(해싱)하여 비밀번호 덮어쓰기
+    user.password = generate_password_hash(new_password)
+    db.session.commit()
+
+    return jsonify({'message': '비밀번호가 성공적으로 재설정되었습니다.'}), 200
+
+
+
 
 # ══════════════════════════════════════════════════════════════════════════════
 # MENU / RESTAURANT

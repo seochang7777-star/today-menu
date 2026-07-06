@@ -257,9 +257,22 @@ export default function Login() {
           이메일로 회원가입
         </Link>
         <p className="text-center mt-[20px] text-[0.88rem] text-gray-400">
-          <a href="#" className="text-[var(--color-primary)] font-semibold">비밀번호 찾기</a> · <a href="#" className="text-[var(--color-primary)] font-semibold">이메일 찾기</a>
-
-        </p>
+  <button 
+    type="button"
+    onClick={() => navigate('/findpassword')} 
+    className="text-[var(--color-primary)] font-semibold hover:underline bg-transparent border-none p-0 cursor-pointer"
+  >
+    비밀번호 찾기
+  </button>
+  {" · "}
+  <button 
+    type="button"
+    onClick={() => navigate('/findemail')} 
+    className="text-[var(--color-primary)] font-semibold hover:underline bg-transparent border-none p-0 cursor-pointer"
+  >
+    이메일 찾기
+  </button>
+</p>
       </div>
     </div>
   )

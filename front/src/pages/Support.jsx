@@ -156,11 +156,11 @@ export default function Support() {
           alert("👑 답변 등록이 완료되었습니다.");
         } else {
           alert("⚠️ 답변 등록 실패.");
-        }
+        }}
       } catch (error) {
         console.error("오류 발생:", error);
       }
-    };
+    
 
     // 🔍 [필터링 및 페이징] 실시간 내부 검색 반영
     const filteredFaqs = faqData.filter(item =>
