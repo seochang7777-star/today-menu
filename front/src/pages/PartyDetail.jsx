@@ -264,7 +264,7 @@ export default function PartyDetail() {
 
   const tabs = [
     { key: 'info', label: '파티 정보' },
-    ...(isMember ? [{ key: 'chat', label: `💬 채팅 ${messages.length > 0 ? `(${messages.length})` : ''}` }] : []),
+    ...(isMember ? [{ key: 'chat', label: `채팅 ${messages.length > 0 ? `(${messages.length})` : ''}` }] : []),
     { key: 'review', label: '리뷰' },
   ]
 
@@ -299,400 +299,489 @@ export default function PartyDetail() {
 
         <div className="mt-8 grid grid-cols-1 gap-6 items-start lg:grid-cols-[300px_1fr]">
           <main className="order-2 min-w-0">
-          <div className="mb-4">
-            <div className="flex gap-1.5 items-center flex-wrap mb-2">
-              {/* 1. 모집 상태 배지 */}
-              <span
-                className={`px-2.5 py-0.5 rounded-[6px] text-[0.75rem] font-extrabold tracking-tight ${isRecruiting
-                  ? 'bg-green-100 text-green-700 dark:bg-green-950/30 dark:text-green-400' // 모집 중 (싱그러운 초록색)
-                  : party.status === 'CLOSED'
-                    ? 'bg-amber-100 text-amber-700 dark:bg-amber-950/30 dark:text-amber-400' // 마감 (차분한 주황색)
-                    : 'bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400' // 완료 (흐린 회색)
-                  }`}
-              >
-                {isRecruiting ? '모집 중' : party.status === 'CLOSED' ? '모집 마감' : '파티 완료'}
-              </span>
-
-              {/* 2. 참여 중 배지 (내가 속한 파티) */}
-              {isMember && (
-                <span className="px-2.5 py-0.5 bg-blue-50 text-blue-600 dark:bg-blue-950/30 dark:text-blue-400 rounded-[6px] text-[0.75rem] font-extrabold tracking-tight flex items-center gap-0.5">
-                  <span>✅</span> 참여 중
+            <div className="mb-4">
+              <div className="flex gap-1.5 items-center flex-wrap mb-2">
+                {/* 1. 모집 상태 배지 */}
+                <span
+                  className={`px-2.5 py-0.5 rounded-[6px] text-[0.75rem] font-extrabold tracking-tight ${isRecruiting
+                    ? 'bg-green-100 text-green-700 dark:bg-green-950/30 dark:text-green-400' // 모집 중 (싱그러운 초록색)
+                    : party.status === 'CLOSED'
+                      ? 'bg-amber-100 text-amber-700 dark:bg-amber-950/30 dark:text-amber-400' // 마감 (차분한 주황색)
+                      : 'bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400' // 완료 (흐린 회색)
+                    }`}
+                >
+                  {isRecruiting ? '모집 중' : party.status === 'CLOSED' ? '모집 마감' : '파티 완료'}
                 </span>
-              )}
-            </div>
-            <h2 className="text-2xl font-black mb-1.5">{party.title}</h2>
-            <div className="flex gap-3 flex-wrap text-sm text-gray-500">
-              <span>🍽️ {party.restaurant?.name ?? '식당 없음'}</span>
-              <span>👤 {party.host?.nickname}</span>
-              <span>🕐 {party.meeting_time ? new Date(party.meeting_time).toLocaleString('ko-KR') : ''}</span>
-            </div>
-          </div>
 
-          <div className="party-body-section p-4 mb-4">
-            <div className="flex justify-between text-sm font-semibold mb-2">
-              <span>모집 현황</span><span>{party.member_count}/{party.max_people}명</span>
-            </div>
-            <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
-              <div className={`h-full bg-green-600 transition-all ${party.member_count >= party.max_people ? 'bg-red-500' : ''}`}
-                style={{ width: `${pct}%` }} />
-            </div>
-          </div>
+                {/* 2. 참여 중 배지 (내가 속한 파티) */}
+                {isMember && (
+                  <span className="px-2.5 py-0.5 bg-blue-50 text-blue-600 dark:bg-blue-950/30 dark:text-blue-400 rounded-[6px] text-[0.75rem] font-extrabold tracking-tight flex items-center gap-0.5">
+                    <span>✅</span> 참여 중
+                  </span>
+                )}
+              </div>
+              <h2 className="text-2xl font-black mb-1.5">{party.title}</h2>
+              <div className="flex gap-3 flex-wrap text-sm text-gray-500">
+                
+                <span><div className="flex items-center gap-2">
+                    
+                    <button
+                      type="button"
+                      style={{
+                        backgroundColor: '#F3E7DD',
+                        padding: '4px 8px',
+                        borderRadius: '6px',
+                        border: 'none',
+                      }}
+                      className="rounded-xs text-[0.85rem] font-semibold text-[var(--text-primary)] transition-colors hover:bg-[#EAD8C9]"
 
-          <div className="tab-bar">
-            {tabs.map(({ key, label }) => (
-              <button key={key} className={`tab-btn${activeTab === key ? ' active' : ''}`}
-                onClick={() => setActiveTab(key)}>{label}</button>
-            ))}
-          </div>
+                      onClick={() => navigate(`/menu/${party.restaurant.id}`)}
 
-          {/* 파티 정보 탭 */}
-          {activeTab === 'info' && (
-            <div className="party-body-section">
-              <h3 style={{ marginBottom: 14 }}>파티 소개</h3>
-              <p style={{ fontSize: '.9rem', color: 'var(--text-secondary)', lineHeight: 1.8, marginBottom: 16 }}>
-                {party.title}에서 함께 식사할 분들을 모집합니다!<br />
-                맛있는 음식과 좋은 사람들과 함께하는 식사 시간을 만들어 보세요.
-              </p>
-              <div style={{ background: 'var(--bg-surface)', borderRadius: 'var(--border-radius)', padding: 16 }}>
-                {[
-                  ['📍 장소', party.restaurant?.name ?? '-'],
-                  ['🕐 일시', party.meeting_time ? new Date(party.meeting_time).toLocaleString('ko-KR') : '-'],
-                  ['👥 인원', `${party.member_count}/${party.max_people}명`],
-                  ['🍽️ 카테고리', party.restaurant?.category ?? '-'],
-                  ['👤 호스트', party.host?.nickname ?? '-'],
-                ].map(([label, val]) => (
-                  <div key={label} className="party-info-row">
-                    <span className="party-info-label">{label}</span>
-                    <span className="party-info-value">{val}</span>
+                    >🍴
+                      {party.restaurant.name}
+                    </button>
+
+                    <span>👤{party.host?.nickname}</span>
+
+                  </div> </span>
+                <span>🕐 {party.meeting_time ? new Date(party.meeting_time).toLocaleString('ko-KR') : ''}</span>
+              </div>
+            </div>
+
+            <div className="party-body-section p-4 mb-4">
+              <div className="flex justify-between text-sm font-semibold mb-2">
+                <span>모집 현황</span><span>{party.member_count}/{party.max_people}명</span>
+              </div>
+              <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+                <div
+                  className="h-full transition-all"
+                  style={{
+                    width: `${pct}%`,
+                    backgroundColor: '#E84F55',
+                  }}
+                />
+              </div>
+            </div>
+
+            <div className="tab-bar">
+              {tabs.map(({ key, label }) => (
+                <button
+                  key={key}
+                  className={`tab-btn${activeTab === key ? ' active' : ''}`}
+                  onClick={() => setActiveTab(key)}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+
+            {/* 파티 정보 탭 */}
+            {activeTab === 'info' && (
+              <div className="rounded-[10px] border border-[#FFC8C4] bg-white p-8">
+                <h3 className="mb-4 flex items-center gap-2 text-xl font-black text-[#221517]">
+                  <span className="text-2xl">🎉</span>
+                  파티 소개
+                </h3>
+
+                <div className="grid gap-4 rounded-[8px] bg-[#FEF4F3] p-5 lg:grid-cols-[1fr_1.35fr]">
+                  <div className="flex flex-col justify-center">
+                    <h4 className="mb-4 text-base font-black leading-7 text-[#221517]">
+                      {party.title}에서 함께 식사할 분들을 모집합니다!
+                    </h4>
+
+                    <p className="text-sm font-semibold leading-7 text-[#5C4B50]">
+                      맛있는 음식과 좋은 사람들과 함께
+                      <br />
+                      즐거운 식사 시간을 만들어 보세요 😊
+                    </p>
+                  </div>
+
+                  <div className="grid gap-2 sm:grid-cols-2">
+                    {[
+                      ['📍', '장소', party.restaurant?.name ?? '-'],
+                      [
+                        '🕐',
+                        '일시',
+                        party.meeting_time
+                          ? new Date(party.meeting_time).toLocaleString('ko-KR')
+                          : '-',
+                      ],
+                      [<svg
+                    viewBox="0 0 24 24"
+                    className="h-5 w-5 fill-[#F46C6F]"
+                  >
+                    <path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5s-3 1.34-3 3 1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5C15 14.17 10.33 13 8 13zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z" />
+                  </svg>, '인원', `${party.member_count} / ${party.max_people}명`],
+                      ['🏳️', '카테고리', party.restaurant?.category ?? '-'],
+                    ].map(([icon, label, val]) => (
+                      <div
+                        key={label}
+                        className="grid min-h-[66px] grid-cols-[34px_1fr] items-center gap-2 rounded-[7px] border border-[#F9E1DD] bg-white px-4 py-3 shadow-[0_12px_26px_rgba(244,108,111,0.22)]"
+                      >
+                        <span className="text-xl leading-none text-[#FF4F64]">
+                          {icon}
+                        </span>
+
+                        <div className="min-w-0">
+                          <div className="text-xs font-black leading-4 text-[#4B393D]">
+                            {label}
+                          </div>
+                          <div className="mt-1 break-words text-sm font-black leading-5 text-[#171113]">
+                            {val}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* 채팅 탭 */}
+            {activeTab === 'chat' && isMember && (
+              <div className="party-body-section">
+                <h3 style={{ marginBottom: 14 }}>💬 파티 채팅</h3>
+                <div ref={chatRef}
+                  style={{ height: 320, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 14, padding: '0 4px' }}>
+                  {messages.length === 0 ? (
+                    <div style={{ textAlign: 'center', color: 'var(--text-muted)', padding: 40, fontSize: '.9rem' }}>
+                      아직 대화가 없습니다. 먼저 인사해보세요! 👋
+                    </div>
+                  ) : messages.map((msg, i) => {
+                    const mine = msg.sender?.user_id === user?.user_id
+                    return (
+                      <div key={i} style={{ alignSelf: mine ? 'flex-end' : 'flex-start', maxWidth: '75%' }}>
+                        {!mine && <div style={{ fontSize: '.72rem', color: 'var(--text-muted)', marginBottom: 2 }}>{msg.sender?.nickname ?? '알 수 없음'}</div>}
+                        <div style={{ padding: '9px 13px', borderRadius: mine ? '12px 12px 3px 12px' : '12px 12px 12px 3px', background: mine ? 'var(--color-primary)' : 'var(--bg-surface)', color: mine ? '#fff' : 'var(--text-primary)', fontSize: '.88rem', lineHeight: 1.5 }}>
+                          {msg.content}
+                        </div>
+                        <div style={{ fontSize: '.7rem', color: 'var(--text-light)', marginTop: 2, textAlign: mine ? 'right' : 'left' }}>
+                          {msg.created_at ?
+                            (() => {
+                              // 1. 서버에서 받은 문자열을 Date 객체로 생성
+                              const date = new Date(msg.created_at);
+
+                              // 2. 현재 시간에서 한국 시간대인 9시간(9 * 60 * 60 * 1000 밀리초)을 더함
+                              // 이미 브라우저가 로컬 시간대로 해석했다면, UTC로 변환한 뒤 9시간을 더합니다.
+                              const kstDate = new Date(date.getTime() + (9 * 60 * 60 * 1000));
+
+                              // 3. 시간 형식으로 변환
+                              return kstDate.toLocaleTimeString('ko-KR', {
+                                hour: '2-digit',
+                                minute: '2-digit',
+                                hour12: true
+                              });
+                            })()
+                            : ''}
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+                {isMember ? (
+                  <form onSubmit={handleChat} style={{ display: 'flex', gap: 8 }}>
+                    <input type="text" className="form-control" placeholder="메시지 입력..." required
+                      value={chatInput} onChange={(e) => setChatInput(e.target.value)} style={{ borderRadius: 24 }} />
+                    <button type="submit" className="btn btn-dark" style={{ borderRadius: 24, whiteSpace: 'nowrap' }}>전송</button>
+                  </form>
+                ) : (
+                  <p style={{ textAlign: 'center', color: 'var(--text-muted)', fontSize: '.88rem' }}>채팅은 파티 참여 후 이용 가능합니다</p>
+                )}
+              </div>
+            )}
+
+            {/* 리뷰 탭 */}
+            {activeTab === 'review' && (
+              <div className="party-body-section">
+                <div className="flex-between mb-4">
+                  <h3>리뷰</h3>
+                  <span style={{ fontSize: '.82rem', color: 'var(--text-muted)' }}>총 {dummyReviews.length}개</span>
+                </div>
+                {dummyReviews.map((rev, i) => (
+                  <div key={i} className="party-review-card">
+                    <div className="party-reviewer-avatar">{rev.nick[0]}</div>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 4 }}>
+                        <span style={{ fontWeight: 700, fontSize: '.88rem' }}>{rev.nick}</span>
+                        <span style={{ color: 'var(--color-accent)', fontSize: '.82rem' }}>{'★'.repeat(rev.score)}</span>
+                      </div>
+                      <p style={{ fontSize: '.85rem', color: 'var(--text-secondary)', lineHeight: 1.6 }}>{rev.text}</p>
+                    </div>
                   </div>
                 ))}
-              </div>
-            </div>
-          )}
-
-          {/* 채팅 탭 */}
-          {activeTab === 'chat' && isMember && (
-            <div className="party-body-section">
-              <h3 style={{ marginBottom: 14 }}>💬 파티 채팅</h3>
-              <div ref={chatRef}
-                style={{ height: 320, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 14, padding: '0 4px' }}>
-                {messages.length === 0 ? (
-                  <div style={{ textAlign: 'center', color: 'var(--text-muted)', padding: 40, fontSize: '.9rem' }}>
-                    아직 대화가 없습니다. 먼저 인사해보세요! 👋
-                  </div>
-                ) : messages.map((msg, i) => {
-                  const mine = msg.sender?.user_id === user?.user_id
-                  return (
-                    <div key={i} style={{ alignSelf: mine ? 'flex-end' : 'flex-start', maxWidth: '75%' }}>
-                      {!mine && <div style={{ fontSize: '.72rem', color: 'var(--text-muted)', marginBottom: 2 }}>{msg.sender?.nickname ?? '알 수 없음'}</div>}
-                      <div style={{ padding: '9px 13px', borderRadius: mine ? '12px 12px 3px 12px' : '12px 12px 12px 3px', background: mine ? 'var(--color-primary)' : 'var(--bg-surface)', color: mine ? '#fff' : 'var(--text-primary)', fontSize: '.88rem', lineHeight: 1.5 }}>
-                        {msg.content}
+                <div style={{ marginTop: 24 }}>
+                  <h4 style={{ marginBottom: 14, fontSize: '.95rem' }}>이 파티에 어울리는 메뉴 추천</h4>
+                  <div className="party-recommend-grid">
+                    {['삼겹살', '파스타', '초밥', '치킨', '비빔밥', '짜장면'].map((menu) => (
+                      <div key={menu} className="party-recommend-card">
+                        <div className="party-recommend-thumb">{CAT_ICON['한식'] ?? '🍴'}</div>
+                        <div style={{ fontWeight: 700, fontSize: '.85rem' }}>{menu}</div>
+                        <div style={{ fontSize: '.75rem', color: 'var(--text-muted)', marginTop: 2 }}>인기 메뉴</div>
                       </div>
-                      <div style={{ fontSize: '.7rem', color: 'var(--text-light)', marginTop: 2, textAlign: mine ? 'right' : 'left' }}>
-                        {msg.created_at ?
-                          (() => {
-                            // 1. 서버에서 받은 문자열을 Date 객체로 생성
-                            const date = new Date(msg.created_at);
-
-                            // 2. 현재 시간에서 한국 시간대인 9시간(9 * 60 * 60 * 1000 밀리초)을 더함
-                            // 이미 브라우저가 로컬 시간대로 해석했다면, UTC로 변환한 뒤 9시간을 더합니다.
-                            const kstDate = new Date(date.getTime() + (9 * 60 * 60 * 1000));
-
-                            // 3. 시간 형식으로 변환
-                            return kstDate.toLocaleTimeString('ko-KR', {
-                              hour: '2-digit',
-                              minute: '2-digit',
-                              hour12: true
-                            });
-                          })()
-                          : ''}
-                      </div>
-                    </div>
-                  )
-                })}
-              </div>
-              {isMember ? (
-                <form onSubmit={handleChat} style={{ display: 'flex', gap: 8 }}>
-                  <input type="text" className="form-control" placeholder="메시지 입력..." required
-                    value={chatInput} onChange={(e) => setChatInput(e.target.value)} style={{ borderRadius: 24 }} />
-                  <button type="submit" className="btn btn-dark" style={{ borderRadius: 24, whiteSpace: 'nowrap' }}>전송</button>
-                </form>
-              ) : (
-                <p style={{ textAlign: 'center', color: 'var(--text-muted)', fontSize: '.88rem' }}>채팅은 파티 참여 후 이용 가능합니다</p>
-              )}
-            </div>
-          )}
-
-          {/* 리뷰 탭 */}
-          {activeTab === 'review' && (
-            <div className="party-body-section">
-              <div className="flex-between mb-16">
-                <h3>리뷰</h3>
-                <span style={{ fontSize: '.82rem', color: 'var(--text-muted)' }}>총 {dummyReviews.length}개</span>
-              </div>
-              {dummyReviews.map((rev, i) => (
-                <div key={i} className="party-review-card">
-                  <div className="party-reviewer-avatar">{rev.nick[0]}</div>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 4 }}>
-                      <span style={{ fontWeight: 700, fontSize: '.88rem' }}>{rev.nick}</span>
-                      <span style={{ color: 'var(--color-accent)', fontSize: '.82rem' }}>{'★'.repeat(rev.score)}</span>
-                    </div>
-                    <p style={{ fontSize: '.85rem', color: 'var(--text-secondary)', lineHeight: 1.6 }}>{rev.text}</p>
+                    ))}
                   </div>
                 </div>
-              ))}
-              <div style={{ marginTop: 24 }}>
-                <h4 style={{ marginBottom: 14, fontSize: '.95rem' }}>이 파티에 어울리는 메뉴 추천</h4>
-                <div className="party-recommend-grid">
-                  {['삼겹살', '파스타', '초밥', '치킨', '비빔밥', '짜장면'].map((menu) => (
-                    <div key={menu} className="party-recommend-card">
-                      <div className="party-recommend-thumb">{CAT_ICON['한식'] ?? '🍴'}</div>
-                      <div style={{ fontWeight: 700, fontSize: '.85rem' }}>{menu}</div>
-                      <div style={{ fontSize: '.75rem', color: 'var(--text-muted)', marginTop: 2 }}>인기 메뉴</div>
-                    </div>
-                  ))}
-                </div>
               </div>
-            </div>
-          )}
+            )}
 
-        {/* ── 사이드 컬럼 ── */}
+            {/* ── 사이드 컬럼 ── */}
           </main>
           <aside className="order-1 space-y-4">
-          <div className="party-info-box mb-4">
-            <div className="text-xs text-gray-500 mb-1">파티 참여</div>
-            <div className="flex justify-between items-center mb-4">
-              <span className="font-extrabold text-lg">{party.restaurant?.name ?? '식당'}</span>
-              <span
-                className={`px-3 py-1 rounded-full text-xs font-bold ${isRecruiting
+            <div className="party-info-box mb-4">
+              <div className="text-xs text-gray-500 mb-1">파티 참여</div>
+              <div className="flex justify-between items-center mb-4">
+                <span className="font-extrabold text-lg">{party.restaurant?.name ?? '식당'}</span>
+                <span
+                  className={`px-3 py-1 rounded-full text-xs font-bold ${isRecruiting
                     ? "bg-green-100 text-green-700"
                     : "bg-gray-100 text-gray-500"
-                  }`}
-              >
-                {isRecruiting ? "모집 중" : "모집마감"}
-              </span>
-            </div>
-
-            {/* 호스트 전용: 파티 종료 */}
-            {party.is_host && party.status === 'CLOSED' && (
-              <button
-                onClick={async () => {
-                  if (!window.confirm('파티를 종료하시겠습니까?')) return
-                  try {
-                    await api.patch(`/api/party/${partyId}/finish`)
-                    alert('파티가 종료되었습니다.')
-                    navigate('/party')
-                  } catch (e) { alert(e.response?.data?.message || '종료 실패') }
-                }}
-                style={{
-                  width: '100%', marginBottom: 8, padding: '10px 0',
-                  background: 'var(--color-secondary)', color: '#fff',
-                  border: 'none', borderRadius: 8,
-                  fontSize: '.88rem', fontWeight: 700, cursor: 'pointer',
-                }}
-              >
-                🏁 파티 종료하기
-              </button>
-            )}
-
-            {/* 호스트 전용: 파티 취소 */}
-            {party.is_host && party.status !== 'COMPLETED' && (
-              <button
-                onClick={handleCancelParty}
-                className="w-full mb-2 py-[10px] bg-transparent text-[var(--color-danger)] border-[1.5px] border-[var(--color-danger)] rounded-[8px] text-sm font-bold cursor-pointer transition-colors hover:bg-[var(--color-danger)] hover:text-white"
-              >
-                파티 취소하기
-              </button>
-            )}
-
-            {/* 1. 호스트 전용: 모집 중일 때 마감 버튼 */}
-            {party.is_host && isRecruiting && (
-              <button
-                onClick={handleStatusChange.bind(null, 'CLOSED')}
-                className="w-full mb-[10px] py-[10px] bg-transparent text-[var(--color-warning)] border-[1.5px] border-[var(--color-warning)] rounded-[8px] text-sm font-bold cursor-pointer transition-colors hover:bg-[var(--color-warning)] hover:text-white"
-              >
-                모집 마감하기
-              </button>
-            )}
-
-            {/* 2. 일반 사용자/참여자 액션 영역 */}
-            {!isHost && (
-              <div className="mt-4">
-                {!user ? (
-                  <Link
-                    to="/login"
-                    className="block w-full text-center mb-2 py-[10px] bg-[var(--color-primary)] text-white rounded-[8px] text-sm font-bold transition-colors hover:bg-[var(--color-primary-dark)]"
-                  >
-                    로그인 후 참여
-                  </Link>
-                ) : isMember ? (
-                  <div className="flex flex-col gap-2">
-                    <button className="btn btn-secondary btn-block" disabled>✅ 참여 중</button>
-                    {!isRecruiting && (
-                      <button className="btn btn-info btn-block" onClick={() => setActiveTab('chat')}>
-                        💬 채팅방 입장
-                      </button>
-                    )}
-                  </div>
-                ) : isRecruiting ? (
-                  <button className="btn btn-primary btn-block btn-lg" onClick={handleJoin}>
-                    🍽️ 파티 참여하기
-                  </button>
-                ) : (
-                  <button className="btn btn-muted btn-block" disabled>모집 마감</button>
-                )}
+                    }`}
+                >
+                  {isRecruiting ? "모집 중" : "모집마감"}
+                </span>
               </div>
-            )}
 
-          </div>
+              {/* 호스트 전용: 파티 종료 */}
+              {party.is_host && party.status === 'CLOSED' && (
+                <button
+                  onClick={async () => {
+                    if (!window.confirm('파티를 종료하시겠습니까?')) return
+                    try {
+                      await api.patch(`/api/party/${partyId}/finish`)
+                      alert('파티가 종료되었습니다.')
+                      navigate('/party')
+                    } catch (e) { alert(e.response?.data?.message || '종료 실패') }
+                  }}
+                  style={{
+                    width: '100%', marginBottom: 8, padding: '10px 0',
+                    background: 'var(--color-secondary)', color: '#fff',
+                    border: 'none', borderRadius: 8,
+                    fontSize: '.88rem', fontWeight: 700, cursor: 'pointer',
+                  }}
+                >
+                  🏁 파티 종료하기
+                </button>
+              )}
 
-          <div className="profile-section">
-            <div className="flex items-center justify-between mb-3.5">
-              {/* 타이틀은 단단하고 깔끔한 기본 텍스트 색상 */}
-              <h3 className="text-base font-extrabold text-[var(--text-main)] flex items-center gap-1.5">
-                <span>👥</span> 참여 인원
-              </h3>
+              {/* 호스트 전용: 파티 취소 */}
+              {party.is_host && party.status !== 'COMPLETED' && (
+                <button
+                  onClick={handleCancelParty}
+                  className="w-full rounded-[8px] bg-[var(--color-primary)] mb-3 px-4 py-3 font-black text-white transition hover:bg-[var(--color-primary-dark)]"
+                >
+                  파티 취소하기
+                </button>
+              )}
 
-              {/* 보여주신 하단 스타일처럼 튀지 않고 은은하게 매칭한 인원수 표시 */}
-              <span className="text-[0.82rem] font-bold text-[var(--text-muted)]">
-                {party.member_count} / {party.max_people}명
-              </span>
-            </div>
-            {voteMsg && (
-              <div style={{
-                fontSize: '.78rem', padding: '6px 10px', borderRadius: 6, marginBottom: 8,
-                background: voteMsg.includes('모두') || voteMsg.includes('실패') ? '#FFF5F5' : '#F0FFF4',
-                color: voteMsg.includes('모두') || voteMsg.includes('실패') ? '#C53030' : '#276749'
-              }}>
-                {voteMsg}
-              </div>
-            )}
-            {user && voteRemaining > 0 && (
-              <div style={{ fontSize: '.72rem', color: 'var(--text-muted)', marginBottom: 8 }}>
-                오늘 남은 투표: <strong>{voteRemaining}회</strong>
-              </div>
-            )}
-            {(party.members ?? []).map((m, i) => (
-              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 0', borderBottom: '1px solid var(--border-color)' }}>
-                <div className="avatar-sm">{m.user?.nickname?.[0] ?? '?'}</div>
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontWeight: 600, fontSize: '.9rem' }}>{m.user?.nickname ?? '알 수 없음'}</div>
-                  <div style={{ fontSize: '.75rem', color: 'var(--text-muted)' }}>{m.is_host ? '호스트' : '참여자'}</div>
+              {/* 1. 호스트 전용: 모집 중일 때 마감 버튼 */}
+              {party.is_host && isRecruiting && (
+                <button
+                  onClick={handleStatusChange.bind(null, 'CLOSED')}
+                  className="w-full rounded-[8px] border border-[var(--border-color)] bg-[var(--bg-surface)] px-4 py-3 font-black text-[var(--text-secondary)] transition hover:bg-[var(--bg-surface-2)]"
+                >
+                  모집 마감하기
+                </button>
+              )}
+
+              {/* 2. 일반 사용자/참여자 액션 영역 */}
+              {!isHost && (
+                <div className="mt-4">
+                  {!user ? (
+                    <Link
+                      to="/login"
+                      className="block w-full text-center mb-2 py-[10px] bg-[var(--color-primary)] text-white rounded-[8px] text-sm font-bold transition-colors hover:bg-[var(--color-primary-dark)]"
+                    >
+                      로그인 후 참여
+                    </Link>
+                  ) : isMember ? (
+                    <div className="flex flex-col gap-2">
+                      <button className="btn btn-secondary btn-block" disabled>✅ 참여 중</button>
+                      {!isRecruiting && (
+                        <button className="btn btn-info btn-block" onClick={() => setActiveTab('chat')}>
+                          💬 채팅방 입장
+                        </button>
+                      )}
+                    </div>
+                  ) : isRecruiting ? (
+                    <button className="btn btn-primary btn-block btn-lg" onClick={handleJoin}>
+                      🍴 파티 참여하기
+                    </button>
+                  ) : (
+                    <button className="btn btn-muted btn-block" disabled>모집 마감</button>
+                  )}
                 </div>
+              )}
 
+            </div>
 
-                {/* 호스트가 타인 강퇴 */}
-                {user && party.is_host && !m.is_host && (
-                  <button
-                    onClick={() => {
-                      if (window.confirm(`${m.user?.nickname}님을 정말로 강퇴하시겠습니까?`)) {
-                        handleKick(m.user.user_id)
-                      }
-                    }}
-                    style={{
-                      marginRight: 4, fontSize: '0.72rem', padding: '3px 8px',
-                      color: 'var(--color-danger)', border: '1px solid var(--color-danger)',
-                      borderRadius: 6, cursor: 'pointer', background: 'transparent', fontWeight: 700
-                    }}
+            <div className="profile-section">
+              <div className="flex items-center justify-between mb-3.5">
+                {/* 타이틀은 단단하고 깔끔한 기본 텍스트 색상 */}
+                <h3 className="text-base font-extrabold text-[var(--text-main)] flex items-center gap-1.5">
+                  <sapn><svg
+                    viewBox="0 0 24 24"
+                    className="h-5 w-5 fill-[#F46C6F]"
                   >
-                    강퇴
-                  </button>
-                )}
-                {user && m.user?.user_id !== user.user_id && isMember && (
-                  <button
-                    onClick={() => openReportModal(m.user.user_id)}
-                    className="text-xs text-red-500 border border-red-500 rounded px-2"
-                    style={{
-                      marginRight: 4, fontSize: '0.72rem', padding: '3px 8px',
-                      color: 'var(--color-danger)', border: '1px solid var(--color-danger)',
-                      borderRadius: 6, cursor: 'pointer', background: 'transparent', fontWeight: 700
-                    }}>
-                    신고
+                    <path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5s-3 1.34-3 3 1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5C15 14.17 10.33 13 8 13zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z" />
+                  </svg></sapn> 참여 인원
+                </h3>
 
-                  </button>
-                )}
+                {/* 보여주신 하단 스타일처럼 튀지 않고 은은하게 매칭한 인원수 표시 */}
+                <span className="text-[0.82rem] font-bold text-[var(--text-muted)]">
+                  {party.member_count} / {party.max_people}명
+                </span>
+              </div>
+              {voteMsg && (
+                <div style={{
+                  fontSize: '.78rem', padding: '6px 10px', borderRadius: 6, marginBottom: 8,
+                  background: voteMsg.includes('모두') || voteMsg.includes('실패') ? '#FFF5F5' : '#F0FFF4',
+                  color: voteMsg.includes('모두') || voteMsg.includes('실패') ? '#C53030' : '#276749'
+                }}>
+                  {voteMsg}
+                </div>
+              )}
+              {user && voteRemaining > 0 && (
+                <div style={{ fontSize: '.72rem', color: 'var(--text-muted)', marginBottom: 8 }}>
+                  오늘 남은 투표: <strong>{voteRemaining}회</strong>
+                </div>
+              )}
+              {(party.members ?? []).map((m, i) => (
+                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 0 20px', borderBottom: '1px solid var(--border-color)' }}>
+                  <div className="avatar-sm">{m.user?.nickname?.[0] ?? '?'}</div>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontWeight: 600, fontSize: '.9rem' }}>{m.user?.nickname ?? '알 수 없음'}</div>
+                    <div style={{ fontSize: '.75rem', color: 'var(--text-muted)' }}>{m.is_host ? '호스트' : '참여자'}</div>
+                  </div>
 
 
-                {/* 일반 참여자 본인 탈퇴 버튼 */}
-                {user && !party.is_host && m.user?.user_id === user.user_id && (
-                  <button
-                    onClick={handleLeaveParty}
-                    style={{
-                      marginRight: 4, fontSize: '0.72rem', padding: '3px 8px',
-                      color: 'var(--text-muted)', border: '1px solid var(--border-color)',
-                      borderRadius: 6, cursor: 'pointer', background: 'transparent', fontWeight: 700
-                    }}
-                  >
-                    탈퇴
-
-                  </button>
-                )}
-
-                {/* 호스트 본인 행 — 파티 중단(취소) 버튼 */}
-                {user && party.is_host && m.user?.user_id === user.user_id && party.status !== 'COMPLETED' && (
-                  <button
-                    onClick={() => {
-                      // 파티원(본인 포함)이 1명 초과일 때(즉, 다른 사람이 있을 때) 경고
-                      if (party.members.length > 1) {
-                        alert('다른 파티원이 참여 중이므로 파티를 중단할 수 없습니다. 강퇴하거나 멤버가 모두 나간 뒤 시도해주세요.');
-                        return;
-                      }
-                      handleCancelParty();
-                    }}
-                    style={{
-                      marginRight: 4,
-                      fontSize: '0.72rem',
-                      padding: '3px 8px',
-                      // 파티원이 있을 때는 회색(비활성 느낌), 없으면 빨간색(활성)
-                      color: party.members.length > 1 ? '#999' : 'var(--color-danger)',
-                      border: `1px solid ${party.members.length > 1 ? '#ccc' : 'var(--color-danger)'}`,
-                      borderRadius: 6,
-                      cursor: party.members.length > 1 ? 'not-allowed' : 'pointer',
-                      background: 'transparent',
-                      fontWeight: 700
-                    }}
-                  >
-                    {party.members.length > 1 ? '중단 불가' : '파티중단'}
-                  </button>
-                )}
-
-                {user && m.user?.user_id !== user.user_id && (
-                  <div style={{ display: 'flex', gap: 3, flexShrink: 0 }}>
-                    <button onClick={() => handleVote(m.user.user_id, true)}
-                      disabled={votedToday.includes(m.user?.user_id) || voteRemaining <= 0}
-                      title="매너 좋아요 +1°"
+                  {/* 호스트가 타인 강퇴 */}
+                  {user && party.is_host && !m.is_host && (
+                    <button
+                      onClick={() => {
+                        if (window.confirm(`${m.user?.nickname}님을 정말로 강퇴하시겠습니까?`)) {
+                          handleKick(m.user.user_id)
+                        }
+                      }}
                       style={{
-                        border: 'none', borderRadius: 6, padding: '3px 7px', cursor: 'pointer',
-                        background: votedToday.includes(m.user?.user_id) ? '#F0FFF4' : 'var(--bg-surface)',
-                        fontSize: '.75rem', opacity: voteRemaining <= 0 && !votedToday.includes(m.user?.user_id) ? .4 : 1
-                      }}>
-                      👍
+                        marginRight: 4, fontSize: '0.72rem', padding: '3px 8px',
+                        color: 'var(--color-danger)', border: '1px solid var(--color-danger)',
+                        borderRadius: 6, cursor: 'pointer', background: 'transparent', fontWeight: 700
+                      }}
+                    >
+                      강퇴
                     </button>
-                    <button onClick={() => handleVote(m.user.user_id, false)}
-                      disabled={votedToday.includes(m.user?.user_id) || voteRemaining <= 0}
-                      title="매너 싫어요 -1°"
+                  )}
+                  {user && m.user?.user_id !== user.user_id && isMember && (
+                    <button
+                      onClick={() => openReportModal(m.user.user_id)}
+                      className="text-xs text-red-500 border border-red-500 rounded px-2"
                       style={{
-                        border: 'none', borderRadius: 6, padding: '3px 7px', cursor: 'pointer',
-                        background: 'var(--bg-surface)', fontSize: '.75rem',
-                        opacity: voteRemaining <= 0 && !votedToday.includes(m.user?.user_id) ? .4 : 1
+                        marginRight: 4, fontSize: '0.72rem', padding: '3px 8px',
+                        color: 'var(--color-danger)', border: '1px solid var(--color-danger)',
+                        borderRadius: 6, cursor: 'pointer', background: 'transparent', fontWeight: 700
                       }}>
-                      👎
+                      신고
+
+                    </button>
+                  )}
+
+
+                  {/* 일반 참여자 본인 탈퇴 버튼 */}
+                  {user && !party.is_host && m.user?.user_id === user.user_id && (
+                    <button
+                      onClick={handleLeaveParty}
+                      style={{
+                        marginRight: 4, fontSize: '0.72rem', padding: '3px 8px',
+                        color: 'var(--text-muted)', border: '1px solid var(--border-color)',
+                        borderRadius: 6, cursor: 'pointer', background: 'transparent', fontWeight: 700
+                      }}
+                    >
+                      탈퇴
+
+                    </button>
+                  )}
+
+                  {/* 호스트 본인 행 — 파티 중단(취소) 버튼 */}
+                  {user && party.is_host && m.user?.user_id === user.user_id && party.status !== 'COMPLETED' && (
+                    <button
+                      onClick={() => {
+                        // 파티원(본인 포함)이 1명 초과일 때(즉, 다른 사람이 있을 때) 경고
+                        if (party.members.length > 1) {
+                          alert('다른 파티원이 참여 중이므로 파티를 중단할 수 없습니다. 강퇴하거나 멤버가 모두 나간 뒤 시도해주세요.');
+                          return;
+                        }
+                        handleCancelParty();
+                      }}
+                      style={{
+                        marginRight: 4,
+                        fontSize: '0.72rem',
+                        padding: '3px 8px',
+                        // 파티원이 있을 때는 회색(비활성 느낌), 없으면 빨간색(활성)
+                        color: party.members.length > 1 ? '#999' : 'var(--color-danger)',
+                        border: `1px solid ${party.members.length > 1 ? '#ccc' : 'var(--color-danger)'}`,
+                        borderRadius: 6,
+                        cursor: party.members.length > 1 ? 'not-allowed' : 'pointer',
+                        background: 'transparent',
+                        fontWeight: 700
+                      }}
+                    >
+                      {party.members.length > 1 ? '중단 불가' : '파티중단'}
+                    </button>
+                  )}
+
+                  {user && m.user?.user_id !== user.user_id && (
+                    <div style={{ display: 'flex', gap: 3, flexShrink: 0 }}>
+                      <button onClick={() => handleVote(m.user.user_id, true)}
+                        disabled={votedToday.includes(m.user?.user_id) || voteRemaining <= 0}
+                        title="매너 좋아요 +1°"
+                        style={{
+                          border: 'none', borderRadius: 6, padding: '3px 7px', cursor: 'pointer',
+                          background: votedToday.includes(m.user?.user_id) ? '#F0FFF4' : 'var(--bg-surface)',
+                          fontSize: '.75rem', opacity: voteRemaining <= 0 && !votedToday.includes(m.user?.user_id) ? .4 : 1
+                        }}>
+                        👍
+                      </button>
+                      <button onClick={() => handleVote(m.user.user_id, false)}
+                        disabled={votedToday.includes(m.user?.user_id) || voteRemaining <= 0}
+                        title="매너 싫어요 -1°"
+                        style={{
+                          border: 'none', borderRadius: 6, padding: '3px 7px', cursor: 'pointer',
+
+                          background: 'var(--bg-surface)', fontSize: '.75rem',
+                          opacity: voteRemaining <= 0 && !votedToday.includes(m.user?.user_id) ? .4 : 1
+                        }}>
+                        👎
+                      </button>
+                    </div>
+                  )}
+                </div>
+              ))}
+              {party.restaurant && (
+                <div style={{ marginTop: 10, paddingTop: 14, borderTop: '1px solid var(-border-color)' }}>
+                  <div className="form-label">약속 장소</div>
+                  <div className="flex items-center gap-2">
+                    <span>📍</span>
+
+                    <button
+                      type="button"
+                      style={{
+                        backgroundColor: '#F3E7DD',
+                        padding: '4px 8px',
+                        borderRadius: '6px',
+                        border: 'none',
+                      }}
+                      className="rounded-xs text-[0.85rem] font-semibold text-[var(--text-primary)] transition-colors hover:bg-[#EAD8C9]"
+
+                      onClick={() => navigate(`/menu/${party.restaurant.id}`)}
+
+                    >
+                      {party.restaurant.name}
                     </button>
                   </div>
-                )}
-              </div>
-            ))}
-            {party.restaurant && (
-              <div style={{ marginTop: 16, paddingTop: 14, borderTop: '1px solid var(--border-color)' }}>
-                <div className="form-label">약속 장소</div>
-                <Link to={`/menu/${party.restaurant.id}`} style={{ fontSize: '.9rem', color: 'var(--color-info)', fontWeight: 600 }}>
-                  🍽️ {party.restaurant.name}
-                </Link>
-                <p style={{ fontSize: '.8rem', color: 'var(--text-muted)', marginTop: 4 }}>{party.restaurant.address}</p>
-              </div>
-            )}
-          </div>
+                  <p style={{ fontSize: '.8rem', color: 'var(--text-muted)', marginTop: 4 }}>{party.restaurant.address}</p>
+                </div>
+              )}
+            </div>
           </aside>
         </div>
       </div>

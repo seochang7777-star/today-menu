@@ -69,6 +69,16 @@ button {
   /* color: inherit; */
 }
 
+.tab-btn:hover {
+  color: #F46C6F;
+  border-color: #F46C6F;
+}
+
+.tab-btn.active {
+  color: #F46C6F;
+  border-color: #F46C6F;
+}
+
 .container {
   width: 100%;
   max-width: var(--container-max);
