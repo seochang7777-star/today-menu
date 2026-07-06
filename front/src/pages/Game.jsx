@@ -477,134 +477,6 @@ function ScratchCard({ menus }) {
   )
 }
 
-// ══════════════════════════════════════════════════════════════════════════════
-// 게임 5 — 사다리타기 (💡 선 겹침 버그 완전 해결!)
-// ══════════════════════════════════════════════════════════════════════════════
-function Ladder({ menus }) {
-  const MAX = 6
-  const canvasRef = useRef(null)
-  const [items,      setItems]      = useState([])   
-  const [inputVal,   setInputVal]   = useState('')
-  const [rungs,      setRungs]      = useState([])   
-  const [result,     setResult]     = useState(null) 
-  const [animPath,   setAnimPath]   = useState(null) 
-
-  const NUM_ROWS = 10   
-  const COLORS   = ['#E53E3E','#DD6B20','#F6AD55','#38A169','#3182CE','#6B46C1']
-
-  // 💡 가로선이 절대 연속으로 겹치지 않게 로직 대폭 수정
-  const generateRungs = useCallback((n) => {
-    const r = []
-    for (let row = 0; row < NUM_ROWS; row++) {
-      // 각 가로 줄(row)마다 랜덤하게 하나의 다리만 생성하도록 제한하여 선이 겹치는 현상 완전 방지
-      const col = Math.floor(Math.random() * (n - 1))
-      r.push({ row, col })
-    }
-    return r
-  }, [])
-
-  const tracePath = useCallback((topIdx, rungList) => {
-    let col = topIdx
-    const path = [{ row: -1, col }]
-    for (let row = 0; row < NUM_ROWS; row++) {
-      const goRight = rungList.find(r => r.row === row && r.col === col)
-      const goLeft  = rungList.find(r => r.row === row && r.col === col - 1)
-      if (goRight) { path.push({ row, col }); col += 1 } 
-      else if (goLeft) { path.push({ row, col }); col -= 1 }
-      path.push({ row, col })
-    }
-    return { bottomIdx: col, path }
-  }, [])
-
-  const draw = useCallback((highlightPath = null) => {
-    const canvas = canvasRef.current
-    if (!canvas || items.length < 2) return
-    const ctx  = canvas.getContext('2d')
-    const W    = canvas.width
-    const H    = canvas.height
-    const n    = items.length
-    const PAD  = 40
-    const TOP  = 52
-    const BOT  = H - 52
-    const step = (W - PAD * 2) / (n - 1)
-
-    ctx.clearRect(0, 0, W, H)
-    const xOf = (col) => PAD + col * step
-    const yOf = (row) => TOP + ((row + 1) / (NUM_ROWS + 1)) * (BOT - TOP)
-
-    // 세로선 그리기
-    for (let i = 0; i < n; i++) {
-      ctx.beginPath(); ctx.moveTo(xOf(i), TOP); ctx.lineTo(xOf(i), BOT)
-      ctx.strokeStyle = '#D1C4BE'; ctx.lineWidth = 3.5; ctx.stroke()
-    }
-    
-    // 가로선 그리기
-    rungs.forEach(({ row, col }) => {
-      ctx.beginPath(); ctx.moveTo(xOf(col), yOf(row)); ctx.lineTo(xOf(col + 1), yOf(row))
-      ctx.strokeStyle = '#B0A098'; ctx.lineWidth = 3.5; ctx.stroke()
-    })
-
-    // 선택된 경로 강조 표시
-    if (highlightPath && highlightPath.length >= 2) {
-      ctx.strokeStyle = COLORS[highlightPath[0].col % COLORS.length]; ctx.lineWidth = 5
-      ctx.lineCap = 'round'; ctx.lineJoin = 'round'
-      ctx.beginPath(); ctx.moveTo(xOf(highlightPath[0].col), TOP)
-      for (let i = 1; i < highlightPath.length; i++) {
-        ctx.lineTo(xOf(highlightPath[i].col), highlightPath[i].row === -1 ? TOP : yOf(highlightPath[i].row))
-      }
-      ctx.lineTo(xOf(highlightPath[highlightPath.length - 1].col), BOT); ctx.stroke()
-    }
-
-    // 상단 출발 숫자 노드
-    for (let i = 0; i < n; i++) {
-      const isH = highlightPath && highlightPath[0].col === i
-      ctx.beginPath(); ctx.arc(xOf(i), TOP - 14, 14, 0, 2 * Math.PI); ctx.fillStyle = isH ? COLORS[i % COLORS.length] : '#F3E7DD'; ctx.fill()
-      ctx.fillStyle = isH ? '#fff' : '#7A5C52'; ctx.font = 'bold 12px sans-serif'; ctx.textAlign = 'center'; ctx.fillText(i + 1, xOf(i), TOP - 10)
-    }
-    
-    // 하단 결과 글자 노드
-    for (let i = 0; i < n; i++) {
-      const isR = highlightPath && highlightPath[highlightPath.length - 1].col === i
-      ctx.fillStyle = isR ? COLORS[highlightPath[0].col % COLORS.length] : '#5E4A44'; ctx.font = 'bold 12px sans-serif'; ctx.textAlign = 'center'
-      ctx.fillText(items[i].length > 5 ? items[i].slice(0, 5) + '…' : items[i], xOf(i), BOT + 22)
-    }
-  }, [items, rungs])
-
-  useEffect(() => { draw(animPath) }, [draw, animPath])
-
-  const addItem = () => {
-    const v = inputVal.trim()
-    if (!v || items.length >= MAX) return
-    const next = [...items, v]; setItems(next); setInputVal(''); setResult(null); setAnimPath(null)
-    const r = generateRungs(next.length); setRungs(r)
-  }
-
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16, width: '100%' }}>
-      <div style={{ display: 'flex', gap: 8, width: '100%', maxWidth: 360 }}>
-        <input value={inputVal} onChange={e => setInputVal(e.target.value)} onKeyDown={e => e.key === 'Enter' && addItem()} placeholder="메뉴 입력 (최대 6개)" style={{ flex: 1, padding: '8px 12px', borderRadius: 8, border: '1px solid var(--border-color)', outline: 'none' }} />
-        <button onClick={addItem} className="btn btn-primary" style={{ padding: '8px 16px', borderRadius: 8 }}>추가</button>
-      </div>
-      {items.length >= 2 ? (
-        <div style={{ position: 'relative', width: '100%', maxWidth: 360, background: '#FAF6F0', borderRadius: 20, padding: 16, boxShadow: 'inset 0 2px 8px rgba(0,0,0,0.03)' }}>
-          <canvas ref={canvasRef} width={340} height={380} style={{ width: '100%', display: 'block' }} />
-          <div style={{ position: 'absolute', top: 16, left: 16, right: 16, height: 40, display: 'flex' }}>
-            {items.map((_, i) => <div key={i} onClick={() => { const { bottomIdx, path } = tracePath(i, rungs); setAnimPath(path); setResult({ topIdx: i, bottomIdx }) }} style={{ flex: 1, cursor: 'pointer', borderRadius: 10 }} title={`${i + 1}번 번호 클릭`} />)}
-          </div>
-        </div>
-      ) : (
-        <div style={{ padding: 40, textAlign: 'center', color: 'var(--text-muted)', fontSize: '.9rem' }}>💡 아래 사다리에 태울 메뉴를 2개 이상 입력창에 적어 추가해 주세요!</div>
-      )}
-      {done && prize && (
-        <div style={{ textAlign: 'center', animation: 'popIn .4s ease' }}>
-          <div style={{ fontWeight: 900, fontSize: '1rem', color: 'var(--color-accent)', marginBottom: 8 }}>🎉 당첨!</div>
-          <div style={{ fontWeight: 900, fontSize: '1.2rem', color: 'var(--text-primary)' }}>{prize.name}</div>
-          <div style={{ fontSize: '.85rem', color: 'var(--text-muted)', marginTop: 4 }}>{prize.category}</div>
-        </div>
-      )}
-    </div>
-  )
-}
 
 // ══════════════════════════════════════════════════════════════════════════════
 // 게임 5 — 사다리타기
@@ -948,7 +820,7 @@ const TABS = [
   { id: 'ladder',   label: '🪜 사다리',   desc: '사다리타기' },
 ]
 
-export default function Game() {
+function Game() {
   const [activeTab, setActiveTab] = useState('roulette')
   const [menus,     setMenus]     = useState([])
   const [loading,   setLoading]   = useState(true)
@@ -977,12 +849,12 @@ export default function Game() {
           <button key={id} onClick={() => setActiveTab(id)}
             style={{
               padding: '8px 16px', borderRadius: 20, border: 'none',
-              background: activeTab === tab.id ? 'var(--color-primary)' : 'var(--bg-surface)',
-              color: activeTab === tab.id ? '#fff' : 'var(--text-secondary)',
+              background: activeTab === id ? 'var(--color-primary)' : 'var(--bg-surface)', // 👈 tab.id에서 id로 변경
+              color: activeTab === id ? '#fff' : 'var(--text-secondary)',                  // 👈 tab.id에서 id로 변경
               fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap'
             }}
           >
-            {tab.label}
+            {label} {/* 👈 tab.label에서 label로 변경 */}
           </button>
         ))}
       </div>
