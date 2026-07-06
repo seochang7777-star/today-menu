@@ -1,4 +1,5 @@
 import { Link, useNavigate } from 'react-router-dom'
+import RestaurantImage from './RestaurantImage'
 
 const cardClass =
   'group block h-full overflow-hidden rounded-[8px] border border-[var(--border-color)] bg-white text-inherit no-underline shadow-[var(--shadow-sm)] transition hover:-translate-y-1 hover:shadow-[var(--shadow)]'
@@ -52,7 +53,12 @@ export default function Cafeteria({
     <>
       <div className={imageWrapClass}>
         {image ? (
-          <img className={imageClass} src={image} alt={item.name} />
+          <RestaurantImage
+          imageUrl={item.image}
+          category={category}
+          name={item.name}
+          height={250}
+        />
         ) : (
           <div className="grid h-full w-full place-items-center text-4xl">
             {'🍴'}

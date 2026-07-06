@@ -1,7 +1,7 @@
 import ReviewModal from '../components/ReviewModal'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { createReview, getRestaurant, getReviews } from '../api/services'
+import { createReview, getRestaurant, getReviews, toggleFavoriteAction } from '../api/services'
 import { useAuth } from '../App'
 import KakaoMap from '../components/KakaoMap'
 import RestaurantImage from '../components/RestaurantImage'
@@ -64,6 +64,40 @@ export default function MenuDetail() {
   const [content, setContent] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [message, setMessage] = useState('')
+
+  const handleToggleLike = async () => {
+  if (!user) {
+    navigate('/login');
+    return;
+  }
+
+  const previousLiked = rest.is_liked;
+  
+  // 1. UI 낙관적 업데이트
+  setRest(prev => ({
+    ...prev,
+    is_liked: !prev.is_liked,
+    like_count: prev.is_liked ? prev.like_count - 1 : prev.like_count + 1
+  }));
+
+  try {
+    // 2. list를 []로, setter를 빈 함수로 전달
+    await toggleFavoriteAction({
+      id: rest.id,
+      list: [], 
+      setter: () => {}, 
+      type: 'restaurant'
+    });
+  } catch (error) {
+    // 3. 실패 시 롤백
+    setRest(prev => ({
+      ...prev,
+      is_liked: previousLiked,
+      like_count: previousLiked ? prev.like_count + 1 : prev.like_count - 1
+    }));
+    alert('찜 처리 중 오류가 발생했습니다.');
+  }
+};
 
   const loadReviews = useCallback(() => {
     getReviews(restId)
@@ -172,7 +206,22 @@ export default function MenuDetail() {
             </button>
           </div>
 
-          <div className="px-5 py-5 sm:px-7">
+          <div className="relative px-5 py-5 sm:px-7">
+             <div className="absolute top-4 right-4 z-20 flex flex-col items-center gap-1">
+              <button
+                type="button"
+                onClick={handleToggleLike} // 찜하기 로직 함수
+                className="grid h-10 w-10 place-items-center rounded-full bg-white/90 text-[1.4rem] shadow-sm transition hover:scale-105 active:scale-95"
+              >
+                <span className={rest.is_liked ? "text-[var(--color-primary)]" : "text-[#D1D1D1]"}>
+                  ♥
+                </span>
+              </button>
+              <span className="text-xs font-bold text-[var(--text-primary)] drop-shadow-md">
+                {rest.like_count ?? 0}
+              </span>
+            </div>
+
             <div className="mb-2 text-sm font-bold text-[var(--text-muted)]">
               {rest.category || '음식'}
             </div>

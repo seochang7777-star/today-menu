@@ -4,6 +4,7 @@ import requests as req_lib
 from datetime import datetime
 from functools import wraps
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy import func
 
 from flask import Blueprint, request, jsonify, send_from_directory
 from flask_jwt_extended import (
@@ -155,6 +156,38 @@ def index():
         'open_parties': [serialize_party(p) for p in open_parties],
         'categories':   CATEGORIES,
     })
+
+@main_bp.route('/api/menu/trending', methods=['GET'])
+def get_trending_data():
+    from sqlalchemy import func as sa_func
+
+    liked_sub = (
+        db.session.query(
+            RecommendationLog.recommended_restaurant_id.label('rest_id'),
+            sa_func.count(RecommendationLog.log_id).label('like_count')
+        )
+        .filter(RecommendationLog.is_liked == True)
+        .group_by(RecommendationLog.recommended_restaurant_id)
+        .subquery()
+    )
+    
+    trending = (
+        Restaurant.query
+        .outerjoin(liked_sub, Restaurant.restaurant_id == liked_sub.c.rest_id)
+        .order_by(sa_func.coalesce(liked_sub.c.like_count, 0).desc())
+        .limit(8)
+        .all()
+    )
+    
+    results = []
+    for r in trending:
+        count = db.session.query(sa_func.count(RecommendationLog.log_id))\
+            .filter(RecommendationLog.recommended_restaurant_id == r.restaurant_id, 
+                    RecommendationLog.is_liked == True).scalar()
+        results.append(serialize_restaurant(r, like_count=count))
+        
+    return jsonify({'items': results})
+
 
 # ══════════════════════════════════════════════════════════════════════════════
 # AUTH
@@ -383,7 +416,11 @@ def list_restaurants():
 @menu_bp.route('/<int:rest_id>', methods=['GET'])
 def get_restaurant(rest_id):
     rest = Restaurant.query.get_or_404(rest_id)
-    return jsonify(serialize_restaurant(rest))
+    raw_count = db.session.query(func.count(RecommendationLog.log_id))\
+        .filter(RecommendationLog.recommended_restaurant_id == rest_id, 
+                RecommendationLog.is_liked == True)\
+        .scalar() or 0
+    return jsonify(serialize_restaurant(rest, like_count=raw_count))
 
 
 @menu_bp.route('/', methods=['POST'])
@@ -436,27 +473,6 @@ def random_menus():
         })
 
     return jsonify({'items': result}), 200
-
-
-@main_bp.route('/api/menu/trending', methods=['GET'])
-def get_trending_data():
-    from sqlalchemy import func as sa_func
-    liked_sub = (
-        db.session.query(
-            RecommendationLog.recommended_restaurant_id,
-            sa_func.count(RecommendationLog.log_id).label('like_count')
-        )
-        .filter(RecommendationLog.is_liked == True)
-        .group_by(RecommendationLog.recommended_restaurant_id)
-        .subquery()
-    )
-    trending = (
-        Restaurant.query
-        .outerjoin(liked_sub, Restaurant.restaurant_id == liked_sub.c.recommended_restaurant_id)
-        .order_by(sa_func.coalesce(liked_sub.c.like_count, 0).desc(), Restaurant.avg_rating.desc())
-        .limit(8).all()
-    )
-    return jsonify({'items': [serialize_restaurant(r) for r in trending]})
 
 
 # ══════════════════════════════════════════════════════════════════════════════

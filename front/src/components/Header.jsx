@@ -13,7 +13,7 @@ const NAV_LINKS = [
 
 const pageContainer = 'container'
 const headerIconLink = 'inline-flex min-w-[70px] flex-col items-center justify-center gap-[5px] border-0 bg-transparent text-[0.78rem] font-black leading-none text-[#161211]'
-const navLinkBase = 'flex h-full min-w-[82px] items-center justify-center rounded-b-lg px-[18px] text-[0.94rem] font-extrabold text-[#191210] transition duration-200 hover:bg-[linear-gradient(135deg,var(--color-primary),#F98385)] hover:text-white'
+const navLinkBase = 'flex h-full min-w-[110px] items-center justify-center rounded-b-lg px-[18px] text-[0.94rem] font-extrabold text-[#191210] transition duration-200 hover:bg-[linear-gradient(135deg,var(--color-primary),#F98385)] hover:text-white'
 const navLinkActive = 'bg-[linear-gradient(135deg,var(--color-primary),#F98385)] text-white'
 const mobileButton = 'flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border-0 px-6 text-[0.94rem] font-black transition duration-200'
 
@@ -83,10 +83,10 @@ export default function Header() {
             >
               <img
                 src="/img/icon/mypage.png"
-                className="h-[35px] w-[35px] object-contain"
+                className="h-[28px] w-[28px] object-contain"
                 alt="mypage"
               />
-              <span className="whitespace-nowrap text-[0.74rem] font-extrabold leading-none text-[#7D6A63] transition-colors group-hover:text-[var(--color-primary)]">
+              <span className="whitespace-nowrap text-[0.65rem] font-extrabold leading-none text-[#7D6A63] transition-colors group-hover:text-[var(--color-primary)]">
                 마이페이지
               </span>
             </Link>
@@ -94,18 +94,18 @@ export default function Header() {
             {user && <PartyNotification />}
             {user ? (
               <button onClick={handleLogout} className={`${headerIconLink} group mr-1 max-md:hidden`}>
-                <img src="/img/icon/logout.png" className="h-[35px] w-[35px] object-contain" alt="logout" onError={(e) => { e.target.style.display="none" }} />
-                <span className="whitespace-nowrap text-[0.74rem] font-extrabold leading-none text-[#7D6A63] transition-colors group-hover:text-[var(--color-primary)]">
+                <img src="/img/icon/logout.png" className="h-[28px] w-[28px] object-contain" alt="logout" onError={(e) => { e.target.style.display="none" }} />
+                <span className="whitespace-nowrap text-[0.65rem] font-extrabold leading-none text-[#7D6A63] transition-colors group-hover:text-[var(--color-primary)]">
                 로그아웃
-              </span>
+                </span>
               </button>
             ) : (
               <>
                 <Link to="/login" className={`${headerIconLink} group mr-1 max-md:hidden`}>
                   <img src="/img/icon/login.png" onError={(e) => { e.target.style.display="none" }} 
-                  className="h-[35px] w-[35px] object-contain" 
+                  className="h-[28px] w-[28px] object-contain" 
                   alt="login" />
-                  <span className="whitespace-nowrap text-[0.74rem] font-extrabold leading-none text-[#7D6A63] transition-colors group-hover:text-[var(--color-primary)]">
+                  <span className="whitespace-nowrap text-[0.65rem] font-extrabold leading-none text-[#7D6A63] transition-colors group-hover:text-[var(--color-primary)]">
                 로그인
               </span>
                 </Link>
@@ -125,7 +125,7 @@ export default function Header() {
 
       <nav className="fixed inset-x-0 top-[var(--header-h)] z-[490] h-[var(--nav-h)] border-b border-[var(--border-color)] bg-white/95 shadow-[0_6px_18px_rgba(42,29,26,0.05)] max-md:hidden">
         <div className={`${pageContainer} flex h-full items-center justify-between gap-5`}>
-          <div className="flex h-full items-center gap-[22px]">
+          <div className="flex h-full items-center gap-[0.5px]">
             {NAV_LINKS.map(({ to, label, end }) => (
               <NavLink key={to} to={to} end={end} className={navCls}>
                 {label}
