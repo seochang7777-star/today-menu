@@ -4,9 +4,7 @@ import { useAuth } from '../App'
 import { getRandomMenus } from '../api/services'
 
 // ── 카테고리 아이콘 ──────────────────────────────────────────────────────────
-
-const CAT_ICON = { 한식: '🍚', 일식: '🍣', 중식: '🥟', 양식: '🥩', 분식: '🍜', 치킨: '🍗', 카페: '☕', 술집: '🍺' }
-
+const CAT_ICON = { 한식:'🍚', 일식:'🍣', 중식:'🥟', 양식:'🥩', 분식:'🍜', 치킨:'🍗', 카페:'☕', 술집:'🍺' }
 const catIcon = (c) => CAT_ICON[c] ?? '🍴'
 
 const CATEGORIES = ['전체', '한식', '일식', '중식', '양식', '분식', '치킨', '카페']
@@ -14,31 +12,42 @@ const CATEGORIES = ['전체', '한식', '일식', '중식', '양식', '분식', 
 // ══════════════════════════════════════════════════════════════════════════════
 // 게임 1 — 룰렛
 // ══════════════════════════════════════════════════════════════════════════════
-
-function Roulette({ menus }) {
-  const canvasRef = useRef(null)
-  const spinning = useRef(false)
-  const angleRef = useRef(0)
-  const [result, setResult] = useState(null)
+function Roulette() {
+  const canvasRef  = useRef(null)
+  const spinning   = useRef(false)
+  const angleRef   = useRef(0)
+  const [result,     setResult]     = useState(null)
   const [isSpinning, setIsSpinning] = useState(false)
-  const [loading, setLoading] = useState(false)
-  const [category, setCategory] = useState('전체')
+  const [category,   setCategory]   = useState('전체')
+  const [items,      setItems]      = useState([])
+  const [fetching,   setFetching]   = useState(false)
 
-  const slice = (2 * Math.PI) / (menus.length || 1)
-  const COLORS = ['#E53E3E', '#DD6B20', 'var(--color-accent)', '#38A169', '#3182CE', '#6B46C1', '#D53F8C']
+  // 카테고리 바뀔 때마다 API에서 해당 카테고리 메뉴 새로 불러오기
+  useEffect(() => {
+    setFetching(true)
+    setResult(null)
+    angleRef.current = 0
+    getRandomMenus(30, category)
+      .then(setItems)
+      .catch(() => setItems([]))
+      .finally(() => setFetching(false))
+  }, [category])
+
+  const slice = (2 * Math.PI) / (items.length || 1)
+  const COLORS = ['#E53E3E','#DD6B20','var(--color-accent)','#38A169','#3182CE','#6B46C1','#D53F8C']
 
   const draw = useCallback((angle) => {
     const canvas = canvasRef.current
-    if (!canvas || menus.length === 0) return
+    if (!canvas || items.length === 0) return
     const ctx = canvas.getContext('2d')
     const cx = canvas.width / 2
     const cy = canvas.height / 2
-    const r = cx - 8
+    const r  = cx - 8
     ctx.clearRect(0, 0, canvas.width, canvas.height)
 
-    menus.forEach((item, i) => {
+    items.forEach((item, i) => {
       const start = angle + i * slice
-      const end = start + slice
+      const end   = start + slice
 
       ctx.beginPath()
       ctx.moveTo(cx, cy)
@@ -55,9 +64,9 @@ function Roulette({ menus }) {
       ctx.rotate(start + slice / 2)
       ctx.textAlign = 'right'
       ctx.fillStyle = '#fff'
-      ctx.font = `bold ${Math.max(9, 13 - menus.length * .1)}px sans-serif`
+      ctx.font = `bold ${Math.max(9, 13 - items.length * .1)}px sans-serif`
       ctx.shadowColor = 'rgba(0,0,0,.4)'
-      ctx.shadowBlur = 2
+      ctx.shadowBlur  = 2
       const name = item.name.length > 7 ? item.name.slice(0, 7) + '…' : item.name
       ctx.fillText(name, r - 8, 4)
       ctx.restore()
@@ -75,34 +84,32 @@ function Roulette({ menus }) {
     ctx.font = 'bold 11px sans-serif'
     ctx.textAlign = 'center'
     ctx.fillText('SPIN', cx, cy + 4)
-  }, [category])
+  }, [items, slice])
 
   // 카테고리 바뀌면 룰렛 다시 그리기 + 결과 초기화
   useEffect(() => {
     angleRef.current = 0
+    setResult(null)
     draw(0)
-  }, [category]) // draw 말고 category로만
+  }, [draw])
 
   const spin = () => {
-    if (spinning.current || menus.length === 0) return
+    if (spinning.current || items.length === 0) return
     spinning.current = true
     setIsSpinning(true)
     setResult(null)
 
-    const currentItems = [...menus]
-    const currentSlice = slice
-
-    const extraSpins = (5 + Math.random() * 5) * 2 * Math.PI
+    const extraSpins  = (5 + Math.random() * 5) * 2 * Math.PI
     const targetAngle = angleRef.current + extraSpins
-    const duration = 4000
-    const start = performance.now()
-    const startAngle = angleRef.current
+    const duration    = 4000
+    const start       = performance.now()
+    const startAngle  = angleRef.current
 
     const animate = (now) => {
       const elapsed = now - start
       const t = Math.min(elapsed / duration, 1)
       const ease = 1 - Math.pow(1 - t, 3)
-      const cur = startAngle + (targetAngle - startAngle) * ease
+      const cur  = startAngle + (targetAngle - startAngle) * ease
 
       angleRef.current = cur
       draw(cur)
@@ -113,9 +120,8 @@ function Roulette({ menus }) {
         spinning.current = false
         setIsSpinning(false)
         const norm = (((-cur % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI))
-        const idx = Math.floor(norm / currentSlice) % currentItems.length
-        setResult(currentItems[idx])
-        setResult(menus[idx])
+        const idx  = Math.floor(norm / slice) % items.length
+        setResult(items[idx])
       }
     }
     requestAnimationFrame(animate)
@@ -149,18 +155,18 @@ function Roulette({ menus }) {
         </select>
         {category !== '전체' && (
           <span style={{ marginLeft: 8, fontSize: '.78rem', color: 'var(--text-muted)' }}>
-            {menus.length}개 메뉴
+            {items.length}개 메뉴
           </span>
         )}
       </div>
 
       {/* 룰렛 캔버스 */}
-      {loading ? (
+      {fetching ? (
         <div style={{ padding: 40, color: 'var(--text-muted)', textAlign: 'center' }}>
           <div style={{ fontSize: '2rem', marginBottom: 8 }}>🍽️</div>
           <div style={{ fontWeight: 700 }}>메뉴 불러오는 중...</div>
         </div>
-      ) : menus.length === 0 ? (
+      ) : items.length === 0 ? (
         <div style={{ padding: 40, color: 'var(--text-muted)', textAlign: 'center' }}>
           <div style={{ fontSize: '2rem', marginBottom: 8 }}>😅</div>
           <div style={{ fontWeight: 700 }}>{category} 메뉴가 없습니다</div>
@@ -238,181 +244,118 @@ function Roulette({ menus }) {
 // 게임 2 — 스무고개
 // ══════════════════════════════════════════════════════════════════════════════
 const TWENTY_QS = [
-  { q: '따뜻한 국물이 있나요?', yes: ['한식', '분식'], no: ['일식', '양식', '카페'] },
-  { q: '밥과 함께 먹는 음식인가요?', yes: ['한식'], no: ['카페', '양식'] },
-  { q: '면 요리인가요?', yes: ['분식', '일식', '중식'], no: ['한식', '양식', '치킨'] },
-  { q: '고기 요리인가요?', yes: ['한식', '양식', '치킨'], no: ['카페', '분식'] },
-  { q: '1만원 이하로 먹을 수 있나요?', yes: ['분식', '한식'], no: ['양식', '일식'] },
-  { q: '외국 음식인가요?', yes: ['일식', '중식', '양식'], no: ['한식', '분식'] },
-  { q: '매운 음식인가요?', yes: ['한식', '분식', '중식'], no: ['양식', '카페', '일식'] },
-  { q: '배달로 자주 시키는 음식인가요?', yes: ['치킨', '중식'], no: ['카페', '양식'] },
-  { q: '달콤한 맛이 나나요?', yes: ['카페'], no: ['한식', '분식', '치킨'] },
-  { q: '혼자 먹기 좋은 음식인가요?', yes: ['분식', '일식'], no: ['한식', '양식'] },
-];
+  { q: '따뜻한 국물이 있나요?',     yes: ['한식','분식'], no: ['일식','양식','카페'] },
+  { q: '밥과 함께 먹는 음식인가요?', yes: ['한식'], no: ['카페','양식'] },
+  { q: '면 요리인가요?',             yes: ['분식','일식','중식'], no: ['한식','양식','치킨'] },
+  { q: '고기 요리인가요?',           yes: ['한식','양식','치킨'], no: ['카페','분식'] },
+  { q: '1만원 이하로 먹을 수 있나요?',yes: ['분식','한식'], no: ['양식','일식'] },
+  { q: '외국 음식인가요?',           yes: ['일식','중식','양식','피자'], no: ['한식','분식'] },
+  { q: '매운 음식인가요?',           yes: ['한식','분식','중식'], no: ['양식','카페','일식'] },
+  { q: '배달로 자주 시키는 음식인가요?',yes: ['치킨','피자','중식'], no: ['카페','양식'] },
+  { q: '달콤한 맛이 나나요?',        yes: ['카페'], no: ['한식','분식','치킨'] },
+  { q: '혼자 먹기 좋은 음식인가요?', yes: ['분식','일식'], no: ['한식','양식'] },
+]
 
-function TwentyQ({ menus = [] }) {
-  const [started, setStarted] = useState(false);
-  const [step, setStep] = useState(0);
-  const [answers, setAnswers] = useState([]);
-  const [target, setTarget] = useState(null);
-  const [guess, setGuess] = useState(null);
-  const [reveal, setReveal] = useState(false);
-
-  // 카테고리별 이모지 매칭 함수 (정의 누락 방지용)
-
-
-
-
+function TwentyQ({ menus }) {
+  const [step,    setStep]    = useState(0)
+  const [answers, setAnswers] = useState([])
+  const [target,  setTarget]  = useState(null)
+  const [guess,   setGuess]   = useState(null)
+  const [reveal,  setReveal]  = useState(false)
 
   useEffect(() => {
-    if (menus.length > 0) {
-      setTarget(menus[Math.floor(Math.random() * menus.length)]);
-    }
-  }, [menus]);
+    if (menus.length > 0)
+      setTarget(menus[Math.floor(Math.random() * menus.length)])
+  }, [menus])
 
   const answer = (yn) => {
-    const newA = [...answers, yn];
-    setAnswers(newA);
-
+    const newA = [...answers, yn]
+    setAnswers(newA)
     if (newA.length >= TWENTY_QS.length) {
-      const score = {};
+      const score = {}
       newA.forEach((a, i) => {
-        const q = TWENTY_QS[i];
-        const cats = a === 'yes' ? q.yes : q.no;
-        cats.forEach(c => { score[c] = (score[c] ?? 0) + 1; });
-      });
-
-      const best = Object.entries(score).sort((a, b) => b[1] - a[1])[0]?.[0];
-      const candidates = menus.filter(m => m.category === best);
-      setGuess(candidates[Math.floor(Math.random() * candidates.length)] ?? menus[0]);
-      setStep(TWENTY_QS.length); // 안전하게 10으로 고정
+        const q = TWENTY_QS[i]
+        const cats = a === 'yes' ? q.yes : q.no
+        cats.forEach(c => { score[c] = (score[c] ?? 0) + 1 })
+      })
+      const best = Object.entries(score).sort((a,b) => b[1]-a[1])[0]?.[0]
+      const candidates = menus.filter(m => m.category === best)
+      setGuess(candidates[Math.floor(Math.random() * candidates.length)] ?? menus[0])
+      setStep(10)
     } else {
-      setStep(prev => prev + 1);
+      setStep(step + 1)
     }
-  };
+  }
 
-  const reset = () => {
-    setStarted(false);
-    setStep(0);
-    setAnswers([]);
-    setGuess(null);
-    setReveal(false);
-    if (menus.length > 0) {
-      setTarget(menus[Math.floor(Math.random() * menus.length)]);
-    }
-  };
-
-  // ⭕ 중요: step이 배열 길이를 벗어나면 안전하게 null 처리하여 크래시를 방지합니다.
-  const currentQuestion = step < TWENTY_QS.length ? TWENTY_QS[step] : null;
+  const reset = () => { setStep(0); setAnswers([]); setGuess(null); setReveal(false); setTarget(menus[Math.floor(Math.random()*menus.length)]) }
+  const q = TWENTY_QS[step]
 
   return (
-    <div className="max-w-[400px] mx-auto p-4">
-      {/* [시작 화면] */}
-      {!started && step === 0 && (
-        <div className="text-center py-8">
-          <div className="text-5xl mb-4 animate-bounce">🕵️</div>
-          <div className="text-xl font-black text-[var(--text-main)] mb-2">스무고개로 메뉴 맞추기!</div>
-          <p className="text-xs text-[var(--text-muted)] leading-relaxed mb-6">
-            예스/노 10개 질문으로 오늘 먹을 메뉴를 알아맞혀드려요.<br />솔직하게 대답할수록 정확해져요!
+    <div style={{ maxWidth: 400, margin: '0 auto' }}>
+      {step === 0 && answers.length === 0 && (
+        <div style={{ textAlign: 'center' }}>
+          <div style={{ fontSize: '3rem', margin: '12px 0' }}>🕵️</div>
+          <div style={{ fontWeight: 800, fontSize: '1.2rem', marginBottom: 8 }}>스무고개로 메뉴 맞추기!</div>
+          <p style={{ color: 'var(--text-muted)', fontSize: '.88rem', lineHeight: 1.7, marginBottom: 20 }}>
+            예스/노 10개 질문으로 오늘 먹을 메뉴를 알아맞혀드려요.<br/>솔직하게 대답할수록 정확해져요!
           </p>
-          <button
-            className="px-9 py-3 bg-[var(--color-primary)] text-white font-bold rounded-full transition-all hover:brightness-110 active:scale-95 shadow-md"
-            onClick={() => { setStarted(true); setStep(0); }}
-          >
-            시작하기
-          </button>
+          <button className="btn btn-primary" style={{ padding: '12px 36px', borderRadius: 50 }}
+            onClick={() => setStep(0)}>시작하기</button>
         </div>
       )}
-
-      {/* [질문 진행 화면] */}
-      {started && step < TWENTY_QS.length && currentQuestion && (
+      {step < 10 && answers.length <= step && (
         <div>
-          {/* 프로그레스 인디케이터 */}
-          <div className="flex justify-between items-center mb-4 text-xs font-bold text-[var(--text-muted)]">
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12, fontSize: '.8rem', color: 'var(--text-muted)' }}>
             <span>질문 {step + 1} / {TWENTY_QS.length}</span>
-            <div className="flex gap-1">
+            <div style={{ display: 'flex', gap: 3 }}>
               {TWENTY_QS.map((_, i) => (
-                <div
-                  key={i}
-                  className={`w-[16px] h-[5px] rounded-full transition-all duration-300 ${i < answers.length
-                      ? 'bg-[var(--color-primary)]'
-                      : i === step
-                        ? 'bg-[var(--color-secondary)] scale-y-125'
-                        : 'bg-gray-200'
-                    }`}
-                />
+                <div key={i} style={{ width: 18, height: 5, borderRadius: 3, background: i < answers.length ? 'var(--color-primary)' : i === step ? 'var(--color-secondary)' : 'var(--bg-surface)' }} />
               ))}
             </div>
           </div>
-
-          {/* 질문 카드 박스 */}
-          <div className="bg-white dark:bg-gray-900 rounded-2xl p-6 border border-gray-100 dark:border-gray-800 text-center shadow-sm mb-5">
-            <div className="text-3xl mb-2">🤔</div>
-            <div className="text-base font-extrabold text-[var(--text-main)] leading-snug">{currentQuestion.q}</div>
+          <div style={{ background: 'var(--bg-white)', borderRadius: 16, padding: '24px 20px', border: '1px solid var(--border-color)', textAlign: 'center', marginBottom: 20 }}>
+            <div style={{ fontSize: '2rem', marginBottom: 10 }}>🤔</div>
+            <div style={{ fontWeight: 800, fontSize: '1.1rem', lineHeight: 1.5 }}>{q.q}</div>
           </div>
-
-          {/* YES / NO 선택 버튼 */}
-          <div className="grid grid-cols-2 gap-3">
-            <button
-              onClick={() => answer('yes')}
-              className="py-5 rounded-xl border-2 border-emerald-500 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-black text-lg transition-transform active:scale-95 shadow-sm"
-            >
-              ✅ 예!
-            </button>
-            <button
-              onClick={() => answer('no')}
-              className="py-5 rounded-xl border-2 border-rose-500 bg-rose-50 hover:bg-rose-100 text-rose-700 font-black text-lg transition-transform active:scale-95 shadow-sm"
-            >
-              ❌ 아니오
-            </button>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+            {[['yes','✅ 예!','#F0FFF4','#276749'], ['no','❌ 아니오','#FFF5F5','#C53030']].map(([val, label, bg, color]) => (
+              <button key={val} onClick={() => answer(val)}
+                style={{ padding: 20, borderRadius: 14, border: `2px solid ${color}`, background: bg, fontWeight: 800, fontSize: '1.1rem', cursor: 'pointer', color, transition: 'transform .1s' }}
+                onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.03)'}
+                onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}>
+                {label}
+              </button>
+            ))}
           </div>
         </div>
       )}
-
-      {/* [결과 화면] */}
-      {step === TWENTY_QS.length && guess && (
-        <div className="text-center py-4">
-          <div className="text-4xl mb-2 animate-pulse">🎯</div>
-          <div className="text-lg font-black text-[var(--text-main)] mb-4">AI의 추천 메뉴는...</div>
-
-          <div className="bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-800 dark:to-gray-800 rounded-2xl p-6 shadow-inner mb-4 border border-blue-100 dark:border-none">
-            <div className="text-4xl mb-2">{catIcon(guess.category)}</div>
-            <div className="text-xl font-black text-gray-900 dark:text-white mb-1">{guess.name}</div>
-            <div className="text-xs text-gray-500 dark:text-gray-400 font-medium">{guess.category} · {guess.address}</div>
-
-            <Link
-              to={`/menu/${guess.id}`}
-              className="inline-block mt-4 px-5 py-2 bg-blue-600 text-white rounded-full text-xs font-bold transition-all hover:bg-blue-700 shadow-sm"
-            >
+      {step === 10 && guess && (
+        <div style={{ textAlign: 'center' }}>
+          <div style={{ fontSize: '2.5rem', marginBottom: 8 }}>🎯</div>
+          <div style={{ fontWeight: 900, fontSize: '1.2rem', marginBottom: 16 }}>AI의 추천 메뉴는...</div>
+          <div style={{ background: 'linear-gradient(135deg,#EBF8FF,#BEE3F8)', borderRadius: 16, padding: '24px 20px', marginBottom: 16 }}>
+            <div style={{ fontSize: '2.5rem', marginBottom: 8 }}>{catIcon(guess.category)}</div>
+            <div style={{ fontWeight: 900, fontSize: '1.4rem', marginBottom: 4 }}>{guess.name}</div>
+            <div style={{ fontSize: '.82rem', color: 'var(--text-muted)' }}>{guess.category} · {guess.address}</div>
+            <Link to={`/menu/${guess.id}`}
+              style={{ display: 'inline-block', marginTop: 12, padding: '6px 20px', background: '#3182CE', color: '#fff', borderRadius: 20, fontSize: '.82rem', fontWeight: 700, textDecoration: 'none' }}>
               식당 보러가기 →
             </Link>
           </div>
-
-          <div className="flex flex-col items-center gap-2">
-            {/* <button 
-              onClick={() => setReveal(!reveal)}
-              className="text-xs font-semibold text-[var(--text-muted)] bg-transparent border border-gray-200 dark:border-gray-700 px-3 py-1.5 rounded-lg hover:bg-gray-50 transition-colors"
-            >
-              {reveal ? '숨기기' : '🔍 내가 생각했던 음식 공개'}
-            </button> */}
-
-            {reveal && target && (
-              <div className="w-full bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-xl p-3 text-xs font-bold border border-dashed border-gray-200 dark:border-gray-700">
-                {target.name} ({target.category})
-              </div>
-            )}
-
-            <button
-              onClick={reset}
-              className="mt-2 w-full py-2.5 bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-[var(--text-main)] rounded-xl text-sm font-bold transition-all"
-            >
-              🔄 다시하기
-            </button>
-          </div>
+          <button onClick={() => setReveal(!reveal)}
+            style={{ fontSize: '.82rem', color: 'var(--text-muted)', background: 'none', border: '1px solid var(--border-color)', padding: '6px 14px', borderRadius: 8, cursor: 'pointer', marginBottom: 12 }}>
+            {reveal ? '숨기기' : '🔍 내가 생각했던 음식 공개'}
+          </button>
+          {reveal && (
+            <div style={{ background: 'var(--bg-surface)', borderRadius: 10, padding: 12, marginBottom: 12, fontSize: '.88rem' }}>
+              {target?.name} ({target?.category})
+            </div>
+          )}
+          <button className="btn btn-secondary" onClick={reset}>🔄 다시하기</button>
         </div>
       )}
     </div>
-  );
+  )
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
@@ -420,9 +363,9 @@ function TwentyQ({ menus = [] }) {
 // ══════════════════════════════════════════════════════════════════════════════
 function WorldCup({ menus }) {
   const POOL = 32
-  const [bracket, setBracket] = useState([])
-  const [round, setRound] = useState(0)
-  const [winners, setWinners] = useState([])
+  const [bracket,  setBracket]  = useState([])
+  const [round,    setRound]    = useState(0)
+  const [winners,  setWinners]  = useState([])
   const [roundNum, setRoundNum] = useState(0)
   const [champion, setChampion] = useState(null)
   const [choosing, setChoosing] = useState(null)
@@ -433,7 +376,7 @@ function WorldCup({ menus }) {
   }
   useEffect(() => { if (menus.length >= 4) init() }, [menus])
 
-  const left = bracket[round * 2]
+  const left  = bracket[round * 2]
   const right = bracket[round * 2 + 1]
   const totalMatches = bracket.length / 2
   const roundLabel = bracket.length === 2 ? '결승' : bracket.length === 4 ? '준결승' : bracket.length === 8 ? '8강' : bracket.length === 16 ? '16강' : '32강'
@@ -444,7 +387,7 @@ function WorldCup({ menus }) {
     setTimeout(() => {
       setChoosing(null)
       const newWinners = [...winners, winner]
-      const nextRound = round + 1
+      const nextRound  = round + 1
       if (nextRound >= totalMatches) {
         if (newWinners.length === 1) {
           setChampion(newWinners[0])
@@ -472,12 +415,7 @@ function WorldCup({ menus }) {
           식당 보러가기 →
         </Link>
       </div>
-      <div><button
-        onClick={init}
-        className="mt-2 w-full py-2.5 bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-[var(--text-main)] rounded-xl text-sm font-bold transition-all"
-      >
-        🔄 다시하기
-      </button></div>
+      <div><button className="btn btn-secondary" onClick={init}>🔄 다시하기</button></div>
     </div>
   )
 
@@ -518,11 +456,11 @@ function WorldCup({ menus }) {
 // 게임 4 — 뽑기 (긁기)
 // ══════════════════════════════════════════════════════════════════════════════
 function ScratchCard({ menus }) {
-  const canvasRef = useRef(null)
+  const canvasRef  = useRef(null)
   const scratching = useRef(false)
-  const [prize, setPrize] = useState(null)
+  const [prize,    setPrize]    = useState(null)
   const [revealed, setRevealed] = useState(0)
-  const [done, setDone] = useState(false)
+  const [done,     setDone]     = useState(false)
   const TARGET = 60
 
   const pick = useCallback(() => menus.length > 0 ? menus[Math.floor(Math.random() * menus.length)] : null, [menus])
@@ -578,8 +516,8 @@ function ScratchCard({ menus }) {
   }
 
   const onStart = (e) => { e.preventDefault(); scratching.current = true; scratch(...Object.values(getPos(e, canvasRef.current))) }
-  const onMove = (e) => { e.preventDefault(); if (!scratching.current) return; scratch(...Object.values(getPos(e, canvasRef.current))) }
-  const onEnd = () => { scratching.current = false }
+  const onMove  = (e) => { e.preventDefault(); if (!scratching.current) return; scratch(...Object.values(getPos(e, canvasRef.current))) }
+  const onEnd   = ()  => { scratching.current = false }
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16 }}>
@@ -622,24 +560,336 @@ function ScratchCard({ menus }) {
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
+// 게임 5 — 사다리타기
+// ══════════════════════════════════════════════════════════════════════════════
+function Ladder({ menus }) {
+  const MAX = 6
+  const canvasRef = useRef(null)
+  const [items,      setItems]      = useState([])   // 메뉴 목록
+  const [inputVal,   setInputVal]   = useState('')
+  const [rungs,      setRungs]      = useState([])   // 사다리 가로줄
+  const [result,     setResult]     = useState(null) // { topIdx, bottomIdx }
+  const [animPath,   setAnimPath]   = useState(null) // 현재 하이라이트 경로
+  const [fetching,   setFetching]   = useState(false)
+
+  const NUM_ROWS = 9   // 세로 구간 수
+  const COLORS   = ['#E53E3E','#DD6B20','#F6AD55','#38A169','#3182CE','#6B46C1']
+
+  // ── 사다리 가로줄 생성 ────────────────────────────────────────────────────
+  const generateRungs = useCallback((n) => {
+    const r = []
+    for (let row = 0; row < NUM_ROWS; row++) {
+      let last = -2
+      const cols = Array.from({ length: n - 1 }, (_, i) => i).sort(() => Math.random() - .5)
+      for (const col of cols) {
+        if (col !== last + 1 && Math.random() > .45) {
+          r.push({ row, col })
+          last = col
+        }
+      }
+    }
+    return r
+  }, [])
+
+  // ── 경로 추적 ─────────────────────────────────────────────────────────────
+  const tracePath = useCallback((topIdx, rungList) => {
+    let col = topIdx
+    const path = [{ row: -1, col }]
+    for (let row = 0; row < NUM_ROWS; row++) {
+      const goRight = rungList.find(r => r.row === row && r.col === col)
+      const goLeft  = rungList.find(r => r.row === row && r.col === col - 1)
+      if      (goRight) col += 1
+      else if (goLeft)  col -= 1
+      path.push({ row, col })
+    }
+    return { bottomIdx: col, path }
+  }, [])
+
+  // ── 캔버스 그리기 ─────────────────────────────────────────────────────────
+  const draw = useCallback((highlightPath = null) => {
+    const canvas = canvasRef.current
+    if (!canvas || items.length < 2) return
+    const ctx  = canvas.getContext('2d')
+    const W    = canvas.width
+    const H    = canvas.height
+    const n    = items.length
+    const PAD  = 36
+    const TOP  = 52
+    const BOT  = H - 52
+    const step = (W - PAD * 2) / (n - 1)
+
+    ctx.clearRect(0, 0, W, H)
+
+    const xOf = (col) => PAD + col * step
+    const yOf = (row) => TOP + (row + 1) * ((BOT - TOP) / (NUM_ROWS + 1))
+
+    // ── 세로줄 ───────────────────────────────────────────────────────────────
+    for (let i = 0; i < n; i++) {
+      ctx.beginPath()
+      ctx.moveTo(xOf(i), TOP)
+      ctx.lineTo(xOf(i), BOT)
+      ctx.strokeStyle = '#D1C4BE'
+      ctx.lineWidth   = 3
+      ctx.stroke()
+    }
+
+    // ── 가로줄 ───────────────────────────────────────────────────────────────
+    rungs.forEach(({ row, col }) => {
+      ctx.beginPath()
+      ctx.moveTo(xOf(col), yOf(row))
+      ctx.lineTo(xOf(col + 1), yOf(row))
+      ctx.strokeStyle = '#B0A098'
+      ctx.lineWidth   = 3
+      ctx.stroke()
+    })
+
+    // ── 하이라이트 경로 ───────────────────────────────────────────────────────
+    if (highlightPath && highlightPath.length >= 2) {
+      const color = COLORS[highlightPath[0].col % COLORS.length]
+      ctx.strokeStyle = color
+      ctx.lineWidth   = 5
+      ctx.lineCap     = 'round'
+      ctx.lineJoin    = 'round'
+      ctx.beginPath()
+      ctx.moveTo(xOf(highlightPath[0].col), TOP)
+      for (let i = 1; i < highlightPath.length; i++) {
+        const prev = highlightPath[i - 1]
+        const cur  = highlightPath[i]
+        const y    = yOf(cur.row)
+        // 가로 이동
+        if (prev.col !== cur.col) {
+          ctx.lineTo(xOf(prev.col), y)
+          ctx.lineTo(xOf(cur.col), y)
+        } else {
+          ctx.lineTo(xOf(cur.col), y)
+        }
+      }
+      ctx.lineTo(xOf(highlightPath[highlightPath.length - 1].col), BOT)
+      ctx.stroke()
+    }
+
+    // ── 상단 라벨 (번호) ──────────────────────────────────────────────────────
+    for (let i = 0; i < n; i++) {
+      const isHighlight = highlightPath && highlightPath[0].col === i
+      ctx.beginPath()
+      ctx.arc(xOf(i), TOP - 14, 14, 0, 2 * Math.PI)
+      ctx.fillStyle = isHighlight ? COLORS[i % COLORS.length] : '#F3E7DD'
+      ctx.fill()
+      ctx.fillStyle = isHighlight ? '#fff' : '#7A5C52'
+      ctx.font      = 'bold 12px sans-serif'
+      ctx.textAlign = 'center'
+      ctx.fillText(i + 1, xOf(i), TOP - 10)
+    }
+
+    // ── 하단 라벨 (메뉴명) ────────────────────────────────────────────────────
+    for (let i = 0; i < n; i++) {
+      const isResult = highlightPath && highlightPath[highlightPath.length - 1].col === i
+      ctx.fillStyle = isResult ? COLORS[highlightPath[0].col % COLORS.length] : '#5E4A44'
+      ctx.font      = `bold ${isResult ? 12 : 11}px sans-serif`
+      ctx.textAlign = 'center'
+      const label = items[i].length > 5 ? items[i].slice(0, 5) + '…' : items[i]
+      ctx.fillText(label, xOf(i), BOT + 20)
+    }
+  }, [items, rungs])
+
+  useEffect(() => { draw(animPath) }, [draw, animPath])
+
+  // ── 메뉴 추가 ─────────────────────────────────────────────────────────────
+  const addItem = () => {
+    const v = inputVal.trim()
+    if (!v || items.length >= MAX) return
+    const next = [...items, v]
+    setItems(next)
+    setInputVal('')
+    setResult(null)
+    setAnimPath(null)
+    setRungs(generateRungs(next.length))
+  }
+
+  const removeItem = (idx) => {
+    const next = items.filter((_, i) => i !== idx)
+    setItems(next)
+    setResult(null)
+    setAnimPath(null)
+    if (next.length >= 2) setRungs(generateRungs(next.length))
+  }
+
+  // ── 랜덤 메뉴 불러오기 ───────────────────────────────────────────────────
+  const loadRandom = () => {
+    setFetching(true)
+    getRandomMenus(MAX)
+      .then((data) => {
+        const names = data.slice(0, MAX).map(m => m.name)
+        setItems(names)
+        setResult(null)
+        setAnimPath(null)
+        setRungs(generateRungs(names.length))
+      })
+      .catch(() => {})
+      .finally(() => setFetching(false))
+  }
+
+  // ── 사다리 다시 생성 ──────────────────────────────────────────────────────
+  const regenerate = () => {
+    if (items.length < 2) return
+    setResult(null)
+    setAnimPath(null)
+    setRungs(generateRungs(items.length))
+  }
+
+  // ── 번호 클릭 → 경로 추적 ────────────────────────────────────────────────
+  const handlePick = (topIdx) => {
+    if (items.length < 2) return
+    const { bottomIdx, path } = tracePath(topIdx, rungs)
+    setAnimPath(path)
+    setResult({ topIdx, bottomIdx })
+  }
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+
+      {/* 메뉴 입력 영역 */}
+      <div>
+        <div style={{ fontSize: '.82rem', fontWeight: 700, color: 'var(--text-muted)', marginBottom: 8 }}>
+          메뉴 목록 ({items.length}/{MAX}) — 최소 2개 이상 필요
+        </div>
+
+        {/* 추가된 메뉴 태그 */}
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 10, minHeight: 32 }}>
+          {items.map((item, i) => (
+            <span key={i} style={{
+              background: COLORS[i % COLORS.length], color: '#fff',
+              borderRadius: 20, padding: '4px 12px', fontSize: '.82rem', fontWeight: 700,
+              display: 'flex', alignItems: 'center', gap: 6,
+            }}>
+              {i + 1}. {item}
+              <button onClick={() => removeItem(i)}
+                style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,.8)', cursor: 'pointer', padding: 0, fontSize: '.9rem', lineHeight: 1 }}>
+                ×
+              </button>
+            </span>
+          ))}
+          {items.length === 0 && (
+            <span style={{ fontSize: '.82rem', color: 'var(--text-muted)' }}>메뉴를 추가하거나 랜덤으로 불러오세요</span>
+          )}
+        </div>
+
+        {/* 직접 입력 */}
+        {items.length < MAX && (
+          <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
+            <input
+              className="form-control"
+              style={{ flex: 1 }}
+              placeholder="메뉴명 직접 입력 후 Enter"
+              value={inputVal}
+              onChange={(e) => setInputVal(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && addItem()}
+            />
+            <button
+              onClick={addItem}
+              style={{ padding: '8px 14px', borderRadius: 8, border: 'none', background: 'var(--color-primary)', color: '#fff', fontWeight: 700, cursor: 'pointer', flexShrink: 0 }}>
+              추가
+            </button>
+          </div>
+        )}
+
+        {/* 버튼 */}
+        <div style={{ display: 'flex', gap: 8 }}>
+          <button onClick={loadRandom} disabled={fetching}
+            style={{ padding: '8px 16px', borderRadius: 8, border: '1.5px solid var(--color-primary)', background: '#FFF5F5', color: 'var(--color-primary)', fontWeight: 700, cursor: 'pointer', fontSize: '.85rem' }}>
+            {fetching ? '...' : '🎲 랜덤 메뉴'}
+          </button>
+          {items.length >= 2 && (
+            <button onClick={regenerate}
+              style={{ padding: '8px 16px', borderRadius: 8, border: '1.5px solid var(--border-color)', background: 'var(--bg-white)', color: 'var(--text-secondary)', fontWeight: 700, cursor: 'pointer', fontSize: '.85rem' }}>
+              🔀 사다리 재생성
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* 사다리 캔버스 */}
+      {items.length >= 2 ? (
+        <>
+          <canvas ref={canvasRef} width={540} height={400}
+            style={{ width: '100%', borderRadius: 12, border: '1px solid var(--border-color)', background: '#FFFDF7', cursor: 'pointer' }}
+          />
+
+          {/* 번호 선택 버튼 */}
+          <div>
+            <div style={{ fontSize: '.82rem', fontWeight: 700, color: 'var(--text-muted)', marginBottom: 8 }}>
+              번호를 선택하면 경로를 확인할 수 있어요
+            </div>
+            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+              {items.map((_, i) => (
+                <button key={i} onClick={() => handlePick(i)}
+                  style={{
+                    width: 42, height: 42, borderRadius: '50%', border: 'none',
+                    background: animPath && animPath[0].col === i ? COLORS[i % COLORS.length] : '#F3E7DD',
+                    color: animPath && animPath[0].col === i ? '#fff' : '#7A5C52',
+                    fontWeight: 800, fontSize: '1rem', cursor: 'pointer',
+                    transition: 'all .2s',
+                  }}>
+                  {i + 1}
+                </button>
+              ))}
+              {animPath && (
+                <button onClick={() => { setAnimPath(null); setResult(null) }}
+                  style={{ padding: '0 14px', height: 42, borderRadius: 21, border: '1.5px solid var(--border-color)', background: 'var(--bg-white)', color: 'var(--text-muted)', fontWeight: 700, cursor: 'pointer', fontSize: '.82rem' }}>
+                  초기화
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* 결과 */}
+          {result && (
+            <div style={{
+              background: `linear-gradient(135deg, #FFF5F5, #FED7D7)`,
+              border: `2px solid ${COLORS[result.topIdx % COLORS.length]}`,
+              borderRadius: 16, padding: '20px 24px', textAlign: 'center',
+              animation: 'popIn .4s ease',
+            }}>
+              <div style={{ fontSize: '.8rem', fontWeight: 700, color: 'var(--text-muted)', marginBottom: 8 }}>
+                🎉 {result.topIdx + 1}번 선택 결과
+              </div>
+              <div style={{ fontSize: '2rem', marginBottom: 6 }}>🍽️</div>
+              <div style={{ fontWeight: 900, fontSize: '1.4rem', color: COLORS[result.topIdx % COLORS.length] }}>
+                {items[result.bottomIdx]}
+              </div>
+            </div>
+          )}
+        </>
+      ) : (
+        <div style={{ textAlign: 'center', padding: '40px 20px', color: 'var(--text-muted)', background: 'var(--bg-surface)', borderRadius: 12 }}>
+          <div style={{ fontSize: '2.5rem', marginBottom: 12 }}>🪜</div>
+          <div style={{ fontWeight: 700 }}>메뉴를 2개 이상 추가하면 사다리가 나타나요</div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
 // 메인 Game 페이지
 // ══════════════════════════════════════════════════════════════════════════════
 const TABS = [
-  { id: 'roulette', label: '🎰 룰렛', desc: '30개 메뉴 중 랜덤' },
-  { id: 'twentyq', label: '🕵️ 스무고개', desc: '예/아니오로 맞추기' },
-  { id: 'worldcup', label: '🏆 월드컵', desc: '32개 토너먼트' },
-  { id: 'scratch', label: '🎟️ 뽑기', desc: '긁어서 메뉴 확인' },
+  { id: 'roulette',  label: '🎰 룰렛',    desc: '30개 메뉴 중 랜덤' },
+  { id: 'twentyq',  label: '🕵️ 스무고개', desc: '예/아니오로 맞추기' },
+  { id: 'worldcup', label: '🏆 월드컵',   desc: '32개 토너먼트' },
+  { id: 'scratch',  label: '🎟️ 뽑기',    desc: '긁어서 메뉴 확인' },
+  { id: 'ladder',   label: '🪜 사다리',   desc: '사다리타기' },
 ]
 
 export default function Game() {
   const [activeTab, setActiveTab] = useState('roulette')
-  const [menus, setMenus] = useState([])
-  const [loading, setLoading] = useState(true)
+  const [menus,     setMenus]     = useState([])
+  const [loading,   setLoading]   = useState(true)
 
   useEffect(() => {
     getRandomMenus(64)
       .then(setMenus)
-      .catch(() => { })
+      .catch(() => {})
       .finally(() => setLoading(false))
   }, [])
 
@@ -651,7 +901,7 @@ export default function Game() {
       </p>
 
       {/* 탭 */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8, marginBottom: 24 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 8, marginBottom: 24 }}>
         {TABS.map(({ id, label, desc }) => (
           <button key={id} onClick={() => setActiveTab(id)}
             style={{
@@ -674,10 +924,11 @@ export default function Game() {
           </div>
         ) : (
           <>
-            {activeTab === 'roulette' && <Roulette menus={menus} />}
-            {activeTab === 'twentyq' && <TwentyQ menus={menus} />}
-            {activeTab === 'worldcup' && <WorldCup menus={menus} />}
-            {activeTab === 'scratch' && <ScratchCard menus={menus} />}
+            {activeTab === 'roulette'  && <Roulette />}
+            {activeTab === 'twentyq'   && <TwentyQ     menus={menus} />}
+            {activeTab === 'worldcup'  && <WorldCup    menus={menus} />}
+            {activeTab === 'scratch'   && <ScratchCard menus={menus} />}
+            {activeTab === 'ladder'    && <Ladder       menus={menus} />}
           </>
         )}
       </div>
