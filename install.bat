@@ -59,8 +59,8 @@ if errorlevel 1 (
 echo.
 echo [5/6] DB 초기화 중... (테이블 생성 + 기본계정 + 테스트유저 100명)
 cd /d "%BACK%"
-if exist "%BACK%\수원지역_상가_정보.csv" (
-    %PYTHON% seed.py --csv 수원지역_상가_정보.csv
+if exist "%BACK%\수원지역_상가_최종.csv" (
+    %PYTHON% seed.py --csv 수원지역_상가_최종.csv
 ) else (
     echo       수원지역_상가_정보.csv 없음 - CSV 건너뜀
     %PYTHON% seed.py --skip-csv

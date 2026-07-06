@@ -123,7 +123,7 @@ def step3_import_csv(csv_path: str, clear: bool = False):
     if not Path(csv_path).exists():
         print(f"  ⚠️  파일 없음: {csv_path}")
         print("  ⏭️  CSV 임포트 건너뜀 — 나중에 직접 실행하세요:")
-        print("       python seed.py --csv 수원지역_상가_정보.csv")
+        print("       python seed.py --csv 수원지역_상가_최종.csv")
         return
 
     with open(csv_path, encoding='utf-8-sig') as f:
@@ -132,8 +132,8 @@ def step3_import_csv(csv_path: str, clear: bool = False):
     print(f"  총 {len(rows)}개 행 읽음")
 
     valid = [r for r in rows
-             if r.get('위도', '').strip() and r.get('경도', '').strip()
-             and r.get('카테고리', '').strip() in OUR_CATEGORIES]
+             if r.get('latitude', '').strip() and r.get('longitude', '').strip()
+             and r.get('category', '').strip() in OUR_CATEGORIES]
     print(f"  등록 대상: {len(valid)}개")
 
     with app.app_context():
@@ -144,8 +144,8 @@ def step3_import_csv(csv_path: str, clear: bool = False):
 
         added = skipped = 0
         for i, r in enumerate(valid, 1):
-            name    = r['사업장명'].strip()
-            address = r.get('소재지도로명주소', '').strip() or r.get('소재지지번주소', '').strip()
+            name    = r['name'].strip()
+            address = r['address'].strip()
 
             if Restaurant.query.filter_by(name=name, address=address).first():
                 skipped += 1
@@ -153,9 +153,9 @@ def step3_import_csv(csv_path: str, clear: bool = False):
 
             db.session.add(Restaurant(
                 name=name, address=address,
-                latitude=float(r['위도']), longitude=float(r['경도']),
-                category=r['카테고리'].strip(),
-                phone=r.get('소재지시설전화번호', '').strip(),
+                latitude=float(r['latitude']), longitude=float(r['longitude']),
+                category=r['category'].strip(),
+                phone=r.get('phone', '').strip(),
                 description='', avg_rating=0.0,
             ))
             added += 1
@@ -165,6 +165,39 @@ def step3_import_csv(csv_path: str, clear: bool = False):
 
         db.session.commit()
         print(f"  ✅ 등록: {added}개 / ⏭️ 중복 건너뜀: {skipped}개")
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# [추가] 별도 메뉴 CSV 임포트
+# ══════════════════════════════════════════════════════════════════════════════
+def step_extra_menu_import(csv_path: str):
+    print(f"\n[추가] 메뉴 CSV 파일 등록 중... ({csv_path})")
+    
+    if not Path(csv_path).exists():
+        print(f" ⚠️ 파일 없음: {csv_path}")
+        return
+
+    with open(csv_path, encoding='utf-8-sig') as f:
+        reader = csv.DictReader(f)
+        with app.app_context():
+            # SQL 직접 실행 방식으로 변경 (모델 의존성 제거)
+            added = 0
+            for row in reader:
+                # 1. 카테고리 등록 (기존 테이블이 없어도 생성하도록 로직 보완)
+                db.session.execute(
+                    db.text("INSERT OR IGNORE INTO categories (id, name) VALUES (:id, :name)"),
+                    {'id': row['category_id'], 'name': row['category']}
+                )
+                
+                # 2. 메뉴 등록
+                db.session.execute(
+                    db.text("INSERT INTO menus (menu_name, category_id) VALUES (:name, :cat_id)"),
+                    {'name': row['menu_name'], 'cat_id': row['category_id']}
+                )
+                added += 1
+            
+            db.session.commit()
+            print(f"  ✅ 메뉴 {added}개 등록 완료!")
 
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -265,7 +298,8 @@ def step4_seed_test_users():
 # ══════════════════════════════════════════════════════════════════════════════
 def main():
     parser = argparse.ArgumentParser(description='오늘의 메뉴 DB 초기화')
-    parser.add_argument('--csv',        default='수원지역_상가_정보.csv', help='CSV 파일 경로')
+    parser.add_argument('--csv',        default='수원지역_상가_최종.csv', help='CSV 파일 경로')
+    parser.add_argument('--menu-csv',   default='menus.csv', help='메뉴 CSV 경로')
     parser.add_argument('--skip-csv',   action='store_true', help='CSV 임포트 건너뜀')
     parser.add_argument('--skip-users', action='store_true', help='테스트 유저 생성 건너뜀')
     parser.add_argument('--clear',      action='store_true', help='식당 데이터 초기화 후 재등록')
@@ -286,6 +320,12 @@ def main():
         step3_import_csv(str(csv_path), args.clear)
     else:
         print("\n[3단계] CSV 임포트 건너뜀 (--skip-csv)")
+
+    menu_csv_path = Path(args.menu_csv)
+    if menu_csv_path.exists():
+        step_extra_menu_import(str(menu_csv_path))
+    else:
+        print(f" ⚠️ 메뉴 파일 없음, 건너뜀: {args.menu_csv}")
 
     if not args.skip_users:
         step4_seed_test_users()

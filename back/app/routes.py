@@ -88,6 +88,7 @@ def serialize_restaurant(r, like_count=None):
         'avg_rating':  r.avg_rating,
         'like_count':     like_count if like_count is not None else 0,
         'business_hours': getattr(r, 'business_hours', '') or '',
+        'image': getattr(r, 'image_url', None),
     }
 
 def serialize_party(p, viewer_id=None):
@@ -144,7 +145,7 @@ def index():
     trending = (
         Restaurant.query
         .outerjoin(liked_sub, Restaurant.restaurant_id == liked_sub.c.recommended_restaurant_id)
-        .order_by(sa_func.coalesce(liked_sub.c.like_count, 0).desc())
+        .order_by(sa_func.coalesce(liked_sub.c.like_count, 0).desc(), Restaurant.avg_rating.desc())
         .limit(8).all()
     )
     open_parties = Party.query.filter_by(status=StatusEnum.RECRUITING)\
@@ -422,6 +423,27 @@ def random_menus():
     from sqlalchemy import func
     items = query.order_by(func.random()).limit(count).all()
     return jsonify({'items': [serialize_restaurant(r) for r in items]}), 200
+
+
+@main_bp.route('/api/menu/trending', methods=['GET'])
+def get_trending_data():
+    from sqlalchemy import func as sa_func
+    liked_sub = (
+        db.session.query(
+            RecommendationLog.recommended_restaurant_id,
+            sa_func.count(RecommendationLog.log_id).label('like_count')
+        )
+        .filter(RecommendationLog.is_liked == True)
+        .group_by(RecommendationLog.recommended_restaurant_id)
+        .subquery()
+    )
+    trending = (
+        Restaurant.query
+        .outerjoin(liked_sub, Restaurant.restaurant_id == liked_sub.c.recommended_restaurant_id)
+        .order_by(sa_func.coalesce(liked_sub.c.like_count, 0).desc(), Restaurant.avg_rating.desc())
+        .limit(8).all()
+    )
+    return jsonify({'items': [serialize_restaurant(r) for r in trending]})
 
 
 # ══════════════════════════════════════════════════════════════════════════════

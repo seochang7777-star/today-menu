@@ -132,27 +132,28 @@ export default function Home() {
   const [likedCafeteriaIds, setLikedCafeteriaIds] = useState(() => new Set())
   const bannerTimer = useRef(null)
 
-  useEffect(() => {
-    const favPromise = user
-      ? getMyFavorites().catch(() => [])
-      : Promise.resolve([])
+useEffect(() => {
+  const favPromise = user ? getMyFavorites().catch(() => []) : Promise.resolve([]);
 
-    Promise.all([
-      getRestaurants({ cat: '전체', page: 1 }),
-      favPromise
-    ]).then(([d, favData]) => {
-      const favIds = new Set((favData || []).map(f => f.id))
-      setLikedCafeteriaIds(favIds)
-      const items = d.items?.length ? d.items : SAMPLE_RESTAURANTS
-      setTrending(items.map(r => ({
-        ...r,
-        is_liked: favIds.has(r.id) || Boolean(r.is_liked)
-      })))
-    }).catch((err) => {
-      console.error('trending 로드 실패:', err)
-      setTrending(SAMPLE_RESTAURANTS)
-    })
-  }, [user])
+  Promise.all([
+    getTrending(),
+    favPromise
+  ]).then(([d, favData]) => {
+    const favIds = new Set((favData || []).map(f => String(f.id)));
+    setLikedCafeteriaIds(favIds);
+    
+    const rawItems = d.items || []; 
+    
+    setTrending(rawItems.map(r => ({
+      ...r,
+      id: String(r.id),
+      is_liked: favIds.has(String(r.id))
+    })));
+  }).catch((err) => {
+    console.error('trending 로드 실패:', err);
+    setTrending(SAMPLE_RESTAURANTS);
+  });
+}, [user]);
 
   useEffect(() => {
     bannerTimer.current = setInterval(() => setBannerIdx((i) => (i + 1) % 3), 4500)
