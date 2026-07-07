@@ -142,50 +142,67 @@ export default function Home() {
     try {
       const saved = localStorage.getItem('trendKeywords')
       if (saved) return JSON.parse(saved)
-    } catch {}
+    } catch { }
     return TREND_FOODS.map(f => ({ name: f, count: 0 }))
   })
   const [showSearch, setShowSearch] = useState(false)
   const [likedCafeteriaIds, setLikedCafeteriaIds] = useState(() => new Set())
   const bannerTimer = useRef(null)
 
-useEffect(() => {
-  const favPromise = user ? getMyFavorites().catch(() => []) : Promise.resolve([]);
+  useEffect(() => {
+    const favPromise = user ? getMyFavorites().catch(() => []) : Promise.resolve([]);
 
-  Promise.all([
-    getTrending(),
-    favPromise
-  ]).then(([d, favData]) => {
-    const favIds = new Set((favData || []).map(f => String(f.id)));
-    setLikedCafeteriaIds(favIds);
-    
-    const rawItems = d.items || []; 
-    
-    setTrending(rawItems.map(r => ({
-      ...r,
-      id: String(r.id),
-      is_liked: favIds.has(String(r.id))
-    })));
+    Promise.all([
+      getTrending(),
+      favPromise
+    ]).then(([d, favData]) => {
+      const favIds = new Set((favData || []).map(f => String(f.id)));
+      setLikedCafeteriaIds(favIds);
 
-    // 실시간 인기 검색어 — 식당 카테고리 카운팅 기반
-    if (rawItems.length > 0) {
-      const countMap = {}
-      rawItems.forEach(r => {
-        if (r.category) countMap[r.category] = (countMap[r.category] || 0) + 1
-        if (r.name) countMap[r.name] = (countMap[r.name] || 0) + 1
-      })
-      const sorted = Object.entries(countMap)
-        .sort((a, b) => b[1] - a[1] || Math.random() - 0.5)
-        .slice(0, 8)
-        .map(([name, count]) => ({ name, count }))
-      setTrendKeywords(sorted)
-      try { localStorage.setItem('trendKeywords', JSON.stringify(sorted)) } catch {}
-    }
-  }).catch((err) => {
-    console.error('trending 로드 실패:', err);
-    setTrending(SAMPLE_RESTAURANTS);
-  });
-}, [user]);
+      const rawItems = d.items || [];
+
+      setTrending(rawItems.map(r => ({
+        ...r,
+        id: String(r.id),
+        is_liked: favIds.has(String(r.id))
+      })));
+
+      // 실시간 인기 검색어 — localStorage 카운트 + API 카테고리 합산
+      if (rawItems.length > 0) {
+        // 기존 localStorage 카운트 불러오기
+        let savedMap = {}
+        try {
+          const saved = localStorage.getItem('trendKeywords')
+          if (saved) {
+            JSON.parse(saved).forEach(k => { savedMap[k.name] = k.count })
+          }
+        } catch { }
+
+        // API 결과 카테고리 카운팅
+        const apiMap = {}
+        rawItems.forEach(r => {
+          if (r.category) apiMap[r.category] = (apiMap[r.category] || 0) + 1
+        })
+
+        // 합산 — localStorage 카운트 우선 반영
+        const mergedMap = { ...apiMap }
+        Object.entries(savedMap).forEach(([name, cnt]) => {
+          mergedMap[name] = (mergedMap[name] || 0) + cnt
+        })
+
+        const sorted = Object.entries(mergedMap)
+          .sort((a, b) => b[1] - a[1] || Math.random() - 0.5)
+          .slice(0, 8)
+          .map(([name, count]) => ({ name, count }))
+
+        setTrendKeywords(sorted)
+        try { localStorage.setItem('trendKeywords', JSON.stringify(sorted)) } catch { }
+      }
+    }).catch((err) => {
+      console.error('trending 로드 실패:', err);
+      setTrending(SAMPLE_RESTAURANTS);
+    });
+  }, [user]);
 
   useEffect(() => {
     bannerTimer.current = setInterval(() => setBannerIdx((i) => (i + 1) % 3), 4500)
@@ -214,7 +231,7 @@ useEffect(() => {
     setTrendKeywords(prev => {
       const updated = prev.map(k => k.name === keyword ? { ...k, count: k.count + 1 } : k)
       const sorted = [...updated].sort((a, b) => b.count - a.count || Math.random() - 0.5)
-      try { localStorage.setItem('trendKeywords', JSON.stringify(sorted)) } catch {}
+      try { localStorage.setItem('trendKeywords', JSON.stringify(sorted)) } catch { }
       return sorted
     })
   }
@@ -250,7 +267,7 @@ useEffect(() => {
                 AI가 추천하는 오늘의 베스트 맛집
                 <br />
                 지금 당신의 취향을 찾아보세요
-              </p>              
+              </p>
 
               <div className={bannerActionsClass}>
                 <Link to="/menu" className={heroButtonLightClass}>추천 맛집 보기 →</Link>
@@ -306,12 +323,12 @@ useEffect(() => {
           {/* 좌우 버튼 — 항상 표시 */}
           <button
             onClick={() => { setBannerIdx((i) => (i + 2) % 3); clearInterval(bannerTimer.current); bannerTimer.current = setInterval(() => setBannerIdx((i) => (i + 1) % 3), 4500) }}
-            style={{ position:'absolute', left:12, top:'50%', transform:'translateY(-50%)', zIndex:10, background:'rgba(0,0,0,0.35)', border:'none', borderRadius:'50%', width:36, height:36, cursor:'pointer', color:'#fff', fontSize:'1.2rem', display:'flex', alignItems:'center', justifyContent:'center' }}
+            style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', zIndex: 10, background: 'rgba(0,0,0,0.35)', border: 'none', borderRadius: '50%', width: 36, height: 36, cursor: 'pointer', color: '#fff', fontSize: '1.2rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
             aria-label="이전 슬라이드"
           >‹</button>
           <button
             onClick={() => { setBannerIdx((i) => (i + 1) % 3); clearInterval(bannerTimer.current); bannerTimer.current = setInterval(() => setBannerIdx((i) => (i + 1) % 3), 4500) }}
-            style={{ position:'absolute', right:12, top:'50%', transform:'translateY(-50%)', zIndex:10, background:'rgba(0,0,0,0.35)', border:'none', borderRadius:'50%', width:36, height:36, cursor:'pointer', color:'#fff', fontSize:'1.2rem', display:'flex', alignItems:'center', justifyContent:'center' }}
+            style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', zIndex: 10, background: 'rgba(0,0,0,0.35)', border: 'none', borderRadius: '50%', width: 36, height: 36, cursor: 'pointer', color: '#fff', fontSize: '1.2rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
             aria-label="다음 슬라이드"
           >›</button>
           {/* 클릭 가능한 dots — 항상 표시 */}
@@ -321,7 +338,7 @@ useEffect(() => {
                 key={dot}
                 onClick={() => { setBannerIdx(dot); clearInterval(bannerTimer.current); bannerTimer.current = setInterval(() => setBannerIdx((i) => (i + 1) % 3), 4500) }}
                 className={`${bannerDotClass} ${bannerIdx === dot ? bannerDotActiveClass : ''}`}
-                style={{ cursor:'pointer' }}
+                style={{ cursor: 'pointer' }}
               />
             ))}
           </div>
@@ -350,11 +367,11 @@ useEffect(() => {
         {Object.entries(CAT_ICON).map(([name, iconPath]) => (
           <Link to={`/menu?cat=${name}`} className={categoryItemClass} key={name}>
             <div className={categoryIconClass}>
-              <img 
-                src={iconPath} 
-                alt={name} 
+              <img
+                src={iconPath}
+                alt={name}
                 className="h-full w-full object-contain"
-                onError={(e) => { e.target.style.display = 'none' }} 
+                onError={(e) => { e.target.style.display = 'none' }}
               />
             </div>
             <div className={categoryLabelClass}>{name}</div>
@@ -376,7 +393,7 @@ useEffect(() => {
               <Cafeteria
                 item={r}
                 to={`/menu/${r.id}`}
-                liked={Boolean(r.is_liked) || likedCafeteriaIds.has(r.id)} 
+                liked={Boolean(r.is_liked) || likedCafeteriaIds.has(r.id)}
                 onToggleLike={() => handleCafeteriaLike(r)}
                 fallbackImage={SAMPLE_RESTAURANTS[index % SAMPLE_RESTAURANTS.length].image}
               />
@@ -474,4 +491,4 @@ useEffect(() => {
       </section>
     </div>
   )
-  }
+}

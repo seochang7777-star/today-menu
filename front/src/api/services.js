@@ -159,6 +159,12 @@ export const findId = async (nickname, security_question, security_answer) => {
   return data
 }
 // ── CHATBOT ───────────────────────────────────────────────────────────────────
+export async function findPassword({ email, nickname, newPassword }) {
+  const { data } = await api.post('/api/auth/reset-password-direct', { email, nickname, new_password: newPassword })
+  return data
+}
+
+
 export async function sendChat(message, history = [], mode = 'recommend', lat = null, lng = null, loc_index = null) {
   const { data } = await api.post('/api/chat', { message, history, mode, lat, lng, loc_index })
   return data

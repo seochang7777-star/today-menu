@@ -186,15 +186,20 @@ def step_extra_menu_import(csv_path: str):
                 # 1. 카테고리 등록 (기존 테이블이 없어도 생성하도록 로직 보완)
                 db.session.execute(
                     db.text("INSERT INTO categories (id, name) VALUES (:id, :name) ON CONFLICT DO NOTHING"),
-                    {'id': row['category_id'], 'name': row['category']}
+                    {'id': int(row['category_id']), 'name': row['category']}
                 )
                 
                 # 2. 메뉴 등록
-                db.session.execute(
-                    db.text("INSERT INTO menus (menu_name, category_id) VALUES (:name, :cat_id) ON CONFLICT DO NOTHING"),
-                    {'name': row['menu_name'], 'cat_id': row['category_id']}
-                )
-                added += 1
+                exists = db.session.execute(
+                    db.text("SELECT 1 FROM menus WHERE menu_name = :name"),
+                    {'name': row['menu_name']}
+                ).fetchone()
+                if not exists:
+                    db.session.execute(
+                        db.text("INSERT INTO menus (menu_name, category_id) VALUES (:name, :cat_id)"),
+                        {'name': row['menu_name'], 'cat_id': int(row['category_id'])}
+                    )
+                    added += 1
             
             db.session.commit()
             print(f"  ✅ 메뉴 {added}개 등록 완료!")
@@ -235,13 +240,19 @@ def step4_seed_test_users():
                     role=RoleEnum.USER,
                 )
                 db.session.add(user)
-                db.session.flush()
+                try:
+                    db.session.flush()
+                except Exception:
+                    db.session.rollback()
+                    skipped_u += 1
+                    continue
                 added_u += 1
             else:
                 user.manner_score = round(random.uniform(20.0, 50.0), 1)
                 skipped_u += 1
 
-            # 기존 로그 없으면 리뷰 1~5개 생성
+            if not user.user_id:
+                continue
             existing_ids = {l.recommended_restaurant_id for l in
                             RecommendationLog.query.filter_by(user_id=user.user_id).all()}
             if not existing_ids:

@@ -4,13 +4,11 @@ import RestaurantImage from './RestaurantImage'
 const cardClass =
   'block overflow-hidden rounded-[8px] border border-[var(--border-color)] bg-white text-inherit no-underline shadow-[var(--shadow-sm)] transition hover:-translate-y-1 hover:shadow-[var(--shadow)]'
 const imageWrapClass = 'h-[250px] overflow-hidden bg-[#FFF4EA] max-[540px]:h-[130px]'
-//하트버튼을 위해서 body 안에서 배지를 감싸는 row를 하나 만듬
 const bodyClass = 'px-[18px] pb-[18px] pt-7 max-[540px]:p-[14px]'
 const topRowClass = 'mb-5 flex items-center justify-between gap-3'
 const likeButtonClass =
   'grid h-9 w-9 place-items-center rounded-full bg-white/90 text-[1.45rem] leading-none text-[#5B4038] shadow-[0_4px_9px_rgba(0,0,0,0.14)] transition hover:scale-105 active:scale-95'
 const likedButtonClass = 'text-[var(--color-primary)]'
-
 const categoryBadgeClass =
   'inline-flex rounded-[var(--border-radius)] bg-[var(--color-primary)] px-2 py-[5px] text-[0.78rem] font-extrabold text-white'
 const titleClass = 'mt-5 mb-1.5 text-[1.08rem] font-black text-[var(--text-primary)]'
@@ -28,7 +26,7 @@ function getStars(rating) {
   const score = Math.min(Math.max(Math.round(rating ?? 0), 0), 5)
   return '★'.repeat(score).padEnd(5, '☆')
 }
-// const stars = '★'.repeat(score) + '☆'.repeat(5 - score)
+
 export default function RestaurantCard({
   restaurant,
   r,
@@ -47,8 +45,6 @@ export default function RestaurantCard({
   if (!item) return null
 
   const rating = item.avg_rating ?? 0
-
-  //const category = item.category || ''는 식당 데이터에 카테고리가 있으면 그 값을 쓰고, 없으면 빈 문자열을 쓰겠다는 뜻이에요.
   const category = item.category || ''
   const reviewCount = item.review_count ?? Math.floor(rating * 10)
 
@@ -65,6 +61,7 @@ export default function RestaurantCard({
           imageUrl={item.image_url ?? item.image}
           category={item.category}
           name={item.name}
+          id={item.id ?? item.restaurant_id}
           height="100%"
         />
       </div>
@@ -72,7 +69,6 @@ export default function RestaurantCard({
       <div className={bodyClass}>
         <div className={topRowClass}>
           <span className={categoryBadgeClass}>{category}</span>
-
           <button
             type="button"
             className={`${likeButtonClass} ${liked ? likedButtonClass : ''}`}
@@ -85,7 +81,6 @@ export default function RestaurantCard({
 
         <div className={titleClass}>{item.name}</div>
         <div className={metaClass}>
-
           <span className={scoreClass}>{getStars(rating)}</span>
           <span className={scoreClass}>{rating.toFixed(1)}</span>
         </div>
@@ -119,9 +114,7 @@ export default function RestaurantCard({
 
   if (to) {
     return (
-      <div className={mergedClassName} onClick={() => { navigate(to) }}
-      // onClick={onClick}
-      >
+      <div className={mergedClassName} onClick={() => { navigate(to) }}>
         {content}
       </div>
     )

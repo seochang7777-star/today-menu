@@ -5,8 +5,6 @@ const cardClass =
   'group block h-full overflow-hidden rounded-[8px] border border-[var(--border-color)] bg-white text-inherit no-underline shadow-[var(--shadow-sm)] transition hover:-translate-y-1 hover:shadow-[var(--shadow)]'
 const imageWrapClass =
   'relative h-[250px] overflow-hidden bg-[#FFF4EA] max-[540px]:h-[130px]'
-const imageClass =
-  'h-full w-full object-cover transition-transform duration-[280ms] group-hover:scale-105'
 const likeButtonClass =
   'absolute right-3 top-3 grid h-[30px] w-[30px] place-items-center rounded-full bg-white/90 text-[1.45rem] leading-none text-[#5B4038] shadow-[0_4px_12px_rgba(0,0,0,0.14)] transition hover:scale-105'
 const likedButtonClass = 'text-[var(--color-primary)]'
@@ -41,7 +39,6 @@ export default function Cafeteria({
   const category = item.category || '기타'
   const address = item.address || '오늘 뭐먹지 추천 맛집'
   const tags = item.tags ?? [`#${category || '맛집'}`, '#추천', '#오늘뭐먹지']
-  const image = item.image_url ?? item.image ?? fallbackImage
 
   const handleLikeClick = (event) => {
     event.preventDefault()
@@ -52,18 +49,13 @@ export default function Cafeteria({
   const content = (
     <>
       <div className={imageWrapClass}>
-        {image ? (
-          <RestaurantImage
-          imageUrl={item.image}
+        <RestaurantImage
+          imageUrl={item.image_url ?? item.image ?? fallbackImage}
           category={category}
           name={item.name}
+          id={item.id ?? item.restaurant_id}
           height={250}
         />
-        ) : (
-          <div className="grid h-full w-full place-items-center text-4xl">
-            {'🍴'}
-          </div>
-        )}
 
         <button
           type="button"
