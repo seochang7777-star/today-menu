@@ -164,7 +164,7 @@ export default function Login() {
     <img 
       src="/img/icon/logo.png" 
       alt="오늘 뭐먹지 로고" 
-      className="absolute right-full m h-7 w-auto object-contain" 
+      className="absolute right-full m h-9 w-auto object-contain" 
     />
     
     <span>오늘 뭐먹지?</span>

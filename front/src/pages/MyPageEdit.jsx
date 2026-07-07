@@ -32,6 +32,7 @@ export default function MyPageEdit() {
   const [isChangingPassword, setIsChangingPassword] = useState(false)
   const [passwordForm, setPasswordForm] = useState({currentPassword: '',newPassword: '',newPassword2: '',})
   const [isPasswordValidated, setIsPasswordValidated] = useState(false)
+  const [isEditingSecurity, setIsEditingSecurity] = useState(false)
 
   // ── 기존 데이터 로드 ──────────────────────────────────────────────────────
   useEffect(() => {
@@ -193,11 +194,19 @@ const handleCheckPassword = async () => {
 
   return (
     <div className="max-w-[600px] w-full mx-auto">
-      <Link to="/mypage" className="btn btn-sm btn-secondary mb-4">
+      <Link to="/mypage" className="inline-flex items-center gap-1 text-[.85rem] font-bold text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors bg-transparent border-0 cursor-pointer">
         ← 마이페이지
       </Link>
 
-      <h2 className="mb-6">✏️ 프로필 수정</h2>
+      <div className="text-center mb-8">
+  <h2 className="text-[2rem] font-extrabold text-[var(--text-primary)] mb-2">
+    ✏️ 프로필 수정
+  </h2>
+
+  <p className="text-[0.92rem] text-[var(--text-muted)]">
+    회원 정보를 수정하고 나만의 취향을 관리해보세요.
+  </p>
+</div>
 
       <div className="bg-[var(--bg-white)] border border-[var(--border-color)] rounded-[var(--border-radius-xl)] p-8">
         <form onSubmit={handleSubmit}>
@@ -368,9 +377,27 @@ const handleCheckPassword = async () => {
             )}
 
             {/* 보안 질문 */}
-<div className="form-group">
-  <label className="form-label">아이디 찾기용 보안 질문</label>
+<div className="form-group border-t border-dashed border-gray-200 pt-6 mt-6">
+  <div className="flex justify-between items-center mb-3">
 
+  <label className="form-label mb-0">
+    🔑 아이디 찾기 설정
+  </label>
+
+  <button
+    type="button"
+    onClick={() => setIsEditingSecurity(!isEditingSecurity)}
+    className="text-xs text-gray-500 hover:text-gray-700 bg-transparent border-0 cursor-pointer font-medium"
+  >
+    {isEditingSecurity ? '설정 취소' : '설정하기'}
+  </button>
+
+</div>
+  
+  {isEditingSecurity && (
+
+<div className="bg-gray-50 border border-gray-200 rounded-xl p-4 space-y-4">
+<label className="form-label">아이디 찾기용 보안 질문</label>
   <select
     className="form-control mb-3"
     value={form.securityQuestion}
@@ -415,6 +442,9 @@ const handleCheckPassword = async () => {
   <p className="text-xs text-gray-500 mt-2">
     아이디를 잊어버렸을 때 본인 확인에 사용됩니다.
   </p>
+  </div>
+
+)}
 </div>
             {/* 🔐 비밀번호 변경 */}
 <div className="form-group border-t border-dashed border-gray-200 pt-6 mt-6">
@@ -489,7 +519,7 @@ const handleCheckPassword = async () => {
       <button
         type="button"
         onClick={handleCheckPassword}
-        className="btn btn-secondary btn-block"
+        className="inline-flex items-center gap-1 text-[.85rem] font-bold text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors bg-transparent border-0 cursor-pointer"
       >
         비밀번호 확인
       </button>
@@ -506,7 +536,7 @@ const handleCheckPassword = async () => {
 
           {error && <div className="alert alert-danger">{error}</div>}
 
-          <button type="submit" disabled={loading} className="btn btn-primary btn-lg btn-block">
+          <button type="submit" disabled={loading} className="w-full py-3 px-6 text-lg font-semibold rounded-[12px] bg-[var(--color-primary)] text-white hover:bg-[var(--color-primary-dark)] transition-colors mt-[8px] disabled:opacity-50 disabled:cursor-not-allowed">
             {loading ? '저장 중...' : '저장하기'}
           </button>
         </form>

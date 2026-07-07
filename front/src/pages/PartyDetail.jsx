@@ -291,7 +291,7 @@ export default function PartyDetail() {
             {/* 뒤로가기 버튼 */}
             <button
               type="button"
-              onClick={() => navigate('/menu')}
+              onClick={() => navigate('/party')}
               aria-label="목록으로 이동"
               className="absolute top-4 left-4 z-20 transition hover:scale-160"
             >

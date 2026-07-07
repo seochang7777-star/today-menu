@@ -63,123 +63,144 @@ export default function FindPassword() {
   };
 
   return (
-    <div className="flex justify-center items-center min-h-[calc(100vh-120px)] bg-gray-50 px-5 py-5">
-      <div className="w-full max-w-[440px] bg-white border border-gray-200 rounded-2xl shadow-sm px-8 py-9 text-center">
-        
-        {/* 상단 타이틀 */}
-        <div className="text-4xl mb-3">🔄</div>
-        <h1 className="text-xl font-extrabold mb-2 text-gray-900">
+    <div className="flex justify-center py-6">
+      <div className="bg-[var(--bg-white)] rounded-[var(--border-radius-xl)] shadow-[var(--shadow-lg)] w-full max-w-[420px] p-10">
+
+        {/* 뒤로가기 - FindId와 동일한 형태 */}
+        <button
+          onClick={() => navigate('/login')}
+          className="text-[.85rem] text-[var(--text-muted)] font-bold flex items-center gap-1 hover:text-[var(--text-primary)] transition-colors bg-transparent border-0 mb-5"
+        >
+          ← 로그인으로
+        </button>
+
+        {/* 로고 */}
+        <div className="text-center mb-[28px]">
+          <div className="site-logo relative justify-center min-h-[40px] pl-3">
+            <img
+              src="/img/icon/logo.png"
+              alt="오늘 뭐먹지 로고"
+              className="absolute right-full h-7 w-auto object-contain"
+            />
+            <span>오늘 뭐먹지?</span>
+          </div>
+        </div>
+
+        {/* 제목 */}
+        <h2 className="text-[1.4rem] font-extrabold mb-[6px] text-center text-gray-950">
           비밀번호 재설정
-        </h1>
-        <p className="text-sm text-gray-500 leading-relaxed mb-7">
-          가입된 이메일과 닉네임을 정확히 입력하시면<br />새로운 비밀번호로 즉시 변경할 수 있습니다.
+        </h2>
+
+        <p className="text-[0.88rem] text-gray-400 text-center mb-[28px]">
+          가입 당시 입력한 정보를 확인한 뒤<br />
+          새로운 비밀번호로 변경합니다.
         </p>
 
-        {/* 폼 구역 */}
-        <form onSubmit={handleSubmit} className="text-left">
-          
-          {/* 1. 이메일 */}
-          <div className="mb-4">
-            <label htmlFor="email" className="block text-xs font-bold mb-1.5 text-gray-700">
-              이메일 주소
-            </label>
+        <form onSubmit={handleSubmit}>
+
+          {/* 이메일 */}
+          <div className="form-group form-icon-wrap">
+            <span className="form-icon">✉️</span>
             <input
               id="email"
               type="email"
-              placeholder="example@email.com"
+              className="form-control"
+              placeholder="이메일"
               value={formData.email}
               onChange={handleChange}
               disabled={loading}
-              className={`w-full px-3.5 py-2.5 border border-gray-300 rounded-lg text-sm outline-none transition-colors focus:border-blue-500 ${loading ? 'bg-gray-100 cursor-not-allowed' : 'bg-white'}`}
             />
           </div>
 
-          {/* 2. 닉네임 */}
-          <div className="mb-4">
-            <label htmlFor="nickname" className="block text-xs font-bold mb-1.5 text-gray-700">
-              닉네임
-            </label>
+          {/* 닉네임 */}
+          <div className="form-group form-icon-wrap">
+            <span className="form-icon">👤</span>
             <input
               id="nickname"
               type="text"
-              placeholder="가입하신 닉네임 입력"
+              className="form-control"
+              placeholder="닉네임"
               value={formData.nickname}
               onChange={handleChange}
               disabled={loading}
-              className={`w-full px-3.5 py-2.5 border border-gray-300 rounded-lg text-sm outline-none transition-colors focus:border-blue-500 ${loading ? 'bg-gray-100 cursor-not-allowed' : 'bg-white'}`}
             />
           </div>
 
-          <hr className="border-none border-t border-dashed border-gray-200 my-5" />
+          <hr className="border-0 border-t border-dashed border-gray-200 my-6" />
 
-          {/* 3. 새 비밀번호 */}
-          <div className="mb-4">
-            <label htmlFor="newPassword" className="block text-xs font-bold mb-1.5 text-gray-700">
-              새 비밀번호
-            </label>
+          {/* 새 비밀번호 */}
+          <div className="form-group form-icon-wrap">
+            <span className="form-icon">🔒</span>
             <input
               id="newPassword"
               type="password"
-              placeholder="새로운 비밀번호 입력"
+              className="form-control"
+              placeholder="새 비밀번호"
               value={formData.newPassword}
               onChange={handleChange}
               disabled={loading}
-              className={`w-full px-3.5 py-2.5 border border-gray-300 rounded-lg text-sm outline-none transition-colors focus:border-blue-500 ${loading ? 'bg-gray-100 cursor-not-allowed' : 'bg-white'}`}
             />
           </div>
 
-          {/* 4. 새 비밀번호 확인 */}
-          <div className="mb-5">
-            <label htmlFor="newPassword2" className="block text-xs font-bold mb-1.5 text-gray-700">
-              새 비밀번호 확인
-            </label>
+          {/* 새 비밀번호 확인 */}
+          <div className="form-group form-icon-wrap">
+            <span className="form-icon">🔒</span>
             <input
               id="newPassword2"
               type="password"
-              placeholder="새로운 비밀번호 재입력"
+              className="form-control"
+              placeholder="새 비밀번호 확인"
               value={formData.newPassword2}
               onChange={handleChange}
               disabled={loading}
-              className={`w-full px-3.5 py-2.5 border border-gray-300 rounded-lg text-sm outline-none transition-colors focus:border-blue-500 ${loading ? 'bg-gray-100 cursor-not-allowed' : 'bg-white'}`}
             />
           </div>
 
-          {/* 알림 메시지 공간 */}
+          {/* 메시지 영역 */}
           {message.text && (
-            <div className={`p-3 rounded-lg text-xs font-semibold mb-5Sub leading-normal border ${
-              message.type === 'success' 
-                ? 'bg-green-50 text-green-700 border-green-200' 
-                : 'bg-red-50 text-red-600 border-red-200'
-            }`}>
-              {message.type === 'success' ? '✅ ' : '❌ '} {message.text}
+            <div
+              className={`rounded-xl border px-4 py-3 text-sm mb-4 ${
+                message.type === 'success'
+                  ? 'bg-green-50 border-green-200 text-green-700'
+                  : 'bg-red-50 border-red-200 text-red-600'
+              }`}
+            >
+              {message.type === 'success' ? '✅ ' : '❌ '}
+              {message.text}
             </div>
           )}
 
-          {/* 제출 버튼 */}
+          {/* 변경 버튼 */}
           <button
             type="submit"
             disabled={loading}
-            className={`w-full py-3.5 rounded-lg text-sm font-bold text-white transition-all ${
-              loading 
-                ? 'bg-gray-400 cursor-not-allowed' 
-                : 'bg-blue-500 hover:bg-blue-600 active:scale-[0.99]'
-            }`}
+            className="w-full py-3 px-6 text-lg font-semibold rounded-[12px] bg-[var(--color-primary)] text-white hover:bg-[var(--color-primary-dark)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {loading ? '변경 처리 중...' : '비밀번호 변경 및 재설정'}
+            {loading ? '변경 중...' : '비밀번호 변경'}
           </button>
+
         </form>
 
-        {/* 하단 링크 */}
-        <div className="flex justify-center gap-4 mt-6 text-xs border-t border-gray-100 pt-4">
-          <Link to="/login" className="text-gray-400 no-underline hover:text-gray-600 transition-colors">
-            로그인으로 이동
-          </Link>
-          <span className="text-gray-200">|</span>
-          <Link to="/register" className="text-cyan-600 no-underline font-bold hover:text-cyan-700 transition-colors">
-            회원가입
-          </Link>
-        </div>
+        {/* 하단 네비게이션 링크 */}
+        <p className="text-center mt-[20px] text-[0.88rem] text-gray-400">
+          <button
+            type="button"
+            onClick={() => navigate('/findid')}
+            className="text-[var(--color-primary)] font-semibold hover:underline bg-transparent border-none p-0 cursor-pointer"
+          >
+            이메일 찾기
+          </button>
+          {" · "}
+          <button
+            type="button"
+            onClick={() => navigate('/login')}
+            className="text-[var(--color-primary)] font-semibold hover:underline bg-transparent border-none p-0 cursor-pointer"
+          >
+            로그인
+          </button>
+        </p>
+
       </div>
     </div>
-  );
+  )
 }
