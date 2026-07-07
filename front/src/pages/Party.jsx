@@ -16,12 +16,15 @@ export default function Party() {
 
   // 페이지 로드 시 전체 데이터 단 1회 요청
   useEffect(() => {
-    setLoading(true)
-    getParties({}) 
-      .then((d) => setAllParties(Array.isArray(d) ? d : []))
-      .catch(() => setAllParties([]))
-      .finally(() => setLoading(false))
-  }, [])
+  setLoading(true)
+  getParties({}) 
+    .then((d) => {
+      console.log("서버에서 받아온 전체 파티 리스트:", d)
+      setAllParties(Array.isArray(d) ? d : [])
+    })
+    .catch(() => setAllParties([]))
+    .finally(() => setLoading(false))
+}, [status])
 
   const pct = (p) => Math.min(Math.round((p.member_count / p.max_people) * 100), 100)
 

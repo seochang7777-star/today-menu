@@ -44,6 +44,13 @@ export default function PartyCreate() {
     } finally { setLoading(false) }
   }
 
+  const getNowISO = () => {
+    const now = new Date();
+    const offset = now.getTimezoneOffset() * 60000;
+    const localISOTime = new Date(now - offset).toISOString().slice(0, 16);
+    return localISOTime;
+  };
+
   // 선택된 식당명 표시
   const selectedName = preselected?.name ||
     restaurants.find(r => String(r.restaurant_id ?? r.id) === String(form.restaurant_id))?.name ||
@@ -135,6 +142,7 @@ export default function PartyCreate() {
                 className="form-control"
                 required
                 value={form.meeting_time}
+                min={getNowISO()}
                 onChange={(e) => setForm({ ...form, meeting_time: e.target.value })}
               />
             </div>

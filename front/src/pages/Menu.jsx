@@ -3,16 +3,17 @@ import { Link, useSearchParams } from 'react-router-dom'
 import { getRestaurants } from '../api/services'
 import { useAuth } from '../App'
 import RestaurantCard from '../components/RestaurantCard';
+import RandomBanner from '../components/RandomBanner'
 
 const CAT_ICON = {
-  '한식': '🍚',
-  '일식': '🍣',
-  '중식': '🥟',
-  '양식': '🥩',
-  '분식': '🍜',
-  '치킨': '🍗',
-  '카페': '☕',
-  '술집': '🍺',
+  한식: './img/category/korean.png',
+  일식: './img/category/japanese.webp',
+  중식: './img/category/chinese.webp',
+  양식: './img/category/steak.webp',
+  분식: './img/category/snack.webp',
+  치킨: './img/category/chicken.webp',
+  카페: './img/category/coffee.webp',
+  술집: './img/category/beer.webp'
 }
 const CATEGORIES = [
   '전체',
@@ -109,9 +110,7 @@ export default function Menu() {
       <h1 className="mb-6 text-[2.2rem] font-black">맛집찾기</h1>
 
       <section className={adBannerClass}>
-        <Link to="/party" className={adBannerLinkClass} aria-label="파티 페이지로 이동">
-          <img className={adBannerImageClass} src="/img/banner/banner2.png" alt="파티 만들기 배너" />
-        </Link>
+        <RandomBanner />
       </section>
 
       {/* 카테고리 필터 */}
@@ -120,26 +119,35 @@ export default function Menu() {
           카테고리
         </span>
 
-        <div className="flex flex-wrap gap-5">
+        <div className="flex flex-wrap gap-2">
           {CATEGORIES.map((c) => (
             <button
               key={c}
               className={`
-    cursor-pointer whitespace-nowrap
-    rounded-full
-    bg-[var(--color-white)]
-    px-4 py-2
-    text-[0.85rem]
-    font-bold
-    text-black
-    shadow-sm
-    transition-all duration-150
-    hover:bg-[var(--color-accent)] hover: shadow-md
-    ${activeCat === c ? "scale-105 shadow-md ring-2 ring-white/60" : ""}
-  `}
+                cursor-pointer whitespace-nowrap
+                rounded-full
+                bg-[var(--color-white)]
+                px-3 py-2
+                text-[0.85rem]
+                font-bold
+                text-black
+                shadow-sm
+                flex items-center justify-center gap-0
+                transition-all duration-150
+                hover:bg-[var(--color-accent)] hover:shadow-md
+                ${activeCat === c ? "scale-105 shadow-md ring-2 ring-white/60" : ""}
+              `}
               onClick={() => go({ cat: c, page: 1, q: "" })}
             >
-              {CAT_ICON[c] && <span className="mr-1">{CAT_ICON[c]}</span>}
+              {/* 홈에서 사용한 방식과 동일하게 img 태그 삽입 */}
+              {CAT_ICON[c] && (
+                <img 
+                  src={CAT_ICON[c]} 
+                  alt={c} 
+                  className="h-6 w-8 object-contain mr-0.5" // 버튼 크기에 맞게 조절
+                  onError={(e) => { e.target.style.display = 'none' }} 
+                />
+              )}
               {c}
             </button>
           ))}

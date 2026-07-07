@@ -610,34 +610,43 @@ def random_menus():
 # ══════════════════════════════════════════════════════════════════════════════
 @party_bp.route('/', methods=['GET'])
 def list_parties():
+    # 1. 일단 시간 지나고 정원 찬 파티를 일괄 정리 (Data Cleansing)
+    now = datetime.now() 
+    
+    Party.query.filter(
+        Party.status == StatusEnum.RECRUITING,
+        Party.meeting_time < now
+    ).update({"status": StatusEnum.COMPLETED})
+    
+    # 정원 찬 파티 '마감' 처리 (루프가 필요한 경우)
+    recruiting_parties = Party.query.filter_by(status=StatusEnum.RECRUITING).all()
+    for p in recruiting_parties:
+        if len(p.members) >= p.max_people:
+            p.status = StatusEnum.CLOSED
+            
+    db.session.commit()
+
+    # 2. 파라미터 처리 및 필터링
     status_str = request.args.get('status', 'RECRUITING')
     try:
         status = StatusEnum[status_str]
     except KeyError:
         status = StatusEnum.RECRUITING
 
+    # 3. 사용자 정보 확인
     viewer_id = None
     auth_header = request.headers.get('Authorization', '')
     if auth_header.startswith('Bearer '):
         try:
             from flask_jwt_extended import decode_token
             token_data = decode_token(auth_header.split(' ')[1])
-            viewer_id  = int(token_data['sub'])
+            viewer_id = int(token_data['sub'])
         except Exception:
             pass
 
-    parties = Party.query.filter_by(status=status).order_by(Party.created_at.desc()).all()
+    # 4. 정리된 상태의 데이터를 조회하여 반환
+    parties = Party.query.order_by(Party.created_at.desc()).all()
     
-    for p in parties:
-        now = datetime.utcnow()
-        if p.status != StatusEnum.COMPLETED and p.meeting_time < now:
-            p.status = StatusEnum.COMPLETED
-        elif p.status == StatusEnum.RECRUITING and len(p.members) >= p.max_people:
-            p.status = StatusEnum.CLOSED
-    try:
-        db.session.commit()
-    except Exception:
-        db.session.rollback()
     return jsonify([serialize_party(p, viewer_id) for p in parties])
 
 
