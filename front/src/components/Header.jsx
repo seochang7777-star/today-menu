@@ -91,14 +91,16 @@ export default function Header() {
               </span>
             </Link>
 
-            {user && <PartyNotification />}
             {user ? (
-              <button onClick={handleLogout} className={`${headerIconLink} group mr-1 max-md:hidden`}>
+              <>
+                <PartyNotification />
+                <button onClick={handleLogout} className={`${headerIconLink} group mr-1 max-md:hidden`}>
                 <img src="/img/icon/logout.png" className="h-[28px] w-[28px] object-contain" alt="logout" onError={(e) => { e.target.style.display="none" }} />
                 <span className="whitespace-nowrap text-[0.65rem] font-extrabold leading-none text-[#7D6A63] transition-colors group-hover:text-[var(--color-primary)]">
                 로그아웃
                 </span>
               </button>
+              </>
             ) : (
               <>
                 <Link to="/login" className={`${headerIconLink} group mr-1 max-md:hidden`}>
