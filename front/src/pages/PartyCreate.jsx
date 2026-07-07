@@ -51,25 +51,27 @@ export default function PartyCreate() {
 
   return (
     <>
-      <div style={{ padding: '20px 20px 0 20px' }}>
-        <button
-          type="button"
-          onClick={() => navigate('/party')}
-          className="inline-flex items-center gap-1 text-[.85rem] font-bold text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors bg-transparent border-0 cursor-pointer"
-        >
-          ← 목록으로
-        </button>
-      </div>
-
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '20px 0' }}>
+        <div className="mb-4 w-full max-w-[560px]">
+          <button
+            type="button"
+            onClick={() => navigate('/party')}
+            className="inline-flex min-h-[35px] items-center justify-center gap-2 rounded-[12px] bg-white px-5 text-[0.89rem] font-black text-[var(--color-primary)] shadow-[var(--shadow-sm)] transition-transform hover:-translate-y-0.5"
+          >
+            ← 목록으로
+          </button>
+        </div>
+
         <div className="text-center mb-[24px]">
           <div className="site-logo relative justify-center min-h-[40px] pl-3 flex items-center">
+            
             <img
               src="/img/icon/logo.png"
               alt="오늘 뭐먹지 로고"
               className="absolute right-full h-7 w-auto object-contain"
               style={{ marginRight: '8px' }}
             />
+            
             <span style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>밥친구 파티 만들기</span>
           </div>
         </div>

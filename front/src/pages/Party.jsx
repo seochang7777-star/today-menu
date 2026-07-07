@@ -10,6 +10,8 @@ export default function Party() {
   const { user } = useAuth()
   const [searchParams, setSearchParams] = useSearchParams()
   const status = searchParams.get('status') ?? 'RECRUITING'
+  const q = searchParams.get('q') ?? ''
+  const [searchInput, setSearchInput] = useState(q)
 
   const [allParties, setAllParties] = useState([])
   const [loading, setLoading] = useState(false)
@@ -28,15 +30,43 @@ export default function Party() {
   // 실시간 전체 카운팅 연동
   const getStatusCount = (s) => allParties.filter(p => p.status === s).length
 
+  const handleSearch = () => {
+    const keyword = searchInput.trim()
+    setSearchParams(keyword ? { status, q: keyword } : { status })
+  }
+
   // 현재 탭에 맞춰 프론트엔드 필터링
-  const filteredParties = allParties.filter(p => p.status === status)
+  const filteredParties = allParties.filter((p) => {
+    const keyword = q.trim().toLowerCase()
+    const matchesStatus = p.status === status
+    if (!keyword) return matchesStatus
+
+    return (
+      matchesStatus &&
+      [p.title, p.restaurant?.name, p.restaurant?.category]
+        .filter(Boolean)
+        .some((value) => value.toLowerCase().includes(keyword))
+    )
+  })
+  const joinedParties = allParties.filter((p) => {
+    if (!user) return false
+
+    return (
+      p.is_member ||
+      p.isMember ||
+      p.joined ||
+      p.members?.some((m) => m.user?.user_id === user.user_id || m.user_id === user.user_id)
+    )
+  })
 
   return (
-    <div className="max-w-[800px] mx-auto px-4 pb-14">
+    <div className="max-w-[1400px] pb-13">
+      <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_500px] lg:items-start">
+        <main className="min-w-0">
       {/* 상단 배너 영역 */}
-      <div className="my-[2px] flex justify-between items-center gap-4">
+      <div className="my-[2px] flex items-center">
         <div>
-          <h1 className="text-2xl font-black text-gray-900 flex items-center gap-2 mb-1">
+          <h1 className="text-2xl font-black text-gray-900 flex items-center gap-2 mb-1 mt-5">
             <span className="text-[#FF5A5A]">
               <svg
                     viewBox="0 0 24 24"
@@ -49,10 +79,32 @@ export default function Party() {
           </h1>
           <p className="text-sm text-gray-500 font-medium">같은 식당을 가고 싶은 사람들과 함께해요!</p>
         </div>
+      </div>
+      <div className="-mt-3 flex flex-col sm:flex-row justify-between items-center gap-4">
+        <form
+          onSubmit={(e) => { e.preventDefault(); handleSearch(); }}
+          className="flex h-12 w-full max-w-[420px] items-center gap-4"
+        >
+          <input
+            type="text"
+            placeholder="식당명을 검색하세요"
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
+            className="h-12 min-w-0 flex-1 rounded-full border-[1.5px] border-[rgba(244,108,111,0.8)] bg-white px-8 text-[0.92rem] font-semibold text-[var(--text-primary)] shadow-[0_4px_18px_rgba(244,108,111,0.08)] outline-none placeholder:text-[#9D8C86]"
+          />
+          <button
+            type="submit"
+            className="relative grid h-12 w-12 shrink-0 place-items-center rounded-full border-0 bg-[linear-gradient(135deg,var(--color-primary),#F98082)] text-[1.8rem] font-bold text-white shadow-[0_4px_18px_rgba(244,108,111,0.16)] transition hover:brightness-105 hover:shadow-md"
+            aria-label="검색"
+          >
+            <span className="relative -top-[4px] leading-none">⌕</span>
+          </button>
+        </form>
+
         <img
           src="/img/banner/party_diner.png"
-          alt="밥친구 매칭"
-          className="w-[220px] md:w-[260px] h-auto object-contain flex-shrink-0 select-none"
+          alt="식사하는 사람들"
+          className="w-[200px] md:w-[240px] h-auto object-contain flex-shrink-0 select-none"
         />
       </div>
 
@@ -74,7 +126,7 @@ export default function Party() {
             return (
               <button
                 key={s}
-                onClick={() => setSearchParams({ status: s })}
+                onClick={() => setSearchParams(q ? { status: s, q } : { status: s })}
                 className={`px-4 py-2 text-sm font-bold rounded-xl border transition-all flex items-center gap-1.5 ${
                   isActive
                     ? 'border-[#FF5A5A] bg-[#FFF5F5] text-[#FF5A5A]'
@@ -191,6 +243,89 @@ export default function Party() {
       )}
       </div>
       {/* 흰색 박스 끝 */}
+        </main>
+
+        <aside className="mt-5 rounded-2xl border border-[#FFE2E2] ml-7 bg-[#FFFDF7] shadow-sm lg:sticky lg:top-24">
+          <div className="border-b border-[#FFE2E2] px-5 py-4">
+            <div className="flex items-center gap-2">
+              <svg
+                viewBox="0 0 24 24"
+                className="h-5 w-5 fill-[#F46C6F]"
+              >
+                <path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5s-3 1.34-3 3 1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5C15 14.17 10.33 13 8 13zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z" />
+              </svg>
+              <h2 className="text-base font-black text-gray-900">내가 참여 중인 모임</h2>
+              <span className="rounded-full bg-[#F46C6F] px-2 py-0.5 text-xs font-black text-white">
+                {joinedParties.length}
+              </span>
+            </div>
+            <p className="mt-1 text-xs font-medium text-gray-500">
+              현재 참여하고 있는 모임이에요
+            </p>
+          </div>
+
+          <div className="max-h-[520px] space-y-3 overflow-y-auto p-4">
+            {!user ? (
+              <div className="rounded-xl bg-[#FFF8F5] px-4 py-8 text-center">
+                <p className="text-sm font-bold text-gray-700">로그인이 필요해요</p>
+                <p className="mt-1 text-xs text-gray-500">참여 중인 모임은 로그인 후 볼 수 있어요.</p>
+              </div>
+            ) : joinedParties.length === 0 ? (
+              <div className="rounded-xl bg-[#FFF8F5] px-4 py-8 text-center">
+                <div className="mb-2 text-3xl">🍽️</div>
+                <p className="text-sm font-bold text-gray-700">참여 중인 모임이 없어요</p>
+                <p className="mt-1 text-xs text-gray-500">마음에 드는 밥친구 모임에 참여해보세요.</p>
+              </div>
+            ) : (
+              joinedParties.map((p) => (
+                <Link
+                  key={p.party_id}
+                  to={`/party/${p.party_id}`}
+                  className="flex gap-3 rounded-xl border border-gray-100 bg-white p-3 shadow-sm transition hover:border-[#F46C6F]/50 hover:shadow-md"
+                >
+                  <div className="h-20 w-24 shrink-0 overflow-hidden rounded-lg bg-gray-100">
+                    <RestaurantImage
+                      imageUrl={p.restaurant?.image_url}
+                      category={p.restaurant?.category}
+                      name={p.restaurant?.name}
+                      height="100%"
+                      iconSize="1.5rem"
+                    />
+                  </div>
+
+                  <div className="min-w-2 flex-1">
+                    <span className="mb-1 inline-flex rounded-full bg-[#FFF1F1] px-2 py-0.5 text-[10px] font-black text-[#F46C6F]">
+                      참여 중
+                    </span>
+
+                    <h3 className="truncate text-sm font-black text-gray-900">
+                      {p.title}
+                    </h3>
+
+                    <p className="mt-1 truncate text-xs font-medium text-gray-500">
+                      {p.restaurant?.name ?? '식당 정보 없음'}
+                    </p>
+
+                    <div className="mt-2 flex items-center gap-3 text-[11px] font-bold text-gray-500">
+                      <span>👥 {p.member_count}/{p.max_people}명</span>
+                      <span>
+                        {p.meeting_time
+                          ? new Date(p.meeting_time).toLocaleTimeString('ko-KR', {
+                              hour: '2-digit',
+                              minute: '2-digit',
+                            })
+                          : ''}
+                      </span>
+                    </div>
+                  </div>
+
+                  <span className="self-center text-lg text-gray-300">›</span>
+                </Link>
+              ))
+            )}
+          </div>
+        </aside>
+      </div>
     </div>
   )
 }
