@@ -12,7 +12,7 @@ const NAV_LINKS = [
 ]
 
 const pageContainer = 'container'
-const headerIconLink = 'inline-flex min-w-[70px] flex-col items-center justify-center gap-[5px] border-0 bg-transparent text-[0.78rem] font-black leading-none text-[#161211]'
+const headerIconLink = 'inline-flex min-w-[35px] flex-col items-center justify-center gap-[5px] border-0 bg-transparent text-[0.78rem] font-black leading-none text-[#161211]'
 const navLinkBase = 'flex h-full min-w-[110px] items-center justify-center rounded-b-lg px-[18px] text-[0.94rem] font-extrabold text-[#191210] transition duration-200 hover:bg-[linear-gradient(135deg,var(--color-primary),#F98385)] hover:text-white'
 const navLinkActive = 'bg-[linear-gradient(135deg,var(--color-primary),#F98385)] text-white'
 const mobileButton = 'flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border-0 px-6 text-[0.94rem] font-black transition duration-200'
@@ -77,19 +77,21 @@ export default function Header() {
           </div>
 
           <div className="flex items-center justify-end text-[0.9rem] font-extrabold" >
-            <Link
-              to="/mypage"
-              className={`${headerIconLink} group mr-0 max-md:hidden`}
-            >
-              <img
-                src="/img/icon/mypage.png"
-                className="h-[28px] w-[28px] object-contain"
-                alt="mypage"
-              />
-              <span className="whitespace-nowrap text-[0.65rem] font-extrabold leading-none text-[#7D6A63] transition-colors group-hover:text-[var(--color-primary)]">
-                마이페이지
-              </span>
-            </Link>
+            {user &&
+              <Link
+                to="/mypage"
+                className={`${headerIconLink} group mr-0 max-md:hidden`}
+              >
+                <img
+                  src="/img/icon/mypage.png"
+                  className="h-[28px] w-[28px] object-contain"
+                  alt="mypage"
+                />
+                <span className="whitespace-nowrap text-[0.65rem] font-extrabold leading-none text-[#7D6A63] transition-colors group-hover:text-[var(--color-primary)]">
+                  마이페이지
+                </span>
+              </Link>
+            }
 
             {user ? (
               <>

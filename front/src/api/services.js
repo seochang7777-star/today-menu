@@ -132,6 +132,32 @@ export async function saveFavoriteLocations(locations) {
   return data   // serialize_user 반환 → saved_locations 포함
 }
 
+/** 현재 비밀번호 확인 */
+export async function verifyPassword(currentPassword) {
+  const { data } = await api.post('/api/auth/verify-password', {
+    currentPassword,
+  })
+  return data
+}
+
+/** 비밀번호 변경 */
+export async function changePassword(currentPassword, newPassword) {
+  const { data } = await api.patch('/api/auth/change-password', {
+    currentPassword,
+    newPassword,
+  })
+  return data
+}
+/** 아이디 찾기 */ 
+export const findId = async (nickname, security_question, security_answer) => {
+  const { data } = await api.post('/api/auth/findid', {
+    nickname,
+    security_question,
+    security_answer,
+  })
+
+  return data
+}
 // ── CHATBOT ───────────────────────────────────────────────────────────────────
 export async function sendChat(message, history = [], mode = 'recommend', lat = null, lng = null, loc_index = null) {
   const { data } = await api.post('/api/chat', { message, history, mode, lat, lng, loc_index })

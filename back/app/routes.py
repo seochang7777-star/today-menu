@@ -70,6 +70,7 @@ def serialize_user(u):
         'allergies':    u.allergies,
         'gender':       u.gender or '미설정',   # ← 추가
         'address':      u.address or '',         # ← 추가
+        'security_question': u.security_question,   # ← 추가
         'role':         u.role.value,
         'created_at':   u.created_at.isoformat() if u.created_at else None,
         'saved_locations': prefs.get('saved_locations', []),
@@ -263,8 +264,8 @@ def me():
 @auth_bp.route('/me', methods=['PUT'])
 @jwt_login_required
 def update_me():
-    user     = User.query.get_or_404(int(get_jwt_identity()))
-    data     = request.get_json()
+    user = User.query.get_or_404(int(get_jwt_identity()))
+    data = request.get_json()
     nickname = data.get('nickname', '').strip()
 
     if nickname and nickname != user.nickname:
@@ -272,30 +273,42 @@ def update_me():
             return jsonify({'message': '이미 사용 중인 닉네임입니다.'}), 409
         user.nickname = nickname
 
-    user.allergies   = data.get('allergies', user.allergies)
-    user.gender    = data.get('gender',    user.gender)    # ← 추가
-    user.address   = data.get('address',   user.address)   # ← 추가
+    # 보안 질문 저장
+    user.security_question = data.get(
+        'security_question',
+        user.security_question
+    )
+
+    # 보안 답변 저장(해시)
+    security_answer = data.get('security_answer')
+    if security_answer:
+        user.security_answer = generate_password_hash(security_answer)
+
+    user.allergies = data.get('allergies', user.allergies)
+    user.gender = data.get('gender', user.gender)
+    user.address = data.get('address', user.address)
+
     prefs = user.preferences or {}
 
-    new_locations = data.get('saved_locations', None)
+    new_locations = data.get('saved_locations')
     if new_locations is not None:
         validated = []
         for loc in new_locations[:3]:
             if loc.get('name') and loc.get('lat') is not None and loc.get('lng') is not None:
                 validated.append({
-                    'name':    str(loc['name'])[:30],
+                    'name': str(loc['name'])[:30],
                     'address': str(loc.get('address', ''))[:100],
-                    'lat':     float(loc['lat']),
-                    'lng':     float(loc['lng']),
+                    'lat': float(loc['lat']),
+                    'lng': float(loc['lng']),
                 })
         prefs['saved_locations'] = validated
 
-    # 💡 [필드명 통일] 프론트엔드 payload 구조와 데이터베이스 JSON 구조 명확히 동치
     user.preferences = {
         **prefs,
-        'likes':    data.get('likes', prefs.get('likes', [])),
+        'likes': data.get('likes', prefs.get('likes', [])),
         'dislikes': data.get('dislikes', prefs.get('dislikes', [])),
     }
+
     db.session.commit()
     return jsonify(serialize_user(user)), 200
 
@@ -406,7 +419,90 @@ def reset_password_direct():
 
     return jsonify({'message': '비밀번호가 성공적으로 재설정되었습니다.'}), 200
 
+# ── 비밀번호 변경 ─────────────────────────────────────────────────────────────
+@auth_bp.route('/verify-password', methods=['POST'])
+@jwt_required()
+def verify_password():
+    data = request.get_json()
 
+    current_password = data.get("currentPassword", "")
+
+    if not current_password:
+        return jsonify({"message": "현재 비밀번호를 입력해주세요."}), 400
+
+    user = User.query.get(int(get_jwt_identity()))
+
+    if not user:
+        return jsonify({"message": "사용자를 찾을 수 없습니다."}), 404
+
+    if not check_password_hash(user.password, current_password):
+        return jsonify({"message": "현재 비밀번호가 일치하지 않습니다."}), 400
+
+    return jsonify({"message": "비밀번호가 확인되었습니다."}), 200
+
+# ── 비밀번호 변경(최종확인) ─────────────────────────────────────────────────────────────
+@auth_bp.route('/change-password', methods=['PATCH'])
+@jwt_required()
+def change_password():
+    data = request.get_json()
+
+    current_password = data.get("currentPassword", "")
+    new_password = data.get("newPassword", "")
+
+    if not current_password or not new_password:
+        return jsonify({"message": "모든 항목을 입력해주세요."}), 400
+
+    if len(new_password) < 4:
+        return jsonify({"message": "비밀번호는 4자리 이상이어야 합니다."}), 400
+
+    user = User.query.get(int(get_jwt_identity()))
+
+    if not user:
+        return jsonify({"message": "사용자를 찾을 수 없습니다."}), 404
+
+    # 현재 비밀번호 확인
+    if not check_password_hash(user.password, current_password):
+        return jsonify({"message": "현재 비밀번호가 일치하지 않습니다."}), 400
+
+    # 새 비밀번호로 변경
+    user.password = generate_password_hash(new_password)
+
+    db.session.commit()
+
+    return jsonify({"message": "비밀번호가 변경되었습니다."}), 200
+
+# ── 아이디 찾기 ─────────────────────────────────────────────────────────────
+@auth_bp.route('/findid', methods=['POST'])
+def find_id():
+    data = request.get_json()
+
+    nickname = data.get('nickname', '').strip()
+    question = data.get('security_question', '').strip()
+    answer = data.get('security_answer', '').strip()
+
+    if not nickname or not question or not answer:
+        return jsonify({
+            'message': '모든 항목을 입력해주세요.'
+        }), 400
+
+    user = User.query.filter_by(
+        nickname=nickname,
+        security_question=question
+    ).first()
+
+    if not user:
+        return jsonify({
+            'message': '일치하는 회원이 없습니다.'
+        }), 404
+
+    if not check_password_hash(user.security_answer, answer):
+        return jsonify({
+            'message': '답변이 올바르지 않습니다.'
+        }), 400
+
+    return jsonify({
+        'email': user.email
+    }), 200
 
 
 # ══════════════════════════════════════════════════════════════════════════════

@@ -267,7 +267,7 @@ export default function Login() {
   {" · "}
   <button 
     type="button"
-    onClick={() => navigate('/support')} 
+    onClick={() => navigate('/findid')} 
     className="text-[var(--color-primary)] font-semibold hover:underline bg-transparent border-none p-0 cursor-pointer"
   >
     이메일 찾기

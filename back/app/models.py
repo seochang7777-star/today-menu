@@ -26,6 +26,8 @@ class User(db.Model):
     manner_score = db.Column(db.Float, default=36.5)
     preferences  = db.Column(db.JSON)       # { likes: [], dislikes: [] }
     allergies    = db.Column(db.Text)
+    security_question = db.Column(db.String(100), nullable=True)
+    security_answer = db.Column(db.String(255), nullable=True)
     address      = db.Column(db.String(200), nullable=True)
     gender       = db.Column(db.String(20), nullable=True, default='미설정')
     saved_locations = db.Column(db.JSON, default=list)

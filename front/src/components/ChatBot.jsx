@@ -79,6 +79,12 @@ export default function ChatBot() {
   }, [plusOpen])
 
   useEffect(() => {
+  const handleOpen = () => setOpen(true);
+  window.addEventListener('open-chatbot', handleOpen);
+  return () => window.removeEventListener('open-chatbot', handleOpen);
+}, []);
+
+  useEffect(() => {
     if (!locPicker) return
     const handler = (e) => {
       if (e.target.closest?.('[data-loc-picker]')) return

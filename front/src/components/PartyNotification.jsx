@@ -12,6 +12,8 @@ export default function PartyNotification() {
   const prevPartiesRef = useRef([])
   const timerRef = useRef(null)
 
+  const headerIconLink = 'inline-flex min-w-[70px] flex-col items-center justify-center gap-[5px] border-0 bg-transparent text-[0.78rem] font-black leading-none text-[#161211]'
+
   useEffect(() => {
     if (!user) return
     checkNotifications()
@@ -108,16 +110,9 @@ export default function PartyNotification() {
   return (
     <div style={{ position: 'relative' }}>
       {/* 알림 벨 버튼 */}
-      <button
-        onClick={() => setShow(!show)}
-        style={{
-          background: 'transparent', border: 'none', cursor: 'pointer',
-          position: 'relative', padding: '4px',
-          display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2,
-        }}
-      >
+<button onClick={() => setShow(!show)} className={`${headerIconLink} group mr-1 max-md:hidden`}>
         <div style={{ position: 'relative' }}>
-          <img src="/img/icon/alarm.png" alt="알림" style={{ width: 28, height: 28, objectFit: 'contain', display: 'block' }} />
+          <img src="/img/icon/alarm.png" className="h-[28px] w-[28px] object-contain" alt="alarm" onError={(e) => { e.target.style.display="none" }} />
           {unreadCount > 0 && (
             <span style={{
               position: 'absolute', top: 0, right: 0,
@@ -128,7 +123,7 @@ export default function PartyNotification() {
             }}>{unreadCount > 9 ? '9+' : unreadCount}</span>
           )}
         </div>
-        <span style={{ whiteSpace: 'nowrap', fontSize: '0.65rem', fontWeight: 800, lineHeight: 1, color: '#7D6A63' }}>
+        <span className="whitespace-nowrap text-[0.65rem] font-extrabold leading-none text-[#7D6A63] transition-colors group-hover:text-[var(--color-primary)]">
           파티알림
         </span>
       </button>

@@ -1,7 +1,7 @@
 // src/pages/MyPageEdit.jsx
 import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { getMyPage, updateMyPageProfile } from '../api/services'
+import { getMyPage, updateMyPageProfile, verifyPassword, changePassword } from '../api/services'
 import { useAuth } from '../App'
 import { processTags } from '../utils'
 
@@ -19,13 +19,19 @@ export default function MyPageEdit() {
     address: '',          // ← 추가
     preferences: [],  // likes
     dislikes: [],
-  })
 
+    securityQuestion: '',
+    securityAnswer: '',
+  })
+  
   const [inputLike, setInputLike] = useState('')
   const [inputDislike, setInputDislike] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const [dataLoading, setDataLoading] = useState(true)
+  const [isChangingPassword, setIsChangingPassword] = useState(false)
+  const [passwordForm, setPasswordForm] = useState({currentPassword: '',newPassword: '',newPassword2: '',})
+  const [isPasswordValidated, setIsPasswordValidated] = useState(false)
 
   // ── 기존 데이터 로드 ──────────────────────────────────────────────────────
   useEffect(() => {
@@ -38,6 +44,9 @@ export default function MyPageEdit() {
           address: d.user.address ?? '',
           preferences: processTags(d.user.preferences?.likes),
           dislikes: processTags(d.user.preferences?.dislikes),
+
+          securityQuestion: d.user.security_question ?? '',
+          securityAnswer: '',
         })
       })
       .catch(() => { })
@@ -95,10 +104,57 @@ export default function MyPageEdit() {
   const handleRemoveDislike = (target) =>
     setForm((f) => ({ ...f, dislikes: f.dislikes.filter((x) => x !== target) }))
 
+  const handlePasswordChange = (field, value) => {
+  setIsPasswordValidated(false)
+
+  setPasswordForm((prev) => ({
+    ...prev,
+    [field]: value,
+  }))
+}
+
+const handleCheckPassword = async () => {
+  setError('')
+  setIsPasswordValidated(false)
+
+  const {
+    currentPassword,
+    newPassword,
+    newPassword2,
+  } = passwordForm
+
+  if (!currentPassword || !newPassword || !newPassword2) {
+    setError('모든 항목을 입력해주세요.')
+    return
+  }
+
+  if (newPassword !== newPassword2) {
+    setError('새 비밀번호가 일치하지 않습니다.')
+    return
+  }
+
+  if (newPassword.length < 4) {
+    setError('비밀번호는 4자리 이상이어야 합니다.')
+    return
+  }
+
+  try {
+    await verifyPassword(currentPassword)
+
+    setIsPasswordValidated(true)
+
+  } catch (err) {
+    setError(err.response?.data?.message ?? '비밀번호 확인 실패')
+  }
+}
   // ── 저장 ──────────────────────────────────────────────────────────────────
   const handleSubmit = async (e) => {
     e.preventDefault()
     if (!form.nickname.trim()) { setError('닉네임은 공백일 수 없습니다.'); return }
+    if (isChangingPassword && !isPasswordValidated) {
+  setError('먼저 비밀번호 확인을 완료해주세요.')
+  return
+}
     setError('')
     setLoading(true)
     try {
@@ -109,7 +165,15 @@ export default function MyPageEdit() {
         address: form.address,   // ← 추가
         likes: form.preferences,  // routes.py: data.get('preferences') → likes
         dislikes: form.dislikes,      // routes.py: data.get('dislikes')
+        security_question: form.securityQuestion,
+        security_answer: form.securityAnswer,
       }
+      if (isChangingPassword) {
+  await changePassword(
+    passwordForm.currentPassword,
+    passwordForm.newPassword
+  )
+}
       const updated = await updateMyPageProfile(payload)
       // App.jsx의 login()은 토큰이 없으면 setUser만 실행 → 프로필 갱신 용도로 적합
       login(updated)
@@ -302,6 +366,142 @@ export default function MyPageEdit() {
                 ))}
               </div>
             )}
+
+            {/* 보안 질문 */}
+<div className="form-group">
+  <label className="form-label">아이디 찾기용 보안 질문</label>
+
+  <select
+    className="form-control mb-3"
+    value={form.securityQuestion}
+    onChange={(e) =>
+      setForm({
+        ...form,
+        securityQuestion: e.target.value,
+      })
+    }
+  >
+    <option value="">질문을 선택하세요.</option>
+    <option value="초등학교 담임선생님 성함은?">
+      초등학교 담임선생님 성함은?
+    </option>
+    <option value="가장 좋아했던 음식은?">
+      가장 좋아했던 음식은?
+    </option>
+    <option value="처음 키운 반려동물 이름은?">
+      처음 키운 반려동물 이름은?
+    </option>
+    <option value="가장 기억에 남는 여행지는?">
+      가장 기억에 남는 여행지는?
+    </option>
+    <option value="가장 좋아하는 영화는?">
+      가장 좋아하는 영화는?
+    </option>
+  </select>
+
+  <input
+    type="text"
+    className="form-control"
+    placeholder="답변을 입력하세요."
+    value={form.securityAnswer}
+    onChange={(e) =>
+      setForm({
+        ...form,
+        securityAnswer: e.target.value,
+      })
+    }
+  />
+
+  <p className="text-xs text-gray-500 mt-2">
+    아이디를 잊어버렸을 때 본인 확인에 사용됩니다.
+  </p>
+</div>
+            {/* 🔐 비밀번호 변경 */}
+<div className="form-group border-t border-dashed border-gray-200 pt-6 mt-6">
+  <div className="flex justify-between items-center mb-3">
+    <label className="form-label mb-0">
+      🔐 비밀번호 변경
+    </label>
+
+    <button
+      type="button"
+      onClick={() => {
+        setIsChangingPassword(!isChangingPassword)
+        setIsPasswordValidated(false)
+      }}
+      className="text-xs text-gray-500 hover:text-gray-700 bg-transparent border-0 cursor-pointer font-medium"
+    >
+      {isChangingPassword ? '변경 취소' : '비밀번호 변경하기'}
+    </button>
+  </div>
+
+  {isChangingPassword && (
+    <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 space-y-4">
+
+      <div>
+        <label className="block text-sm font-semibold mb-1">
+          현재 비밀번호
+        </label>
+
+        <input
+          type="password"
+          className="form-control"
+          placeholder="현재 비밀번호"
+          value={passwordForm.currentPassword}
+          onChange={(e) =>
+            handlePasswordChange('currentPassword', e.target.value)
+          }
+        />
+      </div>
+
+      <div>
+        <label className="block text-sm font-semibold mb-1">
+          새 비밀번호
+        </label>
+
+        <input
+          type="password"
+          className="form-control"
+          placeholder="새 비밀번호"
+          value={passwordForm.newPassword}
+          onChange={(e) =>
+            handlePasswordChange('newPassword', e.target.value)
+          }
+        />
+      </div>
+
+      <div>
+        <label className="block text-sm font-semibold mb-1">
+          새 비밀번호 확인
+        </label>
+
+        <input
+          type="password"
+          className="form-control"
+          placeholder="새 비밀번호 확인"
+          value={passwordForm.newPassword2}
+          onChange={(e) =>
+            handlePasswordChange('newPassword2', e.target.value)
+          }
+        />
+      </div>
+
+      <button
+        type="button"
+        onClick={handleCheckPassword}
+        className="btn btn-secondary btn-block"
+      >
+        비밀번호 확인
+      </button>
+
+      {isPasswordValidated && (
+        <div className="rounded-lg border border-green-200 bg-green-50 text-green-700 text-sm px-3 py-2">
+          ✓ 현재 비밀번호가 확인되었습니다.
+        </div>
+      )}
+    </div>
+  )}
+</div>
           </div>
 
           {error && <div className="alert alert-danger">{error}</div>}

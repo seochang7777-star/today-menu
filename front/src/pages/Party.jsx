@@ -32,15 +32,28 @@ export default function Party() {
   const filteredParties = allParties.filter(p => p.status === status)
 
   return (
-    <div className="max-w-[800px] mx-auto px-4 pb-12">
+    <div className="max-w-[800px] mx-auto px-4 pb-14">
       {/* 상단 배너 영역 */}
-      <div className="mb-8 p-6 bg-[#FFF8F5] rounded-2xl flex justify-between items-center">
+      <div className="my-[2px] flex justify-between items-center gap-4">
         <div>
           <h1 className="text-2xl font-black text-gray-900 flex items-center gap-2 mb-1">
-            <span className="text-[#FF5A5A]">👥</span> 밥친구 매칭
+            <span className="text-[#FF5A5A]">
+              <svg
+                    viewBox="0 0 24 24"
+                    className="h-8 w-8 fill-[#F46C6F]"
+                  >
+                    <path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5s-3 1.34-3 3 1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5C15 14.17 10.33 13 8 13zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z" />
+                  </svg>
+            </span>
+            밥친구 매칭
           </h1>
           <p className="text-sm text-gray-500 font-medium">같은 식당을 가고 싶은 사람들과 함께해요!</p>
         </div>
+        <img
+          src="/img/banner/party_diner.png"
+          alt="밥친구 매칭"
+          className="w-[220px] md:w-[260px] h-auto object-contain flex-shrink-0 select-none"
+        />
       </div>
 
       {!user && (
@@ -50,8 +63,11 @@ export default function Party() {
         </div>
       )}
 
+      {/* 하나의 흰색 박스: 컨트롤 바 + 파티 리스트 */}
+      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+
       {/* 컨트롤 바 (상태 탭) */}
-      <div className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+      <div className="p-4 border-b border-gray-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div className="flex gap-2">
           {['RECRUITING', 'CLOSED', 'COMPLETED'].map((s) => {
             const isActive = status === s;
@@ -90,18 +106,18 @@ export default function Party() {
       {loading ? (
         <div className="text-center py-16 text-gray-400 font-medium">로딩 중...</div>
       ) : filteredParties.length === 0 ? (
-        <div className="text-center py-16 bg-white border border-gray-100 rounded-2xl shadow-sm">
+        <div className="text-center py-16">
           <div className="text-4xl mb-3">👥</div>
           <p className="text-gray-500 text-sm font-medium">
             {STATUS_LABEL[status]}인 파티가 없습니다
           </p>
         </div>
       ) : (
-        <div className="flex flex-col gap-4">
+        <div className="divide-y divide-gray-100">
           {filteredParties.map((p) => (
             <div 
               key={p.party_id} 
-              className="bg-white border border-gray-100 rounded-2xl p-4 shadow-sm hover:shadow-md transition-shadow flex flex-col md:flex-row gap-5"
+              className="p-4 hover:bg-gray-50/60 transition-colors flex flex-col md:flex-row gap-5"
             >
               {/* 왼쪽: 이미지 영역 (기존 크기 규격에 맞춰 조립) */}
               <div className="w-full md:w-[180px] h-[130px] rounded-xl overflow-hidden relative bg-gray-100 flex-shrink-0">
@@ -173,6 +189,8 @@ export default function Party() {
           ))}
         </div>
       )}
+      </div>
+      {/* 흰색 박스 끝 */}
     </div>
   )
 }

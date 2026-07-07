@@ -5,6 +5,7 @@ import { useAuth } from '../App'
 import KakaoMap from '../components/KakaoMap'
 import RestaurantSearch from '../components/RestaurantSearch'
 import Cafeteria from '../components/Cafeteria'
+import RandomBanner from '../components/RandomBanner'
 
 const adBannerClass =
   'w-full overflow-hidden rounded-[12px] bg-white max-md:h-[70px]'
@@ -12,7 +13,16 @@ const adBannerLinkClass = 'block h-full w-full'
 const adBannerImageClass =
   'h-full w-full object-contain object-center'
 
-const CAT_ICON = { 한식: '🍚', 일식: '🍣', 중식: '🥡', 양식: '🥩', 분식: '🍜', 치킨: '🍗', 카페: '☕' }
+const CAT_ICON = {
+  한식: './img/category/korean.png',
+  일식: './img/category/japanese.webp',
+  중식: './img/category/chinese.webp',
+  양식: './img/category/steak.webp',
+  분식: './img/category/snack.webp',
+  치킨: './img/category/chicken.webp',
+  카페: './img/category/coffee.webp',
+  술집: './img/category/beer.webp'
+};
 const TREND_FOODS = ['삼겹살', '치킨', '짜장면', '순대국', '초밥', '파스타', '비빔밥', '떡볶이']
 
 const SAMPLE_RESTAURANTS = [
@@ -89,8 +99,8 @@ const trendRankClass = 'w-5 font-black text-[#ff5f24]'
 const trendNameClass = 'flex-1 text-[var(--text-primary)]'
 const trendUpClass = 'text-[1.35rem] leading-none text-[var(--color-primary)]'
 const categoryGridClass = 'mb-11 grid grid-cols-8 gap-3 max-lg:grid-cols-4 max-sm:grid-cols-2'
-const categoryItemClass = 'flex min-h-[90px] flex-col items-center justify-center gap-1.5 rounded-[10px] border border-[var(--border-color)] bg-white shadow-[0_8px_18px_rgba(42,29,26,0.07)] transition-all hover:-translate-y-1 hover:border-[var(--color-primary)] hover:shadow-[var(--shadow)]'
-const categoryIconClass = 'grid h-10 w-10 place-items-center text-[1.75rem]'
+const categoryItemClass = 'flex min-h-[90px] flex-col items-center justify-center gap-0 rounded-[10px] border border-[var(--border-color)] bg-white shadow-[0_8px_18px_rgba(42,29,26,0.07)] transition-all hover:-translate-y-1 hover:border-[var(--color-primary)] hover:shadow-[var(--shadow)]'
+const categoryIconClass = 'grid h-13 w-13 place-items-center text-[1.75rem] -mt-1'
 const categoryLabelClass = 'text-[0.86rem] font-black text-[var(--text-primary)]'
 const recommendSectionClass =
   'mb-[38px]'
@@ -337,9 +347,16 @@ useEffect(() => {
       </section>
 
       <section className={categoryGridClass}>
-        {Object.entries(CAT_ICON).map(([name, icon]) => (
+        {Object.entries(CAT_ICON).map(([name, iconPath]) => (
           <Link to={`/menu?cat=${name}`} className={categoryItemClass} key={name}>
-            <div className={categoryIconClass}>{icon}</div>
+            <div className={categoryIconClass}>
+              <img 
+                src={iconPath} 
+                alt={name} 
+                className="h-full w-full object-contain"
+                onError={(e) => { e.target.style.display = 'none' }} 
+              />
+            </div>
             <div className={categoryLabelClass}>{name}</div>
           </Link>
         ))}
@@ -453,17 +470,7 @@ useEffect(() => {
       )}
 
       <section className={adBannerClass}>
-        <Link
-          to="/party"
-          className={adBannerLinkClass}
-          aria-label="파티 페이지로 이동"
-        >
-          <img
-            src="/img/banner/banner2.png"
-            alt="파티 만들기 배너"
-            className={adBannerImageClass}
-          />
-        </Link>
+        <RandomBanner />
       </section>
     </div>
   )

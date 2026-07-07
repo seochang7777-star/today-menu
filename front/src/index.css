@@ -632,12 +632,6 @@ button {
 }
 .nav-welcome:empty { visibility: hidden; }
 
-/* logo-clock */
-.logo-clock {
-  display: inline-grid; place-items: center;
-  width: 26px; height: 26px; font-size: .95rem;
-  border: 2px solid var(--color-primary); border-radius: 999px; background: #fff;
-}
 
 /* mobile drawer */
 .mobile-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.42); z-index: 800; }

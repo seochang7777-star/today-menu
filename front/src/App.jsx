@@ -27,6 +27,7 @@ import Notice        from './pages/Notice'
 import MannerHistory from './pages/MannerHistory'
 import AdminPage    from './pages/AdminPage'
 import FindPassword from './pages/FindPassword'
+import FindId from './pages/FindId'
 
 export const AuthContext = createContext(null)
 export const useAuth = () => useContext(AuthContext)
@@ -91,7 +92,7 @@ export default function App() {
                 <Route path="/party/:partyId"          element={<PartyDetail />} />
                 <Route path="/mypage"                  element={<PrivateRoute><MyPage /></PrivateRoute>} />
                 <Route path="/mypage/edit"             element={<PrivateRoute><MyPageEdit /></PrivateRoute>} />
-                <Route path="/admin"                       element={<PrivateRoute><AdminPage /></PrivateRoute>} />
+                <Route path="/admin"                   element={<PrivateRoute><AdminPage /></PrivateRoute>} />
                 <Route path="/mypage/manner-history"   element={<PrivateRoute><MannerHistory /></PrivateRoute>} />
                 <Route path="/game"                    element={<Game />} />
                 <Route path="/auth/naver/callback"     element={<NaverCallback />} />
@@ -101,7 +102,8 @@ export default function App() {
                 <Route path="/terms"                   element={<Terms />} />
                 <Route path="/support"                 element={<Support />} />
                 <Route path="/notice"                  element={<Notice />} />
-                <Route path="/findPassword"                  element={<FindPassword />} />
+                <Route path="/findPassword"            element={<FindPassword />} />
+                <Route path="/findid"                 element={<FindId />} />
                 {/* * NotFound는 항상 Route의 맨 마지막줄에 있어야함 */}
                 <Route path="*"                        element={<NotFound />} />
               </Routes>
