@@ -100,15 +100,19 @@ export default function ChatBot() {
     setMessages((p) => [...p, { role, content, ...extra }])
 
   const requestLocation = async () => {
-    if (locStatus === 'granted') {
-      setUserLoc(null)
-      setLocStatus('idle')
-      return null
-    }
+    // 이미 위치 확인됐으면 기존 위치 반환 (재요청 없음)
+    if (locStatus === 'granted' && userLoc) return userLoc
     setLocStatus('asking')
     const loc = await getLocation()
     if (loc) { setUserLoc(loc); setLocStatus('granted'); return loc }
     setLocStatus('denied'); return null
+  }
+
+  // 위치 OFF (수동으로 GPS 끄기)
+  const clearLocation = () => {
+    setUserLoc(null)
+    setLocStatus('idle')
+    setLocMode('current')
   }
 
   const send = async (text) => {
