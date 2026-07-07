@@ -230,28 +230,6 @@ useEffect(() => {
               src="https://images.unsplash.com/photo-1621996346565-e3dbc646d9a9?auto=format&fit=crop&w=900&q=80"
               alt="파스타"
             />
-            {/* 좌우 버튼 */}
-            <button
-              onClick={() => { setBannerIdx((i) => (i + 2) % 3); clearInterval(bannerTimer.current); bannerTimer.current = setInterval(() => setBannerIdx((i) => (i + 1) % 3), 4500) }}
-              style={{ position:'absolute', left:12, top:'50%', transform:'translateY(-50%)', zIndex:10, background:'rgba(0,0,0,0.35)', border:'none', borderRadius:'50%', width:36, height:36, cursor:'pointer', color:'#fff', fontSize:'1.2rem', display:'flex', alignItems:'center', justifyContent:'center' }}
-              aria-label="이전 슬라이드"
-            >‹</button>
-            <button
-              onClick={() => { setBannerIdx((i) => (i + 1) % 3); clearInterval(bannerTimer.current); bannerTimer.current = setInterval(() => setBannerIdx((i) => (i + 1) % 3), 4500) }}
-              style={{ position:'absolute', right:12, top:'50%', transform:'translateY(-50%)', zIndex:10, background:'rgba(0,0,0,0.35)', border:'none', borderRadius:'50%', width:36, height:36, cursor:'pointer', color:'#fff', fontSize:'1.2rem', display:'flex', alignItems:'center', justifyContent:'center' }}
-              aria-label="다음 슬라이드"
-            >›</button>
-            {/* 클릭 가능한 dots */}
-            <div className={bannerDotsClass}>
-              {[0, 1, 2].map((dot) => (
-                <span
-                  key={dot}
-                  onClick={() => { setBannerIdx(dot); clearInterval(bannerTimer.current); bannerTimer.current = setInterval(() => setBannerIdx((i) => (i + 1) % 3), 4500) }}
-                  className={`${bannerDotClass} ${bannerIdx === dot ? bannerDotActiveClass : ''}`}
-                  style={{ cursor:'pointer' }}
-                />
-              ))}
-            </div>
           </div>
 
           <div className={`${slideBaseClass} ${slideBackgrounds[1]} ${bannerIdx === 1 ? slideActiveClass : ''}`}>
@@ -291,6 +269,28 @@ useEffect(() => {
               src="https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&w=900&q=80"
               alt="피자"
             />
+          </div>
+          {/* 좌우 버튼 — 항상 표시 */}
+          <button
+            onClick={() => { setBannerIdx((i) => (i + 2) % 3); clearInterval(bannerTimer.current); bannerTimer.current = setInterval(() => setBannerIdx((i) => (i + 1) % 3), 4500) }}
+            style={{ position:'absolute', left:12, top:'50%', transform:'translateY(-50%)', zIndex:10, background:'rgba(0,0,0,0.35)', border:'none', borderRadius:'50%', width:36, height:36, cursor:'pointer', color:'#fff', fontSize:'1.2rem', display:'flex', alignItems:'center', justifyContent:'center' }}
+            aria-label="이전 슬라이드"
+          >‹</button>
+          <button
+            onClick={() => { setBannerIdx((i) => (i + 1) % 3); clearInterval(bannerTimer.current); bannerTimer.current = setInterval(() => setBannerIdx((i) => (i + 1) % 3), 4500) }}
+            style={{ position:'absolute', right:12, top:'50%', transform:'translateY(-50%)', zIndex:10, background:'rgba(0,0,0,0.35)', border:'none', borderRadius:'50%', width:36, height:36, cursor:'pointer', color:'#fff', fontSize:'1.2rem', display:'flex', alignItems:'center', justifyContent:'center' }}
+            aria-label="다음 슬라이드"
+          >›</button>
+          {/* 클릭 가능한 dots — 항상 표시 */}
+          <div className={bannerDotsClass}>
+            {[0, 1, 2].map((dot) => (
+              <span
+                key={dot}
+                onClick={() => { setBannerIdx(dot); clearInterval(bannerTimer.current); bannerTimer.current = setInterval(() => setBannerIdx((i) => (i + 1) % 3), 4500) }}
+                className={`${bannerDotClass} ${bannerIdx === dot ? bannerDotActiveClass : ''}`}
+                style={{ cursor:'pointer' }}
+              />
+            ))}
           </div>
         </div>
 
