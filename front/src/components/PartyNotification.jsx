@@ -112,19 +112,25 @@ export default function PartyNotification() {
         onClick={() => setShow(!show)}
         style={{
           background: 'transparent', border: 'none', cursor: 'pointer',
-          position: 'relative', padding: '4px', fontSize: '1.2rem',
+          position: 'relative', padding: '4px',
+          display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2,
         }}
       >
-        <img src="/img/icon/alarm.png" alt="알림" style={{ width: 22, height: 22, display: 'block' }} />
-        {unreadCount > 0 && (
-          <span style={{
-            position: 'absolute', top: 0, right: 0,
-            background: 'var(--color-danger)', color: '#fff',
-            borderRadius: '50%', width: 16, height: 16,
-            fontSize: '.65rem', fontWeight: 900,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-          }}>{unreadCount > 9 ? '9+' : unreadCount}</span>
-        )}
+        <div style={{ position: 'relative' }}>
+          <img src="/img/icon/alarm.png" alt="알림" style={{ width: 28, height: 28, objectFit: 'contain', display: 'block' }} />
+          {unreadCount > 0 && (
+            <span style={{
+              position: 'absolute', top: 0, right: 0,
+              background: 'var(--color-danger)', color: '#fff',
+              borderRadius: '50%', width: 16, height: 16,
+              fontSize: '.65rem', fontWeight: 900,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}>{unreadCount > 9 ? '9+' : unreadCount}</span>
+          )}
+        </div>
+        <span style={{ whiteSpace: 'nowrap', fontSize: '0.65rem', fontWeight: 800, lineHeight: 1, color: '#7D6A63' }}>
+          파티알림
+        </span>
       </button>
 
       {/* 알림 드롭다운 */}
