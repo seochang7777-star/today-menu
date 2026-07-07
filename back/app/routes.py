@@ -560,11 +560,13 @@ def create_restaurant():
     rest = Restaurant(
         name=data.get('name', ''),
         address=data.get('address', ''),
+        phone=data.get('phone', ''),
         latitude=data.get('latitude'),
         longitude=data.get('longitude'),
         category=data.get('category', '기타'),
         description=data.get('description', ''),
         avg_rating=data.get('avg_rating', 0.0),
+        business_hours=data.get('business_hours', ''),
     )
     db.session.add(rest)
     db.session.commit()
@@ -1466,13 +1468,13 @@ A. 마이페이지 최하단 '회원 탈퇴하기' 버튼을 누르세요.
         )
         reply = response.choices[0].message.content
 
-        # 추천 로그 — 상위 200개만 확인 (전체 로드 방지)
+        # 💡 [코드 고도화] 추천 로그 인메모리 루프 누수 해결을 위한 텍스트 포함 쿼리 적용
         if mode == 'recommend':
-            from sqlalchemy import text as _t_log
-            top_rests = db.session.execute(_t_log(
-                "SELECT restaurant_id, name FROM restaurants ORDER BY avg_rating DESC LIMIT 200"
-            )).fetchall()
-            for r_id, r_name in top_rests:
+            # Python 레벨에서 식당명 매칭 (SQLite 호환)
+            all_rests_log = Restaurant.query.with_entities(
+                Restaurant.restaurant_id, Restaurant.name
+            ).all()
+            for r_id, r_name in all_rests_log:
                 if r_name and r_name in reply:
                     db.session.add(RecommendationLog(
                         user_id=user_id,
@@ -1884,36 +1886,50 @@ def manner_history():
     received = MannerVote.query.filter_by(target_id=user_id).order_by(MannerVote.voted_at.desc()).limit(20).all()
     given    = MannerVote.query.filter_by(voter_id=user_id).order_by(MannerVote.voted_at.desc()).limit(10).all()
     user     = User.query.get(user_id)
-
-    total_received = len(received)
-    positive_count = sum(1 for v in received if v.is_positive)
-    negative_count = total_received - positive_count
-
     return jsonify({
         'manner_score': user.manner_score,
-        'stats': {
-            'total_received': total_received,
-            'positive':       positive_count,
-            'negative':       negative_count,
-        },
-        'received': [
-            {
-                'voter':       v.voter.nickname if v.voter else '알 수 없음',
-                'is_positive': v.is_positive,
-                'delta':       1.0 if v.is_positive else -1.0,
-                'voted_at':    v.voted_at.strftime('%Y-%m-%d %H:%M') if v.voted_at else '',
-            }
-            for v in received
-        ],
-        'given': [
-            {
-                'target':      v.target.nickname if v.target else '알 수 없음',
-                'is_positive': v.is_positive,
-                'voted_at':    v.voted_at.strftime('%Y-%m-%d %H:%M') if v.voted_at else '',
-            }
-            for v in given
-        ],
-    })
+        'received': [{'voter': v.voter.nickname if v.voter else '알 수 없음', 'is_positive': v.is_positive, 'delta': +1.0 if v.is_positive else -1.0, 'voted_at': v.voted_at.strftime('%Y-%m-%d %H:%M') if v.voted_at else ''} for v in received],
+        'given':    [{'target': v.target.nickname if v.target else '알 수 없음', 'is_positive': v.is_positive, 'voted_at': v.voted_at.strftime('%Y-%m-%d %H:%M') if v.voted_at else ''} for v in given],
+        'stats':    {'total_received': MannerVote.query.filter_by(target_id=user_id).count(), 'positive': MannerVote.query.filter_by(target_id=user_id, is_positive=True).count(), 'negative': MannerVote.query.filter_by(target_id=user_id, is_positive=False).count()},
+    }), 200
+
+# ── 매너온도 투표 API ────────────────────────────────────────────────────────
+@api_bp.route('/manner/vote/<int:target_id>', methods=['POST'])
+@jwt_login_required
+def vote_manner(target_id):
+    from datetime import date
+    voter_id = int(get_jwt_identity())
+    if voter_id == target_id:
+        return jsonify({'message': '자신에게 투표할 수 없습니다.'}), 400
+    target = User.query.get_or_404(target_id)
+    body   = request.get_json(force=True)
+    is_pos = bool(body.get('is_positive', True))
+    today  = date.today()
+    today_count = MannerVote.query.filter(
+        MannerVote.voter_id == voter_id,
+        db.func.date(MannerVote.voted_at) == today,
+    ).count()
+    if today_count >= 2:
+        return jsonify({'message': '오늘 투표 횟수(2회)를 모두 사용했습니다.'}), 429
+    already = MannerVote.query.filter(
+        MannerVote.voter_id  == voter_id,
+        MannerVote.target_id == target_id,
+        db.func.date(MannerVote.voted_at) == today,
+    ).first()
+    if already:
+        return jsonify({'message': '오늘 이미 이 회원에게 투표했습니다.'}), 409
+    vote = MannerVote(voter_id=voter_id, target_id=target_id, is_positive=is_pos)
+    db.session.add(vote)
+    delta = 1.0 if is_pos else -1.0
+    target.manner_score = round(max(20.0, min(50.0, target.manner_score + delta)), 1)
+    db.session.commit()
+    remaining = 2 - (today_count + 1)
+    return jsonify({
+        'message':     f"{'따뜻한' if is_pos else '차가운'} 한 표! {target.nickname}님 온도 {'+' if is_pos else ''}{delta}°",
+        'new_score':   target.manner_score,
+        'remaining':   remaining,
+        'is_positive': is_pos,
+    }), 200
 
 
 @api_bp.route('/manner/status', methods=['GET'])
