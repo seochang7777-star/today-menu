@@ -322,28 +322,28 @@ export default function PartyDetail() {
               </div>
               <h2 className="text-2xl font-black mb-1.5">{party.title}</h2>
               <div className="flex gap-3 flex-wrap text-sm text-gray-500">
-                
+
                 <span><div className="flex items-center gap-2">
-                    
-                    <button
-                      type="button"
-                      style={{
-                        backgroundColor: '#F3E7DD',
-                        padding: '4px 8px',
-                        borderRadius: '6px',
-                        border: 'none',
-                      }}
-                      className="rounded-xs text-[0.85rem] font-semibold text-[var(--text-primary)] transition-colors hover:bg-[#EAD8C9]"
 
-                      onClick={() => navigate(`/menu/${party.restaurant.id}`)}
+                  <button
+                    type="button"
+                    style={{
+                      backgroundColor: '#F3E7DD',
+                      padding: '4px 8px',
+                      borderRadius: '6px',
+                      border: 'none',
+                    }}
+                    className="rounded-xs text-[0.85rem] font-semibold text-[var(--text-primary)] transition-colors hover:bg-[#EAD8C9]"
 
-                    >🍴
-                      {party.restaurant.name}
-                    </button>
+                    onClick={() => navigate(`/menu/${party.restaurant.id}`)}
 
-                    <span>👤{party.host?.nickname}</span>
+                  >🍴
+                    {party.restaurant.name}
+                  </button>
 
-                  </div> </span>
+                  <span>👤{party.host?.nickname}</span>
+
+                </div> </span>
                 <span>🕐 {party.meeting_time ? new Date(party.meeting_time).toLocaleString('ko-KR') : ''}</span>
               </div>
             </div>
@@ -407,11 +407,11 @@ export default function PartyDetail() {
                           : '-',
                       ],
                       [<svg
-                    viewBox="0 0 24 24"
-                    className="h-5 w-5 fill-[#F46C6F]"
-                  >
-                    <path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5s-3 1.34-3 3 1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5C15 14.17 10.33 13 8 13zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z" />
-                  </svg>, '인원', `${party.member_count} / ${party.max_people}명`],
+                        viewBox="0 0 24 24"
+                        className="h-5 w-5 fill-[#F46C6F]"
+                      >
+                        <path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5s-3 1.34-3 3 1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5C15 14.17 10.33 13 8 13zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z" />
+                      </svg>, '인원', `${party.member_count} / ${party.max_people}명`],
                       ['🏳️', '카테고리', party.restaurant?.category ?? '-'],
                     ].map(([icon, label, val]) => (
                       <div
@@ -439,13 +439,28 @@ export default function PartyDetail() {
 
             {/* 채팅 탭 */}
             {activeTab === 'chat' && isMember && (
-              <div className="party-body-section">
-                <h3 style={{ marginBottom: 14 }}>💬 파티 채팅</h3>
+              <div className="rounded-[10px] border border-[#FFC8C4] bg-white p-8">
+                <h3 className="mb-4 flex items-center gap-2 text-xl font-black text-[#221517]">
+                  <img src="/img/icon/logo.png" alt="오늘 뭐먹지?" className="h-6 w-6 object-contain"
+                    onError={(e) => { e.target.style.display = 'none' }} />
+                  파티 채팅
+                </h3>
+
                 <div ref={chatRef}
-                  style={{ height: 320, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 14, padding: '0 4px' }}>
+                  style={{
+                    height: 340,
+                    overflowY: 'auto',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    justifyContent: messages.length === 0 ? 'center' : 'flex-start',
+                    gap: 20,
+                    marginBottom: 14,
+                    padding: '0 4px',
+                  }}>
                   {messages.length === 0 ? (
                     <div style={{ textAlign: 'center', color: 'var(--text-muted)', padding: 40, fontSize: '.9rem' }}>
-                      아직 대화가 없습니다. 먼저 인사해보세요! 👋
+                      아직 대화가 없습니다. 먼저 인사해보세요!
+
                     </div>
                   ) : messages.map((msg, i) => {
                     const mine = msg.sender?.user_id === user?.user_id
@@ -479,10 +494,22 @@ export default function PartyDetail() {
                   })}
                 </div>
                 {isMember ? (
-                  <form onSubmit={handleChat} style={{ display: 'flex', gap: 8 }}>
-                    <input type="text" className="form-control" placeholder="메시지 입력..." required
-                      value={chatInput} onChange={(e) => setChatInput(e.target.value)} style={{ borderRadius: 24 }} />
-                    <button type="submit" className="btn btn-dark" style={{ borderRadius: 24, whiteSpace: 'nowrap' }}>전송</button>
+                  <form onSubmit={handleChat} className="flex gap-2">
+                    <input type="text" className="h-12 min-w-0 flex-1 rounded-full border-[1.5px] border-[rgba(244,108,111,0.8)] bg-white px-5 text-[0.92rem] font-semibold text-[var(--text-primary)] shadow-[0_4px_18px_rgba(244,108,111,0.08)] outline-none 
+                    placeholder= 메시지 입력..."
+                      required
+                      value={chatInput} onChange={(e) => setChatInput(e.target.value)} />
+
+                    <button
+                      type="submit"
+                      className="relative grid h-12 w-12 shrink-0 place-items-center rounded-full border-0 bg-[linear-gradient(135deg,var(--color-primary),#F98082)] shadow-[0_4px_18px_rgba(244,108,111,0.16)] transition hover:brightness-105 hover:shadow-md"
+                    >
+                      <img
+                        src="/img/icon/send.png"
+                        alt="전송"
+                        className="h-6 w-6 object-contain"
+                      />
+                    </button>
                   </form>
                 ) : (
                   <p style={{ textAlign: 'center', color: 'var(--text-muted)', fontSize: '.88rem' }}>채팅은 파티 참여 후 이용 가능합니다</p>
@@ -492,10 +519,13 @@ export default function PartyDetail() {
 
             {/* 리뷰 탭 */}
             {activeTab === 'review' && (
-              <div className="party-body-section">
-                <div className="flex-between mb-4">
-                  <h3>리뷰</h3>
-                  <span style={{ fontSize: '.82rem', color: 'var(--text-muted)' }}>총 {dummyReviews.length}개</span>
+              <div className="rounded-[10px] border border-[#FFC8C4] bg-white p-8">
+                <div className="mb-4 flex items-center justify-between">
+                  <h3 className="flex items-center gap-2 text-xl font-black text-[#221517]">
+                    <span className="text-2xl">⭐</span>
+                    리뷰
+                  </h3>
+                  <span className="text-[0.82rem] text-[var(--text-muted)]">총 {dummyReviews.length}개</span>
                 </div>
                 {dummyReviews.map((rev, i) => (
                   <div key={i} className="party-review-card">
@@ -509,18 +539,7 @@ export default function PartyDetail() {
                     </div>
                   </div>
                 ))}
-                <div style={{ marginTop: 24 }}>
-                  <h4 style={{ marginBottom: 14, fontSize: '.95rem' }}>이 파티에 어울리는 메뉴 추천</h4>
-                  <div className="party-recommend-grid">
-                    {['삼겹살', '파스타', '초밥', '치킨', '비빔밥', '짜장면'].map((menu) => (
-                      <div key={menu} className="party-recommend-card">
-                        <div className="party-recommend-thumb">{CAT_ICON['한식'] ?? '🍴'}</div>
-                        <div style={{ fontWeight: 700, fontSize: '.85rem' }}>{menu}</div>
-                        <div style={{ fontSize: '.75rem', color: 'var(--text-muted)', marginTop: 2 }}>인기 메뉴</div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
+              
               </div>
             )}
 
