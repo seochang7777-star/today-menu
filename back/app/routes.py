@@ -391,10 +391,10 @@ def naver_login():
 @auth_bp.route('/me', methods=['DELETE'])
 @jwt_login_required
 def delete_account():
+    """회원 탈퇴 (본인)"""
     user_id = int(get_jwt_identity())
     user = User.query.get_or_404(user_id)
     try:
-        # 관련 데이터 삭제
         MannerVote.query.filter(
             (MannerVote.voter_id == user_id) | (MannerVote.target_id == user_id)
         ).delete(synchronize_session=False)
@@ -402,12 +402,15 @@ def delete_account():
         Favorite.query.filter_by(user_id=user_id).delete()
         Review.query.filter_by(user_id=user_id).delete()
         Inquiry.query.filter_by(user_id=user_id).delete()
+        Report.query.filter(
+            (Report.reporter_id == user_id) | (Report.reported_user_id == user_id)
+        ).delete(synchronize_session=False)
         db.session.delete(user)
         db.session.commit()
         return jsonify({'message': '회원 탈퇴가 완료되었습니다.'}), 200
     except Exception as e:
         db.session.rollback()
-        return jsonify({'message': f'탈퇴 처리 중 오류: {str(e)}'}), 500
+        return jsonify({'message': f'탈퇴 중 오류: {str(e)}'}), 500
 
 @auth_bp.route('/reset-password-direct', methods=['POST'])
 def reset_password_direct():
@@ -1064,9 +1067,23 @@ def admin_users():
 @admin_required
 def admin_delete_user(user_id):
     user = User.query.get_or_404(user_id)
-    db.session.delete(user)
-    db.session.commit()
-    return jsonify({'message': '탈퇴 처리되었습니다.'}), 200
+    try:
+        MannerVote.query.filter(
+            (MannerVote.voter_id == user_id) | (MannerVote.target_id == user_id)
+        ).delete(synchronize_session=False)
+        RecommendationLog.query.filter_by(user_id=user_id).delete()
+        Favorite.query.filter_by(user_id=user_id).delete()
+        Review.query.filter_by(user_id=user_id).delete()
+        Inquiry.query.filter_by(user_id=user_id).delete()
+        Report.query.filter(
+            (Report.reporter_id == user_id) | (Report.reported_user_id == user_id)
+        ).delete(synchronize_session=False)
+        db.session.delete(user)
+        db.session.commit()
+        return jsonify({'message': '강제 탈퇴 처리되었습니다.'}), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'message': f'처리 중 오류: {str(e)}'}), 500
 
 @api_bp.route('/admin/reviews', methods=['GET'])
 @admin_required
@@ -1805,7 +1822,7 @@ def create_notice():
     user_id = int(get_jwt_identity())
     user    = User.query.get_or_404(user_id)
 
-    if user.role.value.lower() != 'admin':
+    if user.role.value != 'admin':
         return jsonify({'message': '관리자만 공지사항을 작성할 수 있습니다.'}), 403
 
     data    = request.get_json(force=True)
@@ -1834,7 +1851,7 @@ def delete_notice(notice_id):
     user_id = int(get_jwt_identity())
     user    = User.query.get_or_404(user_id)
 
-    if user.role.value.lower() != 'admin':
+    if user.role.value != 'admin':
         return jsonify({'message': '관리자만 삭제할 수 있습니다.'}), 403
 
     notice = Notice.query.get_or_404(notice_id)
