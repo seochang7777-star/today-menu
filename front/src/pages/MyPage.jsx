@@ -12,17 +12,19 @@ export default function MyPage() {
   const navigate = useNavigate()
   const { logout: ctxLogout } = useAuth()
   const gauge2Ref = useRef(null)
-  const favoriteMenusRef = useRef(null)
+  const activityTabsRef = useRef(null)
   const location = useLocation();
 
   const [data, setData] = useState(null)
   const [showAllFavorites, setShowAllFavorites] = useState(false)
+  const [activeMyActivityTab, setActiveMyActivityTab] = useState('activity')
   const [savedLocs, setSavedLocs] = useState([])
   const [locSearch, setLocSearch] = useState('')
   const [locResults, setLocResults] = useState([])
   const [pageLoading, setPageLoading] = useState(true)
   const [locLoading, setLocLoading] = useState(false)
   const [locMsg, setLocMsg] = useState('')
+  const [showMannerModal, setShowMannerModal] = useState(false)
 
   // ── 데이터 로드 ───────────────────────────────────────────────────────────
   useEffect(() => {
@@ -35,11 +37,11 @@ export default function MyPage() {
           is_liked: true,
           restaurant: {
             restaurant_id: f.id,
-            id:            f.id,
-            name:          f.name,
-            category:      f.category,
-            address:       f.address || '',
-            avg_rating:    f.avg_rating || 0,
+            id: f.id,
+            name: f.name,
+            category: f.category,
+            address: f.address || '',
+            avg_rating: f.avg_rating || 0,
           },
           recommended_restaurant_id: f.id,
         }));
@@ -74,6 +76,15 @@ export default function MyPage() {
       circle.style.strokeDashoffset = offset
     }
   }, [data])
+
+  useEffect(() => {
+    if (!showMannerModal) return
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') setShowMannerModal(false)
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [showMannerModal])
 
   // ── 카카오 장소 검색 ──────────────────────────────────────────────────────
   const searchPlace = async () => {
@@ -117,7 +128,7 @@ export default function MyPage() {
 
   // ── 찜 토글 ──────────────────────────────────────────────────────────────
   const handleLike = async (log) => {
-    const logId  = log?.log_id
+    const logId = log?.log_id
     const restId = log?.restaurant?.id ?? log?.restaurant?.restaurant_id
 
     // 낙관적 업데이트 — is_liked 토글
@@ -139,14 +150,20 @@ export default function MyPage() {
         await apiMod.post('/api/favorites', { restaurant_id: restId })
       }
     } catch {
-      getMyPage().then(d => setData(d)).catch(() => {})
+      getMyPage().then(d => setData(d)).catch(() => { })
     }
   }
 
   // 통계 카드 '찜한 메뉴' 클릭 시 찜목록 섹션으로 스크롤
   const handleFavoriteView = () => {
     setShowAllFavorites(true)
-    favoriteMenusRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    setActiveMyActivityTab('favorites')
+    activityTabsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }
+
+  const handleReviewView = () => {
+    setActiveMyActivityTab('reviews')
+    activityTabsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
   }
 
   // ── 회원 탈퇴 ────────────────────────────────────────────────────────────
@@ -163,7 +180,7 @@ export default function MyPage() {
 
   // ── 로딩 ─────────────────────────────────────────────────────────────────
   if (!data) return (
-    <div style={{ textAlign: 'center', padding: 60, color: 'var(--text-muted)' }}>
+    <div className="py-[60px] text-center text-[var(--text-muted)]">
       로딩 중...
     </div>
   )
@@ -202,474 +219,560 @@ export default function MyPage() {
   const R = 36
   const circ = 2 * Math.PI * R
   const heroOffset = circ * (1 - Math.min(mannerScore / 50, 1))
+  const mannerItems = [
+    ['파티 참여', (my_parties.length * 0.5).toFixed(1)],
+    ['후기 작성', (displayLikedLogs.length * 0.3).toFixed(1)],
+    ['약속 이행', '1.0'],
+  ]
+  const myActivityTabs = [
+    ['activity', '▣', '활동 내역'],
+    ['reviews', '✎', '내가 쓴 리뷰'],
+    ['favorites', '♥', '메뉴 찜 목록'],
+    ['locations', '⌖', '저장 장소'],
+  ]
 
   return (
     <>
-      <h1 style={{ fontSize: '2.4rem', fontWeight: 900, marginBottom: 24 }}>마이페이지</h1>
+      <div className="mb-5">
+        <h1 className="mb-2 grid justify-center lg:grid-cols-[minmax(0,740px)_300px] text-3xl font-black text-[var(--text-primary)]">마이페이지</h1>
+
+      </div>
 
       {/* ── HERO BANNER ── */}
-      <div className="mypage-hero">
-        <div className="mypage-hero-inner">
-          <div className="profile-avatar">{user.nickname?.[0]}</div>
-          <div className="mypage-hero-text" style={{ flex: 1 }}>
-            <div style={{ fontSize: '.78rem', opacity: .55, textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 4 }}>
-              MY PAGE
+      <div className="mb-6 grid justify-center gap-5 lg:grid-cols-[minmax(0,740px)_300px]">
+        <div className="relative h-[300px] overflow-hidden rounded-[var(--border-radius-xl)] border border-[#f5d2cb] bg-[var(--color-soft)] px-6 py-6 shadow-sm sm:px-8">
+          <div className="relative z-10 flex h-full max-w-[62%] flex-col justify-center">
+            <div className="mb-7 grid h-12 w-12 place-items-center rounded-full bg-[var(--color-primary)] text-lg font-black text-white shadow-sm">
+              {user.nickname?.[0] ?? 'U'}
             </div>
-            <h2>나의 메뉴 취향과 활동을 한눈에 확인하세요.</h2>
-            <p>찜한 메뉴, 프로필, 추천 기록, 매칭 내역을 관리하는 마이페이지입니다.</p>
+            <h2 className="mb-2 text-2xl font-black text-[var(--text-primary)]">
+              {user.nickname ?? '회원'}님, 오늘도 맛있는 하루 보내세요!
+            </h2>
+            <p className="mb-4 text-[.86rem] font-semibold leading-relaxed text-[var(--text-secondary)]">
+              좋아하는 음식과 활동 기록을 한눈에 관리해요.
+            </p>
             <Link
               to="/mypage/edit"
-              className="btn btn-sm"
-              style={{ background: 'rgba(255,255,255,.15)', color: '#fff', border: '1px solid rgba(255,255,255,.3)' }}
+              className="inline-flex w-fit items-center rounded-md mt-2 bg-white px-4 py-2 text-[.82rem] font-black text-[var(--text-primary)] shadow-sm transition hover:-translate-y-0.5 hover:shadow"
             >
-              프로필 수정 →
+              프로필 수정
             </Link>
           </div>
-          <div style={{ flexShrink: 0, textAlign: 'center' }}>
-            <div style={{ position: 'relative', width: 90, height: 90 }}>
-              <svg width="90" height="90" viewBox="0 0 90 90">
-                <circle cx="45" cy="45" r={R} fill="none" stroke="rgba(255,255,255,.15)" strokeWidth="7" />
-                <circle cx="45" cy="45" r={R} fill="none" stroke="#F6AD55" strokeWidth="7"
+
+          <img
+            src="/img/icon/character.png"
+            alt="마이페이지 캐릭터"
+            className="pointer-events-none absolute bottom-0 right-6 h-[250px] object-contain sm:right-10"
+          />
+        </div>
+
+        <div className="h-[300px] rounded-[var(--border-radius-xl)] border border-[var(--border-color)] bg-[var(--bg-white)] px-5 py-5 text-center shadow-sm">
+          <div className="mb-3 text-left text-[.1rfm] font-black text-[var(--text-primary)]">매너온도</div>
+
+          <div className="mx-auto flex h-[180px] w-[180px] items-center justify-center">
+            <div className="relative h-[190px] w-[190px]">
+              <svg width="180" height="180" viewBox="0 0 180 180">
+                <circle cx="90" cy="90" r="60" fill="none" stroke="var(--bg-surface)" strokeWidth="18" />
+                <circle
+                  cx="90"
+                  cy="90"
+                  r="60"
+                  fill="none"
+                  stroke="var(--color-accent)"
+                  strokeWidth="18"
                   strokeLinecap="round"
-                  strokeDasharray={circ}
-                  strokeDashoffset={heroOffset}
-                  transform="rotate(-90 45 45)"
+                  strokeDasharray={2 * Math.PI * 60}
+                  strokeDashoffset={(2 * Math.PI * 60) * (1 - Math.min(mannerScore / 50, 1))}
+                  transform="rotate(-90 90 90)"
                   style={{ transition: 'stroke-dashoffset 1s' }}
                 />
               </svg>
-              <div className="manner-num" style={{ color: '#fff' }}>
-                <span className="manner-val">{mannerScore}</span>
-                <small>°C</small>
+
+              <div className="absolute inset-0 flex flex-col items-center justify-center">
+                <span className="text-2xl font-black leading-none text-[var(--text-primary)]">{mannerScore}</span>
+                <small className="mt-1 text-[.68rem] font-bold text-[var(--text-muted)]">점</small>
               </div>
             </div>
-            <div style={{ color: 'rgba(255,255,255,.65)', fontSize: '.75rem', marginTop: 4 }}>매너온도</div>
           </div>
+          <p className="-mt-3 mb-3 text-[.72rem] font-bold text-[var(--text-muted)]">따뜻한 식사 메이트</p>
+          <button
+            type="button"
+            onClick={() => setShowMannerModal(true)}
+            className="-mt-2 inline-flex items-center justify-center rounded-full bg-[var(--color-soft)] px-4 py-1.5 text-[.75rem] font-black text-[var(--color-primary)] shadow-sm transition hover:-translate-y-0.5 hover:shadow"
+          >
+            매너 점수 보기
+          </button>
         </div>
       </div>
 
       {/* ── STAT ROW ── */}
-      <div className="stat-row">
+      <div className="mx-auto mb-6 grid w-full max-w-[1060px] grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-4">
         <button
           type="button"
-          className="stat-card cursor-pointer text-center transition hover:-translate-y-0.5 hover:border-[#ff6b6b] hover:shadow-md"
           onClick={handleFavoriteView}
+          className="relative min-h-[112px] w-full rounded-[var(--border-radius-lg)] border border-[var(--border-color)] bg-[var(--bg-white)] px-5 py-4 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-[#FEB95C] hover:shadow-md"
         >
-          <div className="stat-num">{displayLikedLogs.length}</div>
-          <div className="stat-label">찜한 메뉴</div>
-          <div style={{ fontSize: '.72rem', color: 'var(--text-muted)', marginTop: 2 }}>
-            총 {displayLikedLogs.length}개 찜함
+          <span className="absolute left-5 top-5 grid h-10 w-10 place-items-center rounded-full bg-[#FFF5F5] text-lg text-[var(--color-primary)]">
+            ♥
+          </span>
+
+          <div className="pl-14 pt-1">
+            <div className="text-2xl font-black leading-none text-[var(--text-primary)]">
+              {displayLikedLogs.length}
+            </div>
+            <div className="mt-2 text-[.82rem] font-bold text-[var(--text-secondary)]">
+              찜한 메뉴
+            </div>
+            <div className="mt-1 flex items-center justify-between text-[.70rem] font-semibold text-[var(--text-muted)]">
+              <span>총 {displayLikedLogs.length}개 찜함</span>
+              <span>›</span>
+            </div>
           </div>
         </button>
-        <div className="stat-card">
-          <div className="stat-num">{rec_logs.length}</div>
-          <div className="stat-label">추천 활동</div>
-          <div style={{ fontSize: '.72rem', color: 'var(--text-muted)', marginTop: 2 }}>
-            최근 추천 {rec_logs.length}회
+
+        <div className="relative min-h-[112px] w-full rounded-[var(--border-radius-lg)] border border-[var(--border-color)] bg-[var(--bg-white)] px-5 py-4 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-[#FEB95C] hover:shadow-md">
+          <span className="absolute left-5 top-5 grid h-10 w-10 place-items-center rounded-full bg-[#EBF5FF] text-lg text-[#3182CE]">
+            <img
+              src="/img/icon/thumb-up.png"
+              alt="추천 활동"
+              className="h-5 w-5 object-contain"
+            />
+          </span>
+
+          <div className="pl-14 pt-1">
+            <div className="text-2xl font-black leading-none text-[var(--text-primary)]">
+              {rec_logs.length}
+            </div>
+            <div className="mt-2 text-[.82rem] font-bold text-[var(--text-secondary)]">
+              추천 활동
+            </div>
+            <div className="mt-1 flex items-center justify-between text-[.70rem] font-semibold text-[var(--text-muted)]">
+              <span>최근 추천 {rec_logs.length}회</span>
+              <span>›</span>
+            </div>
           </div>
         </div>
-        <div className="stat-card">
-          <div className="stat-num">{my_parties.length}</div>
-          <div className="stat-label">매칭 기록</div>
-          <div style={{ fontSize: '.72rem', color: 'var(--text-muted)', marginTop: 2 }}>
-            완료된 파티 {my_parties.length}건
+
+        <div className="relative min-h-[112px] w-full rounded-[var(--border-radius-lg)] border border-[var(--border-color)] bg-[var(--bg-white)] px-5 py-4 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-[#ff6b6b] hover:shadow-md">
+          <span className="absolute left-5 top-5 grid h-10 w-10 place-items-center rounded-full bg-[#FFF5F5] text-lg text-[var(--color-danger)]">
+            👥
+          </span>
+          <div className="pl-14 pt-1">
+            <div className="text-2xl font-black leading-none text-[var(--text-primary)]">
+              {my_parties.length}
+            </div>
+            <div className="mt-2 text-[.82rem] font-bold text-[var(--text-secondary)]">
+              매칭 기록
+            </div>
+            <div className="mt-1 flex items-center justify-between text-[.70rem] font-semibold text-[var(--text-muted)]">
+              <span>완료된 파티 {my_parties.length}건</span>
+              <span>›</span>
+            </div>
           </div>
         </div>
-        <div className="stat-card">
-          <div className="stat-num" style={{ color: 'var(--color-accent)' }}>{mannerScore}</div>
-          <div className="stat-label">매너점수</div>
-          <div style={{ fontSize: '.72rem', color: 'var(--text-muted)', marginTop: 2 }}>
-            {mannerScore}점
+
+        <button
+          type="button"
+          className="relative min-h-[112px] w-full rounded-[var(--border-radius-lg)] border border-[var(--border-color)] bg-[var(--bg-white)] px-5 py-4 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-[#FEB95C] hover:shadow-md"
+          onClick={handleReviewView}
+        >
+          <span className="absolute left-5 top-5 grid h-10 w-10 place-items-center rounded-full bg-[#FFF8E6] text-lg text-[var(--color-accent)]">
+            ★
+          </span>
+
+          <div className="pl-14 pt-1">
+            <div className="text-2xl font-black leading-none text-[var(--text-primary)]">
+              {my_reviews.length}
+            </div>
+            <div className="mt-2 text-[.82rem] font-bold text-[var(--text-secondary)]">
+              내가 작성한 리뷰
+            </div>
+            <div className="mt-1 flex items-center justify-between text-[.70rem] font-semibold text-[var(--text-muted)]">
+              <span>리뷰 보러가기</span>
+              <span>›</span>
+            </div>
           </div>
-        </div>
+        </button>
       </div>
 
       {user?.role?.toLowerCase() === 'admin' && (
-        <div style={{ marginBottom: 16 }}>
+        <div className="mb-4">
           <Link to="/admin"
-            style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '12px 16px', background: '#FFF5F5', border: '1px solid #FED7D7', borderRadius: 10, textDecoration: 'none', fontWeight: 700, color: 'var(--color-danger)' }}>
+            className="flex items-center gap-2 rounded-[10px] border border-[#FED7D7] bg-[#FFF5F5] px-4 py-3 font-bold text-[var(--color-danger)] no-underline">
             ⚙️ 관리자 페이지로 이동
           </Link>
         </div>
       )}
-      {/* ── 프로필 + 매너점수 ── */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 360px', gap: 16, marginBottom: 16 }}>
-        <div className="profile-section">
+      {/* ── 프로필 + 음식 취향 ── */}
+      <div className="mx-auto mb-4 grid w-full max-w-[1060px] gap-4 lg:grid-cols-2">
+        <div className="rounded-[var(--border-radius-lg)] border border-[var(--border-color)] bg-[var(--bg-white)] p-5">
           <div className="mb-4 flex items-center justify-between gap-3">
-            <h3>프로필</h3>
-            <Link to="/mypage/edit" className="btn btn-sm btn-secondary">수정</Link>
+            <h3 className='text-left text-[.1rfm] font-black text-[var(--text-primary)]'>프로필</h3>
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'auto 1fr', gap: 16, alignItems: 'start' }}>
-            <div className="profile-avatar">{user.nickname?.[0]}</div>
-            <div>
-              {[
-                ['닉네임', user.nickname ?? ''],
-                ['이메일', user.email],
-                ['성별', user.gender ?? '미설정'],
-                ['주소지', user.address ?? '없음'],
-                ['선호메뉴', likes.slice(0, 3).join(', ') || '없음'],
-                ['알러지', (user.allergies ?? '').split(',').filter(Boolean).slice(0, 2).join(', ') || '없음'],
-              ].map(([label, val]) => (
-                <div
-                  key={label}
-                  style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid var(--bg-surface)', fontSize: '.88rem' }}
-                >
-                  <span style={{ color: 'var(--text-muted)', fontWeight: 600 }}>{label}</span>
-                  <span style={{ fontWeight: 700 }}>{val}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        <div className="profile-section">
-          <div className="mb-4 flex items-center justify-between gap-3">
-            <h3>매너점수</h3>
-            <Link to="/mypage/manner-history" className="btn btn-sm btn-secondary">상세 내역 →</Link>
-          </div>
-          <div style={{ display: 'flex', gap: 16, alignItems: 'center' }}>
-            <div ref={gauge2Ref} style={{ position: 'relative', width: 100, height: 100, flexShrink: 0 }}>
-              <svg width="100" height="100" viewBox="0 0 100 100">
-                <circle cx="50" cy="50" r="40" fill="none" stroke="var(--bg-surface)" strokeWidth="8" />
-                <circle
-                  className="progress"
-                  cx="50" cy="50" r="40"
-                  fill="none"
-                  stroke="var(--color-accent)"
-                  strokeWidth="8"
-                  strokeLinecap="round"
-                  transform="rotate(-90 50 50)"
-                />
-              </svg>
-              <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-                <span style={{ fontSize: '1.5rem', fontWeight: 800, lineHeight: 1 }}>{mannerScore}</span>
-                <small style={{ fontSize: '.65rem', color: 'var(--text-muted)' }}>점</small>
-              </div>
-            </div>
-            <div>
-              <div style={{ fontWeight: 700, fontSize: '1rem', marginBottom: 6 }}>따뜻한 식사 메이트</div>
-              <p style={{ fontSize: '.82rem', color: 'var(--text-muted)', lineHeight: 1.6 }}>
-                약속, 공감, 후기 기반으로 쌓아두는 점수
-              </p>
-            </div>
-          </div>
-          <hr style={{ border: 'none', borderTop: '1px solid var(--border-color)', margin: '16px 0' }} />
-          {[
-            ['파티 참여', (my_parties.length * 0.5).toFixed(1)],
-            ['후기 작성', (displayLikedLogs.length * 0.3).toFixed(1)],
-            ['약속 이행', '1.0'],
-          ].map(([label, val]) => (
-            <div
-              key={label}
-              style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', fontSize: '.82rem', color: 'var(--text-muted)' }}
-            >
-              <span>{label}</span>
-              <span style={{ fontWeight: 700, color: 'var(--color-success)' }}>+{val}°</span>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* ── 음식 취향 ── */}
-      <div className="profile-section">
-        <div className="mb-4 flex items-center justify-between gap-3">
-          <h3>🍽️ 나의 음식 취향</h3>
-          <Link to="/mypage/edit#food-preferences" className="btn btn-sm btn-secondary">수정 →</Link>
-        </div>
-        <div style={{ marginBottom: 16 }}>
-          <div style={{ fontSize: '.82rem', fontWeight: 700, color: '#1890ff', marginBottom: 8 }}>👍 좋아하는 음식</div>
-          {likes.length > 0 ? (
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-              {likes.map((item, idx) => (
-                <span key={idx} style={{ background: '#e6f7ff', color: '#1890ff', border: '1px solid #91d5ff', padding: '4px 12px', borderRadius: 20, fontSize: '.82rem' }}>
-                  {item}
-                </span>
-              ))}
-            </div>
-          ) : (
-            <p style={{ fontSize: '.82rem', color: 'var(--text-muted)' }}>등록된 선호 음식이 없습니다.</p>
-          )}
-        </div>
-        <div>
-          <div style={{ fontSize: '.82rem', fontWeight: 700, color: '#ff4d4f', marginBottom: 8 }}>👎 기피하는 음식</div>
-          {dislikes.length > 0 ? (
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-              {dislikes.map((item, idx) => (
-                <span key={idx} style={{ background: '#fff1f0', color: '#ff4d4f', border: '1px solid #ffa39e', padding: '4px 12px', borderRadius: 20, fontSize: '.82rem' }}>
-                  {item}
-                </span>
-              ))}
-            </div>
-          ) : (
-            <p style={{ fontSize: '.82rem', color: 'var(--text-muted)' }}>등록된 기피 음식이 없습니다.</p>
-          )}
-        </div>
-      </div>
-
-      {/* ── 메뉴 찜목록 (탭 없이 좋아요 목록만 표시) ── */}
-      <div className="profile-section scroll-mt-28" ref={favoriteMenusRef} id="favorite-menus">
-        <div className="mb-4 flex items-center justify-between gap-3">
-          <h3>메뉴 찜목록</h3>
-          {displayLikedLogs.length > FAVORITE_LIMIT && (
-            <span className="text-xs text-gray-400">
-              총 {displayLikedLogs.length}개 중 {showAllFavorites ? displayLikedLogs.length : FAVORITE_LIMIT}개 표시
-            </span>
-          )}
-        </div>
-
-        {displayLikedLogs.length > 0 ? (
-          <>
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-              {(showAllFavorites ? displayLikedLogs : displayLikedLogs.slice(0, FAVORITE_LIMIT)).map((log) => (
-                <div
-                  className="card rest-card"
-                  key={log.log_id ?? log.restaurant?.restaurant_id}
-                  style={{ position: 'relative' }}
-                >
-                  <button
-                    onClick={(e) => { e.preventDefault(); handleLike(log) }}
-                    style={{ position: 'absolute', top: 8, right: 8, zIndex: 2, background: 'rgba(255,255,255,0.85)', border: 'none', borderRadius: '50%', width: 30, height: 30, cursor: 'pointer', fontSize: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                  >❤️</button>
-                  <Link
-                    to={`/menu/${log.restaurant?.id ?? log.restaurant?.restaurant_id ?? log.recommended_restaurant_id}`}
-                    style={{ textDecoration: 'none', color: 'inherit' }}
-                  >
-                    <RestaurantImage
-                      category={log.restaurant?.category}
-                      name={log.restaurant?.name}
-                      style={{ height: 120, width: '100%', objectFit: 'cover', borderRadius: '8px 8px 0 0' }}
-                    />
-                    <div className="card-body">
-                      <span className="badge badge-primary">{log.restaurant?.category ?? '기타'}</span>
-                      <div className="card-title mt-8">{log.restaurant?.name ?? '식당'}</div>
-                      <div className="rest-addr" style={{ marginTop: 4 }}>
-                        {(log.restaurant?.address ?? '').slice(0, 20)}
-                        {(log.restaurant?.address?.length ?? 0) > 20 ? '...' : ''}
-                      </div>
-                    </div>
-                  </Link>
-                </div>
-              ))}
-            </div>
-            {displayLikedLogs.length > FAVORITE_LIMIT && (
-              <div className="flex justify-center mt-4">
-                <button
-                  type="button"
-                  onClick={() => setShowAllFavorites((v) => !v)}
-                  className="px-5 py-1.5 rounded-md text-sm font-bold bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors"
-                >
-                  {showAllFavorites ? '접기 ▲' : `전체 ${displayLikedLogs.length}개 보기 ▼`}
-                </button>
-              </div>
-            )}
-          </>
-        ) : (
-          <div className="empty-state">
-            <div className="empty-icon">❤️</div>
-            <p>아직 찜한 메뉴가 없습니다</p>
-            <Link to="/menu" className="btn btn-primary btn-sm" style={{ marginTop: 12 }}>
-              메뉴 둘러보기
-            </Link>
-          </div>
-        )}
-      </div>
-
-      {/* ── 활동내역 ── */}
-      <div className="profile-section">
-        <div className="mb-4 flex items-center justify-between gap-3">
-          <h3>활동내역</h3>
-        </div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 12 }}>
-          {rec_logs.slice(0, 3).map((log) => (
-            <div
-              key={log.log_id ?? log.restaurant?.restaurant_id}
-              style={{ display: 'flex', gap: 14, padding: 14, background: 'var(--bg-white)', border: '1px solid var(--border-color)', borderRadius: 'var(--border-radius-lg)' }}
-            >
-              <Link
-                to={`/menu/${log.restaurant?.id ?? log.restaurant?.restaurant_id ?? log.recommended_restaurant_id}`}
-                style={{ display: 'flex', gap: 14, flex: 1, minWidth: 0, textDecoration: 'none', color: 'inherit' }}
+          <div>
+            {[
+              ['닉네임', user.nickname ?? ''],
+              ['이메일', user.email],
+              ['성별', user.gender ?? '미설정'],
+              ['주소지', user.address ?? '없음'],
+              ['선호메뉴', likes.slice(0, 3).join(', ') || '없음'],
+              ['알러지', (user.allergies ?? '').split(',').filter(Boolean).slice(0, 2).join(', ') || '없음'],
+            ].map(([label, val]) => (
+              <div
+                key={label}
+                className="flex justify-between border-b border-[var(--bg-surface)] py-2 text-[.88rem]"
               >
-                <div style={{ width: 40, height: 40, borderRadius: '50%', background: '#FFF5F5', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.1rem', flexShrink: 0 }}>
-                  🤖
-                </div>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: '.72rem', fontWeight: 700, color: 'var(--text-muted)', marginBottom: 2 }}>추천</div>
-                  <div style={{ fontWeight: 700, fontSize: '.9rem' }}>{log.restaurant?.name ?? '식당 추천'}</div>
-                  <div style={{ fontSize: '.8rem', color: 'var(--text-muted)', marginTop: 2 }}>
-                    {log.restaurant?.category ?? ''} · {log.is_liked ? '찜함' : '추천만'}
-                  </div>
-                </div>
-              </Link>
-              <button
-                onClick={() => handleLike(log)}
-                style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.1rem' }}
-              >
-                {log.is_liked ? '❤️' : '🤍'}
-              </button>
-            </div>
-          ))}
-          {my_parties.slice(0, 2).map((p) => (
-            <Link
-              to={`/party/${p.party_id}?tab=chat`}
-              key={p.party_id}
-              style={{ display: 'flex', gap: 14, padding: 14, background: 'var(--bg-white)', border: '1px solid var(--border-color)', borderRadius: 'var(--border-radius-lg)', color: 'inherit', textDecoration: 'none' }}
-            >
-              <div style={{ width: 40, height: 40, borderRadius: '50%', background: '#F0FFF4', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.1rem', flexShrink: 0 }}>
-                👥
-              </div>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: '.72rem', fontWeight: 700, color: 'var(--text-muted)', marginBottom: 2 }}>매칭/파티</div>
-                <div style={{ fontWeight: 700, fontSize: '.9rem' }}>{p.title}</div>
-                <div style={{ fontSize: '.8rem', color: 'var(--text-muted)', marginTop: 2 }}>
-                  {p.restaurant?.name ?? ''} · {p.meeting_time
-                    ? new Date(p.meeting_time).toLocaleString('ko-KR', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })
-                    : ''}
-                </div>
-              </div>
-            </Link>
-          ))}
-          {rec_logs.length === 0 && my_parties.length === 0 && (
-            <div className="empty-state" style={{ gridColumn: '1/-1' }}>
-              <div className="empty-icon">📋</div>
-              <p>아직 활동 내역이 없습니다</p>
-            </div>
-          )}
-        </div>
-        <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 12 }}>
-          <Link
-            to="/support"
-            state={{ defaultTab: 'inquiry' }}
-            style={{
-              background: 'var(--color-primary)', color: '#fff',
-              borderRadius: 8, padding: '7px 16px',
-              fontSize: '.85rem', fontWeight: 700,
-              textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 4,
-            }}
-          >
-            💬 고객문의
-          </Link>
-        </div>
-      </div>
-
-      {/* ── 내가 쓴 리뷰 ── */}
-      <div className="profile-section">
-        <div className="mb-4 flex items-center justify-between gap-3">
-          <h3>⭐ 내가 쓴 리뷰</h3>
-        </div>
-        {my_reviews.length === 0 ? (
-          <p style={{ color: 'var(--text-muted)', fontSize: '.9rem', textAlign: 'center', padding: '16px 0' }}>아직 작성한 리뷰가 없습니다</p>
-        ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-            {my_reviews.map((rv) => (
-              <div key={rv.review_id || rv.id} style={{ background: 'var(--bg-white)', borderRadius: 10, padding: '12px 16px', border: '1px solid var(--border-color)' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
-                  <span style={{ fontWeight: 700, fontSize: '.95rem' }}>{rv.restaurant_name || rv.restaurant?.name || '식당'}</span>
-                  <span style={{ color: '#F6AD55', fontWeight: 700 }}>{'★'.repeat(rv.rating)}{'☆'.repeat(5 - rv.rating)}</span>
-                </div>
-                <p style={{ fontSize: '.88rem', color: 'var(--text-muted)', margin: '0 0 4px' }}>{rv.content}</p>
-                <span style={{ fontSize: '.78rem', color: 'var(--text-light)' }}>{rv.created_at?.slice(0, 10)}</span>
+                <span className="font-semibold text-[var(--text-muted)]">{label}</span>
+                <span className="font-bold">{val}</span>
               </div>
             ))}
           </div>
-        )}
+        </div>
+
+        <div className="rounded-[var(--border-radius-lg)] border border-[var(--border-color)] bg-[var(--bg-white)] p-5">
+          <div className="flex items-center justify-between gap-3">
+            <h3 className='text-left text-[.1rfm] font-black text-[var(--text-primary)]'>나의 음식 취향</h3>
+
+            <Link to="/mypage/edit#food-preferences"
+              className="inline-flex w-fit items-center rounded-md mt-2 bg-white px-4 py-2 text-[.82rem] font-black text-[var(--text-primary)] 
+            shadow-sm transition hover:-translate-y-0.5 hover:shadow">
+              수정
+            </Link>
+          </div>
+          <div className="mb-2 border-b border-[var(--border-color)] py-4">
+            <div className="mb-3 flex items-center gap-2 text-[.95rem] font-bold text-[#1890ff]">
+              <span className="grid h-10 w-10 place-items-center rounded-full bg-[#EBF5FF]">
+                <img
+                  src="/img/icon/thumb-up.png"
+                  alt="좋아하는 음식"
+                  className="h-5 w-5 object-contain"
+                />
+              </span>
+              <span>좋아하는 음식</span>
+            </div>
+            {likes.length > 0 ? ( 
+              <div className="mb-2 flex flex-wrap gap-2">
+                {likes.map((item, idx) => (
+                  <span key={idx} className="rounded-[20px] border border-[#91d5ff] bg-[#e6f7ff] px-3 py-1 text-[.82rem] text-[#1890ff]">
+                    {item}
+                  </span>
+                ))}
+              </div>
+            ) : (
+              <p className="text-[.95rem] text-[var(--text-muted)]">등록된 선호 음식이 없습니다.</p>
+            )}
+          </div>
+
+            <div className="mb-3 mt-5 flex items-center gap-2 text-[.95rem] font-bold text-[#FF4D4F]">
+              <span className="grid h-10 w-10 place-items-center rounded-full bg-[#FFF3F0]">
+                <img
+                  src="/img/icon/thumbs-down.png"
+                  alt="기피하는 음식"
+                  className="h-5 w-5 object-contain"
+                />
+              </span>
+              <span>기피하는 음식</span>
+            </div>
+            {dislikes.length > 0 ? (
+              <div className="flex flex-wrap gap-2">
+                {dislikes.map((item, idx) => (
+                  <span key={idx} className="rounded-[20px] border border-[#ffa39e] bg-[#fff1f0] px-3 py-1 text-[.82rem] text-[#ff4d4f]">
+                    {item}
+                  </span>
+                ))}
+              </div>
+            ) : (
+              <p className="text-[.95rem] text-[var(--text-muted)]">등록된 기피 음식이 없습니다.</p>
+            )}
+        </div>
       </div>
 
-      {/* ── 저장 장소 ── */}
-      <div className="profile-section">
-        <div className="mb-4 flex items-center justify-between gap-3">
-          <h3>
-            📍 저장 장소{' '}
-            <span style={{ fontSize: '.8rem', color: 'var(--text-muted)', fontWeight: 400 }}>
-              ({savedLocs.length}/3)
-            </span>
-          </h3>
-        </div>
-        <p style={{ fontSize: '.82rem', color: 'var(--text-muted)', marginBottom: 14 }}>
-          자주 가는 장소를 최대 3개 저장하면 챗봇에서 선택해 근처 맛집을 추천받을 수 있어요.
-        </p>
-
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 16 }}>
-          {savedLocs.map((loc, idx) => (
-            <div
-              key={idx}
-              style={{ display: 'flex', alignItems: 'center', gap: 12, background: 'var(--bg-surface)', borderRadius: 8, padding: '10px 14px', border: '1px solid var(--border-color)' }}
-            >
-              <div style={{ width: 28, height: 28, borderRadius: '50%', flexShrink: 0, background: ['#E53E3E', '#3182CE', '#38A169'][idx], color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '.75rem', fontWeight: 800 }}>
-                {idx + 1}
-              </div>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontWeight: 700, fontSize: '.9rem' }}>{loc.name}</div>
-                <div style={{ fontSize: '.75rem', color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                  {loc.address}
-                </div>
-              </div>
+      {/* ── 나의 활동 탭 ── */}
+      <div
+        ref={activityTabsRef}
+        id="my-activity-tabs"
+        className="mx-auto mb-4 scroll-mt-28 rounded-[var(--border-radius-lg)] border border-[var(--border-color)] bg-[var(--bg-white)] p-5 shadow-sm w-full max-w-[1060px]"
+      >
+        <div className="mb-6 grid grid-cols-2 border-b border-[var(--border-color)] sm:grid-cols-4">
+          {myActivityTabs.map(([tabKey, icon, label]) => {
+            const isActive = activeMyActivityTab === tabKey
+            return (
               <button
-                onClick={() => removeLoc(idx)}
-                style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', fontSize: '1rem', padding: 4, flexShrink: 0 }}
+                key={tabKey}
+                type="button"
+                onClick={() => setActiveMyActivityTab(tabKey)}
+                className={`flex items-center justify-center gap-2 border-b-2 px-3 py-4 text-[.9rem] font-black transition ${
+                  isActive
+                    ? 'border-[var(--color-primary)] text-[var(--color-primary)]'
+                    : 'border-transparent text-[var(--text-secondary)] hover:text-[var(--color-primary)]'
+                }`}
               >
-                ✕
+                <span className="text-base leading-none">{icon}</span>
+                <span>{label}</span>
               </button>
-            </div>
-          ))}
-          {savedLocs.length < 3 && Array.from({ length: 3 - savedLocs.length }).map((_, i) => (
-            <div
-              key={`empty-${i}`}
-              style={{ display: 'flex', alignItems: 'center', gap: 12, background: 'transparent', borderRadius: 8, padding: '10px 14px', border: '1.5px dashed var(--border-color)' }}
-            >
-              <div style={{ width: 28, height: 28, borderRadius: '50%', background: 'var(--bg-surface)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '.75rem', color: 'var(--text-light)', flexShrink: 0 }}>
-                {savedLocs.length + i + 1}
-              </div>
-              <div style={{ fontSize: '.82rem', color: 'var(--text-muted)' }}>장소를 추가하세요</div>
-            </div>
-          ))}
+            )
+          })}
         </div>
 
-        {savedLocs.length < 3 && (
+        {activeMyActivityTab === 'activity' && (
           <div>
-            <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
-              <input
-                className="form-control"
-                style={{ flex: 1 }}
-                placeholder="장소명 검색 (예: 우리집, 회사, 학교...)"
-                value={locSearch}
-                onChange={(e) => setLocSearch(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && searchPlace()}
-              />
-              <button
-                className="btn btn-secondary btn-sm"
-                onClick={searchPlace}
-                disabled={locLoading}
-                style={{ flexShrink: 0 }}
-              >
-                {locLoading ? '...' : '🔍 검색'}
-              </button>
-            </div>
-            {locMsg && (
-              <div style={{ fontSize: '.8rem', padding: '6px 10px', borderRadius: 6, marginBottom: 8, background: locMsg.startsWith('✅') ? '#F0FFF4' : '#FFF5F5', color: locMsg.startsWith('✅') ? '#276749' : '#C53030' }}>
-                {locMsg}
-              </div>
-            )}
-            {locResults.length > 0 && (
-              <div style={{ border: '1px solid var(--border-color)', borderRadius: 8, overflow: 'hidden', maxHeight: 220, overflowY: 'auto' }}>
-                {locResults.slice(0, 6).map((p) => (
-                  <div
-                    key={p.id}
-                    style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', borderBottom: '1px solid var(--bg-surface)', background: 'var(--bg-white)' }}
+            <div className="grid grid-cols-[repeat(auto-fit,minmax(220px,1fr))] gap-3">
+              {rec_logs.slice(0, 3).map((log) => (
+                <div
+                  key={log.log_id ?? log.restaurant?.restaurant_id}
+                  className="flex gap-3.5 rounded-[var(--border-radius-lg)] border border-[var(--border-color)] bg-[var(--bg-white)] p-3.5"
+                >
+                  <Link
+                    to={`/menu/${log.restaurant?.id ?? log.restaurant?.restaurant_id ?? log.recommended_restaurant_id}`}
+                    className="flex min-w-0 flex-1 gap-3.5 text-inherit no-underline"
                   >
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontWeight: 700, fontSize: '.88rem' }}>{p.name}</div>
-                      <div style={{ fontSize: '.75rem', color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                        {p.address}
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#FFF5F5] text-[1.1rem]">
+                      🤖
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="mb-0.5 text-[.72rem] font-bold text-[var(--text-muted)]">추천</div>
+                      <div className="text-[.9rem] font-bold">{log.restaurant?.name ?? '식당 추천'}</div>
+                      <div className="mt-0.5 text-[.8rem] text-[var(--text-muted)]">
+                        {log.restaurant?.category ?? ''} · {log.is_liked ? '찜함' : '추천만'}
                       </div>
                     </div>
-                    <button
-                      className="btn btn-primary btn-sm"
-                      style={{ fontSize: '.75rem', flexShrink: 0 }}
-                      onClick={() => addLoc(p)}
-                    >
-                      + 저장
-                    </button>
+                  </Link>
+                  <button
+                    onClick={() => handleLike(log)}
+                    className="border-0 bg-transparent text-[1.1rem]"
+                  >
+                    {log.is_liked ? '❤️' : '🤍'}
+                  </button>
+                </div>
+              ))}
+              {my_parties.slice(0, 2).map((p) => (
+                <Link
+                  to={`/party/${p.party_id}?tab=chat`}
+                  key={p.party_id}
+                  className="flex gap-3.5 rounded-[var(--border-radius-lg)] border border-[var(--border-color)] bg-[var(--bg-white)] p-3.5 text-inherit no-underline"
+                >
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#F0FFF4] text-[1.1rem]">
+                    👥
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="mb-0.5 text-[.72rem] font-bold text-[var(--text-muted)]">매칭/파티</div>
+                    <div className="text-[.9rem] font-bold">{p.title}</div>
+                    <div className="mt-0.5 text-[.8rem] text-[var(--text-muted)]">
+                      {p.restaurant?.name ?? ''} · {p.meeting_time
+                        ? new Date(p.meeting_time).toLocaleString('ko-KR', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })
+                        : ''}
+                    </div>
+                  </div>
+                </Link>
+              ))}
+              {rec_logs.length === 0 && my_parties.length === 0 && (
+                <div className="empty-state col-span-full">
+                  <div className="empty-icon">📋</div>
+                  <p>아직 활동 내역이 없습니다</p>
+                </div>
+              )}
+            </div>
+            <div className="mt-3 flex justify-end">
+              <Link
+                to="/support"
+                state={{ defaultTab: 'inquiry' }}
+                className="inline-flex items-center gap-1 rounded-lg bg-[var(--color-primary)] px-4 py-[7px] text-[.85rem] font-bold text-white no-underline"
+              >
+                💬 고객문의
+              </Link>
+            </div>
+          </div>
+        )}
+
+        {activeMyActivityTab === 'reviews' && (
+          <div>
+            {my_reviews.length === 0 ? (
+              <p className="py-10 text-center text-[.9rem] text-[var(--text-muted)]">아직 작성한 리뷰가 없습니다</p>
+            ) : (
+              <div className="flex flex-col gap-2.5">
+                {my_reviews.map((rv) => (
+                  <div key={rv.review_id || rv.id} className="rounded-[10px] border border-[var(--border-color)] bg-[var(--bg-white)] px-4 py-3">
+                    <div className="mb-1 flex items-center justify-between">
+                      <span className="text-[.95rem] font-bold">{rv.restaurant_name || rv.restaurant?.name || '식당'}</span>
+                      <span className="font-bold text-[#F6AD55]">{'★'.repeat(rv.rating)}{'☆'.repeat(5 - rv.rating)}</span>
+                    </div>
+                    <p className="mb-1 mt-0 text-[.88rem] text-[var(--text-muted)]">{rv.content}</p>
+                    <span className="text-[.78rem] text-[var(--text-light)]">{rv.created_at?.slice(0, 10)}</span>
                   </div>
                 ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {activeMyActivityTab === 'favorites' && (
+          <div>
+            <div className="mb-4 flex items-center justify-between gap-3">
+              <h3>메뉴 찜목록</h3>
+              {displayLikedLogs.length > FAVORITE_LIMIT && (
+                <span className="text-xs text-gray-400">
+                  총 {displayLikedLogs.length}개 중 {showAllFavorites ? displayLikedLogs.length : FAVORITE_LIMIT}개 표시
+                </span>
+              )}
+            </div>
+
+            {displayLikedLogs.length > 0 ? (
+              <>
+                <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+                  {(showAllFavorites ? displayLikedLogs : displayLikedLogs.slice(0, FAVORITE_LIMIT)).map((log) => (
+                    <div
+                      className="card rest-card relative"
+                      key={log.log_id ?? log.restaurant?.restaurant_id}
+                    >
+                      <button
+                        onClick={(e) => { e.preventDefault(); handleLike(log) }}
+                        className="absolute right-2 top-2 z-[2] flex h-[30px] w-[30px] items-center justify-center rounded-full border-0 bg-white/85 text-base"
+                      >❤️</button>
+                      <Link
+                        to={`/menu/${log.restaurant?.id ?? log.restaurant?.restaurant_id ?? log.recommended_restaurant_id}`}
+                        className="text-inherit no-underline"
+                      >
+                        <RestaurantImage
+                          category={log.restaurant?.category}
+                          name={log.restaurant?.name}
+                          height={120}
+                          className="h-[120px] w-full rounded-t-lg object-cover"
+                        />
+                        <div className="card-body">
+                          <span className="badge badge-primary">{log.restaurant?.category ?? '기타'}</span>
+                          <div className="card-title mt-8">{log.restaurant?.name ?? '식당'}</div>
+                          <div className="rest-addr mt-1">
+                            {(log.restaurant?.address ?? '').slice(0, 20)}
+                            {(log.restaurant?.address?.length ?? 0) > 20 ? '...' : ''}
+                          </div>
+                        </div>
+                      </Link>
+                    </div>
+                  ))}
+                </div>
+                {displayLikedLogs.length > FAVORITE_LIMIT && (
+                  <div className="mt-4 flex justify-center">
+                    <button
+                      type="button"
+                      onClick={() => setShowAllFavorites((v) => !v)}
+                      className="rounded-md bg-gray-100 px-5 py-1.5 text-sm font-bold text-gray-600 transition-colors hover:bg-gray-200"
+                    >
+                      {showAllFavorites ? '접기 ▲' : `전체 ${displayLikedLogs.length}개 보기 ▼`}
+                    </button>
+                  </div>
+                )}
+              </>
+            ) : (
+              <div className="empty-state">
+                <div className="empty-icon">❤️</div>
+                <p>아직 찜한 메뉴가 없습니다</p>
+                <Link to="/menu" className="btn btn-primary btn-sm mt-3">
+                  메뉴 둘러보기
+                </Link>
+              </div>
+            )}
+          </div>
+        )}
+
+        {activeMyActivityTab === 'locations' && (
+          <div>
+            <div className="mb-4 flex items-center justify-between gap-3">
+              <h3>
+                📍 저장 장소{' '}
+                <span className="text-[.8rem] font-normal text-[var(--text-muted)]">
+                  ({savedLocs.length}/3)
+                </span>
+              </h3>
+            </div>
+            <p className="mb-3.5 text-[.82rem] text-[var(--text-muted)]">
+              자주 가는 장소를 최대 3개 저장하면 챗봇에서 선택해 근처 맛집을 추천받을 수 있어요.
+            </p>
+
+            <div className="mb-4 flex flex-col gap-2">
+              {savedLocs.map((loc, idx) => (
+                <div
+                  key={idx}
+                  className="flex items-center gap-3 rounded-lg border border-[var(--border-color)] bg-[var(--bg-surface)] px-3.5 py-2.5"
+                >
+                  <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[.75rem] font-extrabold text-white" style={{ background: ['#E53E3E', '#3182CE', '#38A169'][idx] }}>
+                    {idx + 1}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="text-[.9rem] font-bold">{loc.name}</div>
+                    <div className="truncate text-[.75rem] text-[var(--text-muted)]">
+                      {loc.address}
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => removeLoc(idx)}
+                    className="shrink-0 border-0 bg-transparent p-1 text-base text-[var(--text-muted)]"
+                  >
+                    ✕
+                  </button>
+                </div>
+              ))}
+              {savedLocs.length < 3 && Array.from({ length: 3 - savedLocs.length }).map((_, i) => (
+                <div
+                  key={`empty-${i}`}
+                  className="flex items-center gap-3 rounded-lg border-[1.5px] border-dashed border-[var(--border-color)] bg-transparent px-3.5 py-2.5"
+                >
+                  <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[var(--bg-surface)] text-[.75rem] text-[var(--text-light)]">
+                    {savedLocs.length + i + 1}
+                  </div>
+                  <div className="text-[.82rem] text-[var(--text-muted)]">장소를 추가하세요</div>
+                </div>
+              ))}
+            </div>
+
+            {savedLocs.length < 3 && (
+              <div>
+                <div className="mb-2 flex gap-2">
+                  <input
+                    className="form-control flex-1"
+                    placeholder="장소명 검색 (예: 우리집, 회사, 학교...)"
+                    value={locSearch}
+                    onChange={(e) => setLocSearch(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && searchPlace()}
+                  />
+                  <button
+                    className="btn btn-secondary btn-sm shrink-0"
+                    onClick={searchPlace}
+                    disabled={locLoading}
+                  >
+                    {locLoading ? '...' : '🔍 검색'}
+                  </button>
+                </div>
+                {locMsg && (
+                  <div
+                    className="mb-2 rounded-md px-2.5 py-1.5 text-[.8rem]"
+                    style={{ background: locMsg.startsWith('✅') ? '#F0FFF4' : '#FFF5F5', color: locMsg.startsWith('✅') ? '#276749' : '#C53030' }}
+                  >
+                    {locMsg}
+                  </div>
+                )}
+                {locResults.length > 0 && (
+                  <div className="max-h-[220px] overflow-y-auto overflow-hidden rounded-lg border border-[var(--border-color)]">
+                    {locResults.slice(0, 6).map((p) => (
+                      <div
+                        key={p.id}
+                        className="flex items-center gap-2.5 border-b border-[var(--bg-surface)] bg-[var(--bg-white)] px-3.5 py-2.5"
+                      >
+                        <div className="min-w-0 flex-1">
+                          <div className="text-[.88rem] font-bold">{p.name}</div>
+                          <div className="truncate text-[.75rem] text-[var(--text-muted)]">
+                            {p.address}
+                          </div>
+                        </div>
+                        <button
+                          className="btn btn-primary btn-sm shrink-0 text-[.75rem]"
+                          onClick={() => addLoc(p)}
+                        >
+                          + 저장
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -677,17 +780,85 @@ export default function MyPage() {
       </div>
 
       {/* ── 회원 탈퇴 ── */}
-      <div style={{ marginTop: 56, borderTop: '1px solid var(--border-color)', paddingTop: 24, textAlign: 'right' }}>
-        <p style={{ color: 'var(--text-muted)', fontSize: '.85rem', marginBottom: 8 }}>
+      <div className="mx-auto mb-6 grid w-full max-w-[1060px] grid-cols-1 gap-4">
+      <div className="mt-10 border-t border-[var(--border-color)] pt-6 text-right">
+        <p className="mb-2 text-[.85rem] text-[var(--text-muted)]">
           더 이상 서비스를 이용하고 싶지 않으신가요?
         </p>
         <button
           onClick={handleWithdraw}
-          style={{ background: '#E53E3E', color: '#fff', border: 'none', borderRadius: 4, padding: '6px 12px', fontSize: '.85rem', fontWeight: 700, cursor: 'pointer' }}
+          className="rounded bg-[#E53E3E] px-3 py-1.5 text-[.85rem] font-bold text-white border-0"
         >
           🚨 회원 탈퇴하기
         </button>
       </div>
+      </div>
+      
+      {/* 모달창 페이지 */}
+      {showMannerModal && (
+        <div
+          className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/35 px-4 py-8"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="manner-modal-title"
+          onClick={() => setShowMannerModal(false)}
+        >
+          <div
+            className="relative w-full max-w-[430px] rounded-[18px] bg-white p-6 shadow-[0_18px_50px_rgba(42,29,26,.18)]"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="mb-7 flex items-center justify-between gap-4">
+              <h2 id="manner-modal-title" className="text-xl font-black text-[var(--text-primary)]">
+                매너점수
+              </h2>
+            </div>
+
+            <button
+              type="button"
+              className="absolute right-4 top-4 grid h-8 w-8 place-items-center rounded-full border-0 bg-[var(--bg-surface)] text-base font-bold text-[var(--text-muted)]"
+              aria-label="매너점수 모달 닫기"
+              onClick={() => setShowMannerModal(false)}
+            >
+              ×
+            </button>
+
+            <div className="flex items-center gap-4 mb-3">
+              <div ref={gauge2Ref} className="relative h-[100px] w-[100px] shrink-0">
+                <svg width="100" height="100" viewBox="0 0 100 100">
+                  <circle cx="50" cy="50" r="40" fill="none" stroke="var(--bg-surface)" strokeWidth="8" />
+                  <circle
+                    className="progress"
+                    cx="50" cy="50" r="40"
+                    fill="none"
+                    stroke="var(--color-accent)"
+                    strokeWidth="8"
+                    strokeLinecap="round"
+                    transform="rotate(-90 50 50)"
+                  />
+                </svg>
+                <div className="absolute inset-0 flex flex-col items-center justify-center">
+                  <span className="mt-2 text-2xl font-extrabold leading-none">{mannerScore}</span>
+                  <small className="mt-2 text-[.70rem] text-[var(--text-muted)]">점</small>
+                </div>
+              </div>
+
+              
+
+            </div>
+
+            <hr className="mb-6 border-0 border-t border-[var(--border-color)]" />
+
+            <div className="space-y-5">
+              {mannerItems.map(([label, val]) => (
+                <div key={label} className="flex items-center justify-between text-base">
+                  <span className="font-medium text-[var(--text-muted)]">{label}</span>
+                  <span className="font-black text-[var(--color-success)]">+{val}°</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
     </>
   )
 }

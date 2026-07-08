@@ -8,7 +8,7 @@
   --color-secondary: #FFEE7F;
   --color-cream: #FDFAD1;
   --color-accent: #FEB95C;
-  --color-soft: #F1B8AE;
+  --color-soft: #FEEDEC ;
   --color-success: #4A7C59;
   --color-warning: #D9A05B;
   --color-danger: #E84F55;
@@ -490,19 +490,7 @@ button {
 .party-recommend-card { background: var(--bg-surface); border-radius: var(--border-radius); padding: 12px; font-size: .82rem; }
 .party-recommend-thumb { height: 80px; background: var(--border-color); border-radius: 6px; margin-bottom: 8px; display: flex; align-items: center; justify-content: center; font-size: 1.8rem; }
 
-/* My page */
-.mypage-hero { background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark)); color: #fff; border-radius: var(--border-radius-xl); padding: 28px 32px; margin-bottom: 24px; }
-.mypage-hero-inner { display: flex; gap: 20px; align-items: flex-start; flex-wrap: wrap; }
-.mypage-hero-text h2 { font-size: 1.6rem; font-weight: 900; margin-bottom: 4px; }
-.mypage-hero-text p { opacity: .78; font-size: .88rem; margin-bottom: 14px; }
-.stat-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 24px; }
-.stat-card { background: var(--bg-white); border: 1px solid var(--border-color); border-radius: var(--border-radius-lg); padding: 16px; text-align: center; }
-.stat-num { font-size: 1.6rem; font-weight: 800; color: var(--text-primary); }
-.stat-label { font-size: .78rem; color: var(--text-muted); margin-top: 4px; }
-.manner-num { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-.manner-num span { font-size: 1.3rem; font-weight: 800; line-height: 1; }
-.manner-num small { font-size: .65rem; }
-.manner-val { font-size: 1.3rem; font-weight: 800; line-height: 1; }
+/* My page shared with manner/party detail pages */
 .profile-section { background: var(--bg-white); border: 1px solid var(--border-color); border-radius: var(--border-radius-lg); padding: 20px; margin-bottom: 16px; }
 
 /* Game */
@@ -545,13 +533,8 @@ button {
 .search-bar .btn { border-radius: 24px; }
 
 @media (max-width: 768px) {
-  .stat-row { grid-template-columns: repeat(2, 1fr); }
   .popular-section { grid-template-columns: 1fr; }
   .news-grid { grid-template-columns: 1fr; }
-}
-
-@media (max-width: 640px) {
-  .stat-row { grid-template-columns: repeat(2, 1fr); }
 }
 
 /* ── 팀원(yeyeon) 병합 CSS ────────────────────────────────────────── */

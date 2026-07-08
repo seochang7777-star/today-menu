@@ -1,4 +1,3 @@
-// front/src/pages/MannerHistory.jsx
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { getMannerHistory } from '../api/services'
@@ -150,5 +149,7 @@ export default function MannerHistory() {
       </div>
     </>
   )
+
 }
+
 
