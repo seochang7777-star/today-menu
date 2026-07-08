@@ -318,7 +318,13 @@ export default function Home() {
                 오늘 먹기 좋은 메뉴를 골라드려요
               </p>
               <div className={bannerActionsClass}>
-                <Link to="/game" className={heroButtonLightClass}>추천 받기 →</Link>
+                <button
+                  className={heroButtonLightClass}
+                  onClick={() => {
+                    if (!user) { alert('로그인 후 이용 가능합니다.'); return }
+                    window.dispatchEvent(new CustomEvent('open-chatbot'))
+                  }}
+                >AI 추천 받기 →</button>
               </div>
             </div>
             <img
