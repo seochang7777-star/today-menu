@@ -45,6 +45,8 @@ export default function RestaurantImage({
   id,
   height = 180,
   iconSize = "2.5rem",
+  className = "",
+  style,
 }) {
   const [imgError, setImgError] = useState(false);
 
@@ -53,6 +55,7 @@ export default function RestaurantImage({
 
   return (
     <div
+      className={className}
       style={{
         height,
         overflow: "hidden",
@@ -60,6 +63,7 @@ export default function RestaurantImage({
         alignItems: "center",
         justifyContent: "center",
         background: "var(--bg-surface)",
+        ...style,
       }}
     >
       {!imgError && src ? (
