@@ -388,6 +388,30 @@ def naver_login():
     return jsonify({'access_token': access_token, 'refresh_token': refresh_token, **serialize_user(user)}), 200
 
 # ── 비밀번호 찾기 ─────────────────────────────────────────────────────────────
+@auth_bp.route('/me', methods=['DELETE'])
+@jwt_login_required
+def delete_account():
+    """회원 탈퇴 (본인)"""
+    user_id = int(get_jwt_identity())
+    user = User.query.get_or_404(user_id)
+    try:
+        MannerVote.query.filter(
+            (MannerVote.voter_id == user_id) | (MannerVote.target_id == user_id)
+        ).delete(synchronize_session=False)
+        RecommendationLog.query.filter_by(user_id=user_id).delete()
+        Favorite.query.filter_by(user_id=user_id).delete()
+        Review.query.filter_by(user_id=user_id).delete()
+        Inquiry.query.filter_by(user_id=user_id).delete()
+        Report.query.filter(
+            (Report.reporter_id == user_id) | (Report.reported_user_id == user_id)
+        ).delete(synchronize_session=False)
+        db.session.delete(user)
+        db.session.commit()
+        return jsonify({'message': '회원 탈퇴가 완료되었습니다.'}), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'message': f'탈퇴 중 오류: {str(e)}'}), 500
+
 @auth_bp.route('/reset-password-direct', methods=['POST'])
 def reset_password_direct():
     data = request.get_json()
@@ -560,11 +584,13 @@ def create_restaurant():
     rest = Restaurant(
         name=data.get('name', ''),
         address=data.get('address', ''),
+        phone=data.get('phone', ''),
         latitude=data.get('latitude'),
         longitude=data.get('longitude'),
         category=data.get('category', '기타'),
         description=data.get('description', ''),
         avg_rating=data.get('avg_rating', 0.0),
+        business_hours=data.get('business_hours', ''),
     )
     db.session.add(rest)
     db.session.commit()
@@ -1041,9 +1067,23 @@ def admin_users():
 @admin_required
 def admin_delete_user(user_id):
     user = User.query.get_or_404(user_id)
-    db.session.delete(user)
-    db.session.commit()
-    return jsonify({'message': '탈퇴 처리되었습니다.'}), 200
+    try:
+        MannerVote.query.filter(
+            (MannerVote.voter_id == user_id) | (MannerVote.target_id == user_id)
+        ).delete(synchronize_session=False)
+        RecommendationLog.query.filter_by(user_id=user_id).delete()
+        Favorite.query.filter_by(user_id=user_id).delete()
+        Review.query.filter_by(user_id=user_id).delete()
+        Inquiry.query.filter_by(user_id=user_id).delete()
+        Report.query.filter(
+            (Report.reporter_id == user_id) | (Report.reported_user_id == user_id)
+        ).delete(synchronize_session=False)
+        db.session.delete(user)
+        db.session.commit()
+        return jsonify({'message': '강제 탈퇴 처리되었습니다.'}), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'message': f'처리 중 오류: {str(e)}'}), 500
 
 @api_bp.route('/admin/reviews', methods=['GET'])
 @admin_required
@@ -1105,6 +1145,27 @@ def admin_delete_review(review_id):
 
 
 # ── OpenAI 챗봇 ───────────────────────────────────────────────────────────────
+def _address_to_coord(address):
+    """카카오 로컬 API로 주소 → 좌표 변환"""
+    import requests as _req
+    kakao_key = os.environ.get('KAKAO_REST_API_KEY', '')
+    if not kakao_key or not address or address == '없음':
+        return None, None
+    try:
+        res = _req.get(
+            'https://dapi.kakao.com/v2/local/search/address.json',
+            headers={'Authorization': f'KakaoAK {kakao_key}'},
+            params={'query': address},
+            timeout=3
+        )
+        docs = res.json().get('documents', [])
+        if docs:
+            return float(docs[0]['y']), float(docs[0]['x'])  # lat, lng
+    except Exception:
+        pass
+    return None, None
+
+
 def _build_user_context(user_id):
     user = User.query.get_or_404(user_id)
     user_prefs = user.preferences or {}
@@ -1172,9 +1233,18 @@ def chatbot():
             loc_name = chosen['name']
 
     nearby_list = []
-    if lat and lng:
 
-        lat_buffer = 0.0091 # 대략 1km 마진
+    # 위치 없으면 사용자 주소지 → 좌표 변환 fallback
+    addr_fallback_used = False
+    if not (lat and lng) and user.address and user.address != '없음':
+        addr_lat, addr_lng = _address_to_coord(user.address)
+        if addr_lat and addr_lng:
+            lat, lng = addr_lat, addr_lng
+            loc_name = f"{user.address} (주소지 기반)"
+            addr_fallback_used = True
+
+    if lat and lng:
+        lat_buffer = 0.0091  # 대략 1km 마진
         lng_buffer = 0.0113
         filtered_for_chat = Restaurant.query.filter(
             Restaurant.latitude.between(lat - lat_buffer, lat + lat_buffer),
@@ -1194,17 +1264,21 @@ def chatbot():
 
     from sqlalchemy import text as _t_chat
     _chat_rows = db.session.execute(_t_chat(
-        "SELECT name, category FROM restaurants ORDER BY avg_rating DESC LIMIT 30"
+        "SELECT name, category FROM restaurants ORDER BY avg_rating DESC LIMIT 200"
     )).fetchall()
     all_rests = [f"{row[0]}({row[1]})" for row in _chat_rows]
     all_rests_str = ', '.join(all_rests) or '등록된 식당 없음'
 
     if mode == 'recommend':
-        location_section = (
-            f"- 현재 위치 반경 1km 식당: {nearby_str}"
-            if nearby_str
-            else f"- 전체 등록 식당: {all_rests_str}"
-        )
+        if nearby_str:
+            if addr_fallback_used:
+                location_section = f"- 주소지({user.address}) 기반 반경 1km 식당: {nearby_str}"
+            else:
+                location_section = f"- 현재 위치 반경 1km 식당: {nearby_str}"
+        else:
+            location_section = f"- 전체 등록 식당: {all_rests_str}"
+            if user.address and user.address != '없음':
+                location_section += f"\n- 참고 주소지: {user.address} (좌표 변환 실패로 전체 식당 기준 추천)"
         system_prompt = f"""당신은 '오늘의 메뉴' 앱의 AI 메뉴 추천 챗봇입니다.
 아래 사용자 DB 정보를 기반으로 메뉴 또는 식당을 추천해주세요.
 
@@ -1230,6 +1304,14 @@ def chatbot():
 
     else:
         # ── Q&A용 DB 데이터 조회 ──────────────────────────────────────────────
+        # 공지사항 (최근 5개 DB에서 조회)
+        from app.models import Notice
+        recent_notices = Notice.query.order_by(Notice.created_at.desc()).limit(5).all()
+        notices_str = '\n'.join([
+            f"- [{n.created_at.strftime('%Y-%m-%d')}] {n.title}: {n.content[:100]}"
+            for n in recent_notices
+        ]) if recent_notices else '현재 등록된 공지사항이 없습니다.'
+
         # 찜 목록 (최대 5개)
         liked_names = ', '.join([
             Restaurant.query.get(l.recommended_restaurant_id).name
@@ -1403,7 +1485,8 @@ A. 마이페이지 최하단 '회원 탈퇴하기' 버튼을 누르세요.
 ■ 공지사항
 - 상단 메뉴 '공지사항' 또는 푸터 → 고객 → 공지사항 클릭
 - 서비스 업데이트, 점검 안내, 이벤트 정보 등 확인 가능
-- 최신 공지: 서비스 정식 오픈 안내, 파티 매칭 기능 업데이트, AI 챗봇 추천 고도화
+- 최신 공지 목록:
+{notices_str}
 
 친절하고 명확한 한국어로 답변하세요.
 사용자 DB 정보를 활용해 개인화된 안내를 제공하세요.
@@ -1834,6 +1917,55 @@ def _update_avg_rating(restaurant_id):
         db.session.commit()
 
 # ── MANNER HISTORY API ────────────────────────────────────────────────────────
+@api_bp.route('/manner/vote/<int:target_user_id>', methods=['POST'])
+@jwt_login_required
+def vote_manner(target_user_id):
+    """매너온도 투표 (하루 2회 제한)"""
+    voter_id = int(get_jwt_identity())
+
+    if voter_id == target_user_id:
+        return jsonify({'message': '자신에게 투표할 수 없습니다.'}), 400
+
+    target = User.query.get_or_404(target_user_id)
+    data = request.get_json()
+    is_positive = data.get('is_positive', True)
+
+    # 하루 2회 제한 체크
+    from datetime import datetime, date
+    today_start = datetime.combine(date.today(), datetime.min.time())
+    today_votes = MannerVote.query.filter(
+        MannerVote.voter_id == voter_id,
+        MannerVote.voted_at >= today_start
+    ).count()
+
+    if today_votes >= 2:
+        return jsonify({'message': '오늘 투표 횟수(2회)를 모두 사용했습니다.', 'remaining': 0}), 400
+
+    # 같은 대상 하루 1회 제한
+    already = MannerVote.query.filter(
+        MannerVote.voter_id == voter_id,
+        MannerVote.target_id == target_user_id,
+        MannerVote.voted_at >= today_start
+    ).first()
+    if already:
+        return jsonify({'message': '이미 이 유저에게 오늘 투표했습니다.', 'remaining': 2 - today_votes}), 400
+
+    # 투표 저장
+    vote = MannerVote(voter_id=voter_id, target_id=target_user_id, is_positive=is_positive)
+    db.session.add(vote)
+
+    # 온도 변경 (±1.0, 범위 20~50)
+    delta = 1.0 if is_positive else -1.0
+    target.manner_score = round(max(20.0, min(50.0, (target.manner_score or 36.5) + delta)), 1)
+    db.session.commit()
+
+    remaining = max(0, 1 - (today_votes))  # 이번 투표 포함하면 remaining-1
+    return jsonify({
+        'message': f'매너온도 {"+" if is_positive else ""}{delta}°C 반영되었습니다.',
+        'manner_score': target.manner_score,
+        'remaining': remaining,
+    }), 200
+
 @api_bp.route('/manner/history', methods=['GET'])
 @jwt_login_required
 def manner_history():
@@ -1841,50 +1973,36 @@ def manner_history():
     received = MannerVote.query.filter_by(target_id=user_id).order_by(MannerVote.voted_at.desc()).limit(20).all()
     given    = MannerVote.query.filter_by(voter_id=user_id).order_by(MannerVote.voted_at.desc()).limit(10).all()
     user     = User.query.get(user_id)
+
+    total_received = len(received)
+    positive_count = sum(1 for v in received if v.is_positive)
+    negative_count = total_received - positive_count
+
     return jsonify({
         'manner_score': user.manner_score,
-        'received': [{'voter': v.voter.nickname if v.voter else '알 수 없음', 'is_positive': v.is_positive, 'delta': +1.0 if v.is_positive else -1.0, 'voted_at': v.voted_at.strftime('%Y-%m-%d %H:%M') if v.voted_at else ''} for v in received],
-        'given':    [{'target': v.target.nickname if v.target else '알 수 없음', 'is_positive': v.is_positive, 'voted_at': v.voted_at.strftime('%Y-%m-%d %H:%M') if v.voted_at else ''} for v in given],
-        'stats':    {'total_received': MannerVote.query.filter_by(target_id=user_id).count(), 'positive': MannerVote.query.filter_by(target_id=user_id, is_positive=True).count(), 'negative': MannerVote.query.filter_by(target_id=user_id, is_positive=False).count()},
-    }), 200
-
-# ── 매너온도 투표 API ────────────────────────────────────────────────────────
-@api_bp.route('/manner/vote/<int:target_id>', methods=['POST'])
-@jwt_login_required
-def vote_manner(target_id):
-    from datetime import date
-    voter_id = int(get_jwt_identity())
-    if voter_id == target_id:
-        return jsonify({'message': '자신에게 투표할 수 없습니다.'}), 400
-    target = User.query.get_or_404(target_id)
-    body   = request.get_json(force=True)
-    is_pos = bool(body.get('is_positive', True))
-    today  = date.today()
-    today_count = MannerVote.query.filter(
-        MannerVote.voter_id == voter_id,
-        db.func.date(MannerVote.voted_at) == today,
-    ).count()
-    if today_count >= 2:
-        return jsonify({'message': '오늘 투표 횟수(2회)를 모두 사용했습니다.'}), 429
-    already = MannerVote.query.filter(
-        MannerVote.voter_id  == voter_id,
-        MannerVote.target_id == target_id,
-        db.func.date(MannerVote.voted_at) == today,
-    ).first()
-    if already:
-        return jsonify({'message': '오늘 이미 이 회원에게 투표했습니다.'}), 409
-    vote = MannerVote(voter_id=voter_id, target_id=target_id, is_positive=is_pos)
-    db.session.add(vote)
-    delta = 1.0 if is_pos else -1.0
-    target.manner_score = round(max(20.0, min(50.0, target.manner_score + delta)), 1)
-    db.session.commit()
-    remaining = 2 - (today_count + 1)
-    return jsonify({
-        'message':     f"{'따뜻한' if is_pos else '차가운'} 한 표! {target.nickname}님 온도 {'+' if is_pos else ''}{delta}°",
-        'new_score':   target.manner_score,
-        'remaining':   remaining,
-        'is_positive': is_pos,
-    }), 200
+        'stats': {
+            'total_received': total_received,
+            'positive':       positive_count,
+            'negative':       negative_count,
+        },
+        'received': [
+            {
+                'voter':       v.voter.nickname if v.voter else '알 수 없음',
+                'is_positive': v.is_positive,
+                'delta':       1.0 if v.is_positive else -1.0,
+                'voted_at':    v.voted_at.strftime('%Y-%m-%d %H:%M') if v.voted_at else '',
+            }
+            for v in received
+        ],
+        'given': [
+            {
+                'target':      v.target.nickname if v.target else '알 수 없음',
+                'is_positive': v.is_positive,
+                'voted_at':    v.voted_at.strftime('%Y-%m-%d %H:%M') if v.voted_at else '',
+            }
+            for v in given
+        ],
+    })
 
 
 @api_bp.route('/manner/status', methods=['GET'])

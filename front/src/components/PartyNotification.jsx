@@ -29,6 +29,12 @@ export default function PartyNotification() {
       const parties = data.my_parties ?? []
       const newNotes = []
 
+      // 첫 실행 시 기준값 저장 (알림 없이)
+      if (prevPartiesRef.current.length === 0 && parties.length > 0) {
+        prevPartiesRef.current = parties
+        return
+      }
+
       parties.forEach(party => {
         // 이전 상태와 비교
         const prev = prevPartiesRef.current.find(p => p.party_id === party.party_id)

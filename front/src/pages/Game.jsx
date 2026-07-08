@@ -903,7 +903,7 @@ export default function Game() {
       <h1 style={{ fontSize: '2rem', fontWeight: 900, marginBottom: 6, display: 'flex', alignItems: 'center', gap: 10 }}>
         <img src="/img/icon/logo.png" alt="오늘 뭐먹지?" style={{ height: 38, width: 38, objectFit: 'contain' }}
           onError={(e) => { e.target.style.display = 'none' }} />
-        🎮 게임창
+         게임창
       </h1>
       <p style={{ color: 'var(--text-muted)', fontSize: '.88rem', marginBottom: 24 }}>
         게임으로 오늘 메뉴를 정해보세요!

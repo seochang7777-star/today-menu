@@ -226,7 +226,7 @@ export default function PartyDetail() {
   const handleCloseParty = async () => {
     if (!window.confirm('정말로 파티 모집을 마감하시겠습니까?')) return
     try {
-      await api.patch(`/api/party/${partyId}/status`, { status: 'CLOSED' })
+      await api.patch(`/api/party/${partyId}/close`)
       const d = await getParty(partyId); setParty(d)
       alert('파티가 마감되었습니다.')
     } catch (e) {

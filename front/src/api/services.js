@@ -173,7 +173,7 @@ export async function sendChat(message, history = [], mode = 'recommend', lat = 
 // ── PARTY ACTIONS ────────────────────────────────────────────────────────────
 /** 파티 모집 마감 */
 export async function closeParty(partyId) {
-  const { data } = await api.patch(`/api/party/${partyId}/status`, { status: 'CLOSED' })
+  const { data } = await api.patch(`/api/party/${partyId}/close`)
   return data
 }
 

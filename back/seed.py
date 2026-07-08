@@ -191,8 +191,8 @@ def step_extra_menu_import(csv_path: str):
                 
                 # 2. 메뉴 등록
                 exists = db.session.execute(
-                    db.text("SELECT 1 FROM menus WHERE menu_name = :name"),
-                    {'name': row['menu_name']}
+                    db.text("SELECT 1 FROM menus WHERE menu_name = :name AND category_id = :cat_id"),
+                    {'name': row['menu_name'], 'cat_id': int(row['category_id'])}
                 ).fetchone()
                 if not exists:
                     db.session.execute(

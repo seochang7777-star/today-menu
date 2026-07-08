@@ -207,6 +207,7 @@ export default function Home() {
     return () => clearInterval(bannerTimer.current)
   }, [])
 
+
   // ⭕ 버튼을 눌렀을 때 지도 위치로 부드럽게 스크롤하는 함수
   const scrollToMapSection = () => {
     mapSectionRef.current?.scrollIntoView({
@@ -214,6 +215,9 @@ export default function Home() {
       block: 'start'
     });
   };
+
+  const nearbyRef = useRef(null)
+
 
   const findNearby = () => {
     if (!navigator.geolocation) return alert('위치 서비스 미지원')
@@ -225,6 +229,10 @@ export default function Home() {
     navigator.geolocation.getCurrentPosition(async ({ coords }) => {
       const loc = { lat: coords.latitude, lng: coords.longitude }
       setUserLoc(loc)
+      // 내 주변 섹션으로 스크롤
+      setTimeout(() => {
+        nearbyRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      }, 300)
       try {
         const data = await getNearby({ lat: loc.lat, lng: loc.lng })
         setNearby(data)
@@ -339,8 +347,14 @@ export default function Home() {
                 오늘 먹기 좋은 메뉴를 골라드려요
               </p>
               <div className={bannerActionsClass}>
-                {/* ⭕ 404를 유발하는 Link 대신 onClick 이벤트로 변경 */}
-                <button onClick={handleOpenChatBot} className={heroButtonLightClass}>추천 받기 →</button>
+
+                <button
+                  className={heroButtonLightClass}
+                  onClick={() => {
+                    if (!user) { alert('로그인 후 이용 가능합니다.'); return }
+                    window.dispatchEvent(new CustomEvent('open-chatbot'))
+                  }}
+                >AI 추천 받기 →</button>
               </div>
             </div>
             <img
@@ -473,12 +487,8 @@ export default function Home() {
       </section>
 
       {user && (
-        /* ⭕ 하단 내 주변 추천 섹션에 ref 추가 및 상단 바 가림 방지 스타일 적용 */
-        <section 
-          ref={mapSectionRef} 
-          style={{ scrollMarginTop: '80px' }} 
-          className="nearby-section mb-[45px] mt-[11px]"
-        >
+        <section ref={nearbyRef} className="nearby-section mb-[45px] mt-[11px]">
+
           <div className="section-title">
             <span>📍 내 주변 추천</span>
             <div className="nearby-actions">
