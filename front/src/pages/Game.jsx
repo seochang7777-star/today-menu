@@ -44,6 +44,7 @@ const MenuImage = ({ item, size = '100%' }) => {
   };
 
   return (
+
     <div style={{
       width: size,
       height: '160px', // 💡 [핵심] 이미지 상자의 세로 높이를 160px로 절대 고정!
@@ -55,12 +56,14 @@ const MenuImage = ({ item, size = '100%' }) => {
       borderBottom: '1px solid var(--border-color)' // 글자 구분을 위한 하단 선 추가
     }}>
       {!isError ? (
+
         <img
           src={imgSrc}
           alt={item.name}
           // 💡 height: '100%'와 objectFit: 'cover' 덕분에 사진이 찌그러지지 않고 고정된 160px 안에 이쁘게 꽉 찹니다.
           style={{ width: '100%', height: '100%', objectFit: 'cover' }}
           onError={handleError}
+
         />
       ) : (
         // 사진이 없을 때 뜨는 이모지 영역도 높이 균형을 맞춰줍니다.
@@ -77,7 +80,9 @@ const MenuImage = ({ item, size = '100%' }) => {
 // 게임 1 — 룰렛
 // ══════════════════════════════════════════════════════════════════════════════
 function Roulette() {
+
   const navigate = useNavigate()
+
   const canvasRef = useRef(null)
   const spinning = useRef(false)
   const angleRef = useRef(0)
@@ -91,13 +96,15 @@ function Roulette() {
   // 1️⃣ 카테고리 바뀔 때마다 API에서 메뉴 새로 불러오기
   useEffect(() => {
     setFetching(true)
-    setResult(null)
+    setResult(null) 
     angleRef.current = 0
     getRandomMenus(30, category)
       .then(data => {
         setItems(data)
       })
+
       .catch(() => setItems([]))
+
       .finally(() => setFetching(false))
   }, [category])
 
@@ -174,7 +181,9 @@ function Roulette() {
     const animate = (now) => {
       const elapsed = now - start
       const t = Math.min(elapsed / duration, 1)
+
       const ease = 1 - Math.pow(1 - t, 3)
+
       const cur = startAngle + (targetAngle - startAngle) * ease
 
       angleRef.current = cur
@@ -271,7 +280,9 @@ function Roulette() {
               <div style={{ fontSize: '.8rem', fontWeight: 700, color: 'var(--color-primary)', marginBottom: 8 }}>🎉 오늘의 메뉴 당첨!</div>
 
               {/* 💡 [수정] 이모지 영역 대신 다중 확장자를 커버하는 MenuImage 컴포넌트 장착! */}
+
               <MenuImage item={result} size="230px" />
+
 
               <div style={{ fontWeight: 900, fontSize: '1.5rem', marginBottom: 4, color: 'var(--text-primary)' }}>{result.name}</div>
 
@@ -496,6 +507,7 @@ function WorldCup({ menus }) {
   if (champion) return (
     <div style={{ textAlign: 'center' }}>
       <div style={{ fontSize: '3rem', marginBottom: 8 }}>🏆</div>
+
       <div style={{
         background: 'linear-gradient(135deg,#FFFFF0,#FEFCBF)',
         border: '3px solid var(--color-accent)',
@@ -509,7 +521,6 @@ function WorldCup({ menus }) {
 
         {/* 대결창과 똑같이 깔끔하게 채워집니다 */}
         <MenuImage item={champion} />
-
         <div style={{ fontWeight: 900, fontSize: '1.5rem', padding: '14px 8px 4px' }}>{champion.name}</div>
         <div style={{ fontSize: '.82rem', color: 'var(--text-muted)', paddingBottom: '16px' }}>
           {champion.category === '피자' ? '양식' : champion.category}
@@ -540,6 +551,7 @@ function WorldCup({ menus }) {
               background: 'var(--bg-white)',
               width: '100%',
               transition: 'border-color 0.2s'
+
             }}
           >
             {/* 💡 카드의 가로폭을 100% 다 쓰도록 가로 길이를 채우고 높이를 늘렸습니다. */}
@@ -551,6 +563,7 @@ function WorldCup({ menus }) {
             </div>
           </button>
         )}
+
 
         <div style={{ fontWeight: 900, color: 'var(--color-primary)', padding: '0 4px' }}>VS</div>
 
@@ -570,6 +583,7 @@ function WorldCup({ menus }) {
             }}
           >
             <MenuImage item={right} size="100%" />
+
 
             <div style={{ fontWeight: 800, fontSize: '1.1rem', padding: '14px 8px' }}>
               {right.name}

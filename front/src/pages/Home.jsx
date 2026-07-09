@@ -25,6 +25,49 @@ const CAT_ICON = {
 };
 const TREND_FOODS = ['삼겹살', '치킨', '짜장면', '순대국', '초밥', '파스타', '비빔밥', '떡볶이']
 
+const SAMPLE_RESTAURANTS = [
+  {
+    id: '1',
+    name: '홍대 고기집',
+    category: '한식',
+    address: '서울 마포구 홍대입구',
+    avg_rating: 4.8,
+    review_count: 128,
+    image: 'https://images.unsplash.com/photo-1529193591184-b1d58069ecdd?auto=format&fit=crop&w=900&q=80',
+    tags: ['#홍대', '#데이트', '#고기맛집'],
+  },
+  {
+    id: '2',
+    name: '연남 파스타',
+    category: '양식',
+    address: '서울 마포구 연남동',
+    avg_rating: 4.6,
+    review_count: 96,
+    image: 'https://images.unsplash.com/photo-1621996346565-e3dbc646d9a9?auto=format&fit=crop&w=900&q=80',
+    tags: ['#연남동', '#파스타', '#데이트'],
+  },
+  {
+    id: '3',
+    name: '중화루',
+    category: '중식',
+    address: '서울 중구 명동',
+    avg_rating: 4.5,
+    review_count: 78,
+    image: 'https://images.unsplash.com/photo-1585032226651-759b368d7246?auto=format&fit=crop&w=900&q=80',
+    tags: ['#중식', '#짜장면', '#가성비'],
+  },
+  {
+    id: '4',
+    name: '카페 모먼트',
+    category: '카페',
+    address: '서울 성동구 성수동',
+    avg_rating: 4.7,
+    review_count: 54,
+    image: 'https://images.unsplash.com/photo-1551024506-0bccd828d307?auto=format&fit=crop&w=900&q=80',
+    tags: ['#카페', '#디저트', '#분위기'],
+  },
+]
+
 const heroLayoutClass = 'mb-[26px] grid grid-cols-[minmax(0,3fr)_minmax(0,1fr)] gap-5 max-lg:grid-cols-1'
 const mainBannerClass = 'relative h-[400px] overflow-hidden rounded-[10px] shadow-[0_8px_22px_rgba(42,29,26,0.08)] max-md:h-[360px]'
 const slideBaseClass = 'absolute left-0 top-0 z-[1] flex h-full w-full items-center px-8 py-9 text-white opacity-0 transition-opacity duration-[600ms] ease-in-out sm:px-8 md:px-9 lg:px-8 xl:px-10'

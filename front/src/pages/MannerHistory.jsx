@@ -19,6 +19,12 @@ export default function MannerHistory() {
   if (!data) return null
 
   const { manner_score, received = [], given = [], stats = {} } = data
+  const temperatureRanges = [
+    [20, 30, '주의 필요', 'bg-[#FC8181]/15 text-[#FC8181]', 'bg-[#FC8181]'],
+    [30, 36, '보통', 'bg-[#F6AD55]/15 text-[#F6AD55]', 'bg-[#F6AD55]'],
+    [36, 43, '따뜻해요', 'bg-[#68D391]/15 text-[#68D391]', 'bg-[#68D391]'],
+    [43, 50, '매우 따뜻해요 🔥', 'bg-[#38A169]/15 text-[#38A169]', 'bg-[#38A169]'],
+  ]
 
   return (
     <>
@@ -52,22 +58,18 @@ export default function MannerHistory() {
       </div>
 
       {/* 온도 범위 안내 */}
-      <div className="profile-section" style={{ marginBottom: 16 }}>
-        <h3 style={{ marginBottom: 14 }}>온도 범위 안내</h3>
-        {[
-          [20, 30, '주의 필요', '#FC8181'],
-          [30, 36, '보통', '#F6AD55'],
-          [36, 43, '따뜻해요', '#68D391'],
-          [43, 50, '매우 따뜻해요 🔥', '#38A169'],
-        ].map(([min, max, label, color]) => (
-          <div key={label} style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
-            <div style={{
-              width: 80, fontSize: '.82rem', fontWeight: 700, color,
-              background: color + '22', borderRadius: 6, padding: '3px 8px', textAlign: 'center',
-            }}>{min}~{max}°C</div>
-            <span style={{ fontSize: '.85rem', color: 'var(--text-secondary)' }}>{label}</span>
+      <div className="mb-4 rounded-[var(--border-radius-lg)] border border-[var(--border-color)] bg-[var(--bg-white)] p-5">
+        <h3 className="mb-3.5">온도 범위 안내</h3>
+        {temperatureRanges.map(([min, max, label, rangeClass, currentClass]) => (
+          <div key={label} className="mb-2 flex items-center gap-3">
+            <div className={`w-20 rounded-md px-2 py-[3px] text-center text-[.82rem] font-bold ${rangeClass}`}>
+              {min}~{max}°C
+            </div>
+            <span className="text-[.85rem] text-[var(--text-secondary)]">{label}</span>
             {manner_score >= min && manner_score < max && (
-              <span style={{ fontSize: '.75rem', background: color, color: '#fff', borderRadius: 10, padding: '2px 8px', fontWeight: 700 }}>현재</span>
+              <span className={`rounded-[10px] px-2 py-0.5 text-[.75rem] font-bold text-white ${currentClass}`}>
+                현재
+              </span>
             )}
           </div>
         ))}
