@@ -177,7 +177,9 @@ export default function MenuDetail() {
       </div>
     )
   }
+  
 
+  
   return (
     <>
       <div className="mx-auto max-w-[1134px] pb-12">
@@ -188,6 +190,7 @@ export default function MenuDetail() {
               imageUrl={rest.image_url ?? rest.image}
               category={rest.category}
               name={rest.name}
+              id={rest.id ?? rest.restaurant_id ?? restId}
               height="100%"
               iconSize="5rem"
             />
@@ -204,6 +207,7 @@ export default function MenuDetail() {
                 className="h-10 w-10"
               />
             </button>
+            
           </div>
 
           <div className="relative px-5 py-5 sm:px-7">
@@ -471,3 +475,4 @@ export default function MenuDetail() {
     </>
   )
 }
+

@@ -18,7 +18,7 @@ const ACTION_LINKS = [
   },
   {
     keywords: ['프로필 수정', '닉네임 변경', '닉네임 수정', '정보 수정', '취향 변경',
-               '알러지 변경', '알레르기 변경', '주소 변경', '성별 변경'],
+      '알러지 변경', '알레르기 변경', '주소 변경', '성별 변경'],
     link: '/mypage/edit',
     label: '✏️ 프로필 수정',
   },
@@ -89,6 +89,17 @@ const QUICK = {
   ],
 }
 
+const CAT_ICON = {
+  한식: '/img/category/korean.png',
+  일식: '/img/category/japanese.webp',
+  중식: '/img/category/chinese.webp',
+  양식: '/img/category/steak.webp',
+  분식: '/img/category/snack.webp',
+  치킨: '/img/category/chicken.webp',
+  카페: '/img/category/coffee.webp',
+  술집: '/img/category/beer.webp'
+}
+
 function getLocation() {
   return new Promise((resolve) => {
     if (!navigator.geolocation) return resolve(null)
@@ -103,24 +114,24 @@ function getLocation() {
 export default function ChatBot() {
   const { user } = useAuth()
 
-  const [open,       setOpen]       = useState(false)
-  const [mode,       setMode]       = useState('recommend')
-  const [messages,   setMessages]   = useState([])
-  const [histories,  setHistories]  = useState({ recommend: [], qna: [] })
-  const [input,      setInput]      = useState('')
-  const [loading,    setLoading]    = useState(false)
-  const [userLoc,    setUserLoc]    = useState(null)
-  const [locStatus,  setLocStatus]  = useState('idle')
-  const [plusOpen,     setPlusOpen]     = useState(false)
-  const [savedLocs,    setSavedLocs]    = useState([])
-  const [locMode,      setLocMode]      = useState('current')
-  const [locPicker,    setLocPicker]    = useState(false)
-  const [wishlist,     setWishlist]     = useState([])
-  const [mannerScore,  setMannerScore]  = useState(null)
+  const [open, setOpen] = useState(false)
+  const [mode, setMode] = useState('recommend')
+  const [messages, setMessages] = useState([])
+  const [histories, setHistories] = useState({ recommend: [], qna: [] })
+  const [input, setInput] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [userLoc, setUserLoc] = useState(null)
+  const [locStatus, setLocStatus] = useState('idle')
+  const [plusOpen, setPlusOpen] = useState(false)
+  const [savedLocs, setSavedLocs] = useState([])
+  const [locMode, setLocMode] = useState('current')
+  const [locPicker, setLocPicker] = useState(false)
+  const [wishlist, setWishlist] = useState([])
+  const [mannerScore, setMannerScore] = useState(null)
 
-  const endRef   = useRef(null)
+  const endRef = useRef(null)
   const inputRef = useRef(null)
-  const plusRef  = useRef(null)
+  const plusRef = useRef(null)
 
   useEffect(() => { endRef.current?.scrollIntoView({ behavior: 'smooth' }) }, [messages, loading])
   useEffect(() => {
@@ -129,7 +140,7 @@ export default function ChatBot() {
       fetchMe().then((u) => {
         setSavedLocs(u.saved_locations ?? [])
         setMannerScore(u.manner_score ?? null)
-      }).catch(() => {})
+      }).catch(() => { })
     }
   }, [open])
 
@@ -205,11 +216,11 @@ export default function ChatBot() {
       const actionLinks = extractActionLinks(data.reply)
       addMsg('assistant', data.reply, { restaurants: data.restaurants ?? [], actionLinks })
       if (data.manner_score != null) setMannerScore(data.manner_score)
-      if (data.wishlist)             setWishlist(data.wishlist)
+      if (data.wishlist) setWishlist(data.wishlist)
     } catch (e) {
       addMsg('assistant',
         e.response?.status === 401 ? '로그인이 필요합니다.'
-        : e.response?.data?.error ?? '오류가 발생했습니다.',
+          : e.response?.data?.error ?? '오류가 발생했습니다.',
         { isError: true }
       )
     } finally { setLoading(false) }
@@ -239,11 +250,32 @@ export default function ChatBot() {
     <>
       {/* ── FAB ── */}
       {/* 아래 클래스명 뒤에 chatbot-toggle-btn 을 추가하여 메인 화면의 코드와 연동되도록 수정했습니다. */}
-      <button className="chat-fab chatbot-toggle-btn" onClick={() => {
-        if (open) setHistories((h) => ({ ...h, [mode]: messages }))
-        setOpen((o) => !o)
-      }} aria-label="AI 챗봇">
-        {open ? '✕' : '💬'}
+      <button
+        className="
+    chatbot-toggle-btn
+  fixed bottom-7 right-2 z-[800]
+  flex h-[68px] w-[68px] items-center justify-center
+  rounded-full
+  border-0
+  bg-transparent
+  p-0
+  shadow-[0_2px_17px_rgba(244,108,111,0.4)]
+  transition-all duration-200
+  hover:-translate-y-1
+  hover:scale-105
+  active:scale-95
+  "
+        onClick={() => {
+          if (open) setHistories((h) => ({ ...h, [mode]: messages }))
+          setOpen((o) => !o)
+        }}
+        aria-label="AI 챗봇"
+      >
+        <img
+          src="/img/icon/logo.png"
+          alt=""
+          className="h-full w-full -translate-y-1 translate-x-1 object-contain"
+        />
       </button>
 
       {/* ── 챗봇 창 ── */}
@@ -303,10 +335,12 @@ export default function ChatBot() {
             {messages.length === 0 && (
               <div style={{ background: 'var(--bg-surface)', borderRadius: 10, padding: '12px 14px', fontSize: '.82rem', lineHeight: 1.7 }}>
                 <div style={{ marginBottom: 8 }}>
-                  {mode === 'recommend'
-                    ? `안녕하세요 ${user.nickname}님! 🍽️\n취향 기반으로 메뉴를 추천해드려요.\n왼쪽 + 버튼으로 빠른 질문을 선택할 수 있어요.`
-                    : `안녕하세요 ${user.nickname}님! 💬\n앱 사용법이 궁금하면 + 버튼을 눌러보세요.`
-                  }
+                  <p className="whitespace-pre-line">
+                    {mode === 'recommend'
+                      ? `안녕하세요 ${user.nickname}님! 🍽️\n취향 기반으로 메뉴를 추천해드려요.\n왼쪽 + 버튼으로 빠른 질문을 선택할 수 있어요.`
+                      : `안녕하세요 ${user.nickname}님!\n앱 사용법이 궁금하면 +버튼을 눌러보세요.`
+                    }
+                  </p>
                 </div>
                 {mode === 'recommend' && (
                   <div style={{ background: '#EBF8FF', borderRadius: 8, padding: '8px 10px', fontSize: '.76rem', color: '#2B6CB0' }}>
@@ -317,7 +351,7 @@ export default function ChatBot() {
                           {locMode === 'current'
                             ? (locStatus === 'granted' ? '현재 위치 ✓' : 'GPS 현재 위치')
                             : locMode.startsWith('saved_')
-                              ? savedLocs[parseInt(locMode.replace('saved_',''),10)]?.name ?? '저장 장소'
+                              ? savedLocs[parseInt(locMode.replace('saved_', ''), 10)]?.name ?? '저장 장소'
                               : '미선택'}
                         </strong>
                       </span>
@@ -378,7 +412,7 @@ export default function ChatBot() {
                         </button>
                         {savedLocs.map((loc, idx) => {
                           const key = `saved_${idx}`
-                          const colors = ['#E53E3E','#3182CE','#38A169']
+                          const colors = ['#E53E3E', '#3182CE', '#38A169']
                           return (
                             <button key={idx}
                               onClick={() => { setLocMode(key); setLocPicker(false) }}
@@ -408,7 +442,10 @@ export default function ChatBot() {
 
             {/* 메시지 */}
             {messages.map((m, i) => (
-              <div key={i}>
+              <div
+                key={i}
+                className={`flex flex-col ${m.role === 'user' ? 'items-end' : 'items-start'}`}
+              >
                 <div
                   className={`chat-msg ${m.role === 'user' ? 'user' : 'bot'}`}
                   style={{
@@ -463,7 +500,16 @@ export default function ChatBot() {
                           display: 'flex', alignItems: 'center', justifyContent: 'center',
                           fontSize: '1.1rem',
                         }}>
-                          {{'한식':'🍚','일식':'🍣','중식':'🥟','양식':'🥩','분식':'🍜','치킨':'🍗','카페':'☕'}[r.category] ?? '🍴'}
+                          {CAT_ICON[String(r.category ?? '').trim()] ? (
+                            <img
+                              src={CAT_ICON[String(r.category ?? '').trim()]}
+                              alt={r.category}
+                              className="h-8 w-10 object-contain"
+                              onError={(e) => { e.currentTarget.replaceWith(document.createTextNode('🍴')) }}
+                            />
+                          ) : (
+                            <span>🍴</span>
+                          )}
                         </div>
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <div style={{ fontWeight: 700, fontSize: '.85rem', marginBottom: 2 }}>{r.name}</div>

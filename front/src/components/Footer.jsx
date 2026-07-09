@@ -17,11 +17,11 @@ export default function Footer() {
 
         {/* 브랜드 */}
         <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 18 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 18 }}>
             <img
               src="/img/icon/logo_title.png"
               alt="오늘 뭐먹지?"
-              className="w-40 object-contain"
+              className="mb-4 w-40 -translate-y-2 object-contain"
               onError={(e) => { e.target.style.display = 'none' }}
             />
 
