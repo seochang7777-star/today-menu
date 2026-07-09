@@ -404,7 +404,7 @@ export default function MyPage() {
       </div>
 
       {user?.role?.toLowerCase() === 'admin' && (
-        <div className="mb-4">
+        <div className="mb-6 mx-auto w-full max-w-[1060px]">
           <Link to="/admin"
             className="flex items-center gap-2 rounded-[10px] border border-[#FED7D7] bg-[#FFF5F5] px-4 py-3 font-bold text-[var(--color-danger)] no-underline">
             ⚙️ 관리자 페이지로 이동
