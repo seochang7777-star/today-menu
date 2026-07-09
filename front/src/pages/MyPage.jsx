@@ -229,6 +229,12 @@ export default function MyPage() {
     ['reviews', '✎', '내가 쓴 리뷰'],
     ['favorites', '♥', '메뉴 찜 목록'],
     ['locations', '⌖', '저장 장소'],
+  ];
+  const temperatureRanges = [
+    [20, 30, '주의 필요', 'bg-[#FC8181]/15 text-[#FC8181]', 'bg-[#FC8181]'],
+    [30, 36, '보통', 'bg-[#F6AD55]/15 text-[#F6AD55]', 'bg-[#F6AD55]'],
+    [36, 43, '따뜻해요', 'bg-[#68D391]/15 text-[#68D391]', 'bg-[#68D391]'],
+    [43, 50, '매우 따뜻해요 🔥', 'bg-[#38A169]/15 text-[#38A169]', 'bg-[#38A169]'],
   ]
 
   return (
@@ -290,7 +296,7 @@ export default function MyPage() {
 
               <div className="absolute inset-0 flex flex-col items-center justify-center">
                 <span className="text-2xl font-black leading-none text-[var(--text-primary)]">{mannerScore}</span>
-                <small className="mt-1 text-[.68rem] font-bold text-[var(--text-muted)]">점</small>
+                <small className="mt-2 text-[.90rem] font-bold text-[var(--text-muted)]">점</small>
               </div>
             </div>
           </div>
@@ -450,7 +456,7 @@ export default function MyPage() {
               </span>
               <span>좋아하는 음식</span>
             </div>
-            {likes.length > 0 ? ( 
+            {likes.length > 0 ? (
               <div className="mb-2 flex flex-wrap gap-2">
                 {likes.map((item, idx) => (
                   <span key={idx} className="rounded-[20px] border border-[#91d5ff] bg-[#e6f7ff] px-3 py-1 text-[.82rem] text-[#1890ff]">
@@ -463,27 +469,27 @@ export default function MyPage() {
             )}
           </div>
 
-            <div className="mb-3 mt-5 flex items-center gap-2 text-[.95rem] font-bold text-[#FF4D4F]">
-              <span className="grid h-10 w-10 place-items-center rounded-full bg-[#FFF3F0]">
-                <img
-                  src="/img/icon/thumbs-down.png"
-                  alt="기피하는 음식"
-                  className="h-5 w-5 object-contain"
-                />
-              </span>
-              <span>기피하는 음식</span>
+          <div className="mb-3 mt-5 flex items-center gap-2 text-[.95rem] font-bold text-[#FF4D4F]">
+            <span className="grid h-10 w-10 place-items-center rounded-full bg-[#FFF3F0]">
+              <img
+                src="/img/icon/thumbs-down.png"
+                alt="기피하는 음식"
+                className="h-5 w-5 object-contain"
+              />
+            </span>
+            <span>기피하는 음식</span>
+          </div>
+          {dislikes.length > 0 ? (
+            <div className="flex flex-wrap gap-2">
+              {dislikes.map((item, idx) => (
+                <span key={idx} className="rounded-[20px] border border-[#ffa39e] bg-[#fff1f0] px-3 py-1 text-[.82rem] text-[#ff4d4f]">
+                  {item}
+                </span>
+              ))}
             </div>
-            {dislikes.length > 0 ? (
-              <div className="flex flex-wrap gap-2">
-                {dislikes.map((item, idx) => (
-                  <span key={idx} className="rounded-[20px] border border-[#ffa39e] bg-[#fff1f0] px-3 py-1 text-[.82rem] text-[#ff4d4f]">
-                    {item}
-                  </span>
-                ))}
-              </div>
-            ) : (
-              <p className="text-[.95rem] text-[var(--text-muted)]">등록된 기피 음식이 없습니다.</p>
-            )}
+          ) : (
+            <p className="text-[.95rem] text-[var(--text-muted)]">등록된 기피 음식이 없습니다.</p>
+          )}
         </div>
       </div>
 
@@ -501,11 +507,10 @@ export default function MyPage() {
                 key={tabKey}
                 type="button"
                 onClick={() => setActiveMyActivityTab(tabKey)}
-                className={`flex items-center justify-center gap-2 border-b-2 px-3 py-4 text-[.9rem] font-black transition ${
-                  isActive
-                    ? 'border-[var(--color-primary)] text-[var(--color-primary)]'
-                    : 'border-transparent text-[var(--text-secondary)] hover:text-[var(--color-primary)]'
-                }`}
+                className={`flex items-center justify-center gap-2 border-b-2 px-3 py-4 text-[.9rem] font-black transition ${isActive
+                  ? 'border-[var(--color-primary)] text-[var(--color-primary)]'
+                  : 'border-transparent text-[var(--text-secondary)] hover:text-[var(--color-primary)]'
+                  }`}
               >
                 <span className="text-base leading-none">{icon}</span>
                 <span>{label}</span>
@@ -781,19 +786,19 @@ export default function MyPage() {
 
       {/* ── 회원 탈퇴 ── */}
       <div className="mx-auto mb-6 grid w-full max-w-[1060px] grid-cols-1 gap-4">
-      <div className="mt-10 border-t border-[var(--border-color)] pt-6 text-right">
-        <p className="mb-2 text-[.85rem] text-[var(--text-muted)]">
-          더 이상 서비스를 이용하고 싶지 않으신가요?
-        </p>
-        <button
-          onClick={handleWithdraw}
-          className="rounded bg-[#E53E3E] px-3 py-1.5 text-[.85rem] font-bold text-white border-0"
-        >
-          🚨 회원 탈퇴하기
-        </button>
+        <div className="mt-10 border-t border-[var(--border-color)] pt-6 text-right">
+          <p className="mb-2 text-[.85rem] text-[var(--text-muted)]">
+            더 이상 서비스를 이용하고 싶지 않으신가요?
+          </p>
+          <button
+            onClick={handleWithdraw}
+            className="rounded bg-[#E53E3E] px-3 py-1.5 text-[.85rem] font-bold text-white border-0"
+          >
+            🚨 회원 탈퇴하기
+          </button>
+        </div>
       </div>
-      </div>
-      
+
       {/* 모달창 페이지 */}
       {showMannerModal && (
         <div
@@ -825,24 +830,52 @@ export default function MyPage() {
             <div className="flex items-center gap-4 mb-3">
               <div ref={gauge2Ref} className="relative h-[100px] w-[100px] shrink-0">
                 <svg width="100" height="100" viewBox="0 0 100 100">
-                  <circle cx="50" cy="50" r="40" fill="none" stroke="var(--bg-surface)" strokeWidth="8" />
+                  <circle
+                    cx="50"
+                    cy="50"
+                    r="40"
+                    fill="none"
+                    stroke="var(--bg-surface)"
+                    strokeWidth="8"
+                  />
                   <circle
                     className="progress"
-                    cx="50" cy="50" r="40"
+                    cx="50"
+                    cy="50"
+                    r="40"
                     fill="none"
                     stroke="var(--color-accent)"
                     strokeWidth="8"
                     strokeLinecap="round"
+                    strokeDasharray={2 * Math.PI * 40}
+                    strokeDashoffset={(2 * Math.PI * 40) * (1 - Math.min(mannerScore / 50, 1))}
                     transform="rotate(-90 50 50)"
+                    style={{ transition: 'stroke-dashoffset 1s' }}
                   />
                 </svg>
                 <div className="absolute inset-0 flex flex-col items-center justify-center">
                   <span className="mt-2 text-2xl font-extrabold leading-none">{mannerScore}</span>
-                  <small className="mt-2 text-[.70rem] text-[var(--text-muted)]">점</small>
+                  <small className="mt-1 text-[.70rem] text-[var(--text-muted)]">점</small>
                 </div>
               </div>
 
-              
+              {/* 온도 범위 안내 */}
+              <div className="ml-7 mb-4 rounded-[var(--border-radius-lg)] border border-[var(--border-color)] bg-[var(--bg-white)] p-5">
+                <h3 className="mb-3.5">온도 범위 안내</h3>
+                {temperatureRanges.map(([min, max, label, rangeClass, currentClass]) => (
+                  <div key={label} className="mb-2 flex items-center gap-3">
+                    <div className={`w-20 rounded-md px-2 py-[3px] text-center text-[.82rem] font-bold ${rangeClass}`}>
+                      {min}~{max}°C
+                    </div>
+                    <span className="text-[.85rem] text-[var(--text-secondary)]">{label}</span>
+                    {mannerScore >= min && mannerScore < max && (
+                      <span className={`rounded-[10px] px-2 py-0.5 text-[.75rem] font-bold text-white ${currentClass}`}>
+                        현재
+                      </span>
+                    )}
+                  </div>
+                ))}
+              </div>
 
             </div>
 

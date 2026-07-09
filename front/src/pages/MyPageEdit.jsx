@@ -23,14 +23,14 @@ export default function MyPageEdit() {
     securityQuestion: '',
     securityAnswer: '',
   })
-  
+
   const [inputLike, setInputLike] = useState('')
   const [inputDislike, setInputDislike] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const [dataLoading, setDataLoading] = useState(true)
   const [isChangingPassword, setIsChangingPassword] = useState(false)
-  const [passwordForm, setPasswordForm] = useState({currentPassword: '',newPassword: '',newPassword2: '',})
+  const [passwordForm, setPasswordForm] = useState({ currentPassword: '', newPassword: '', newPassword2: '', })
   const [isPasswordValidated, setIsPasswordValidated] = useState(false)
   const [isEditingSecurity, setIsEditingSecurity] = useState(false)
 
@@ -106,56 +106,56 @@ export default function MyPageEdit() {
     setForm((f) => ({ ...f, dislikes: f.dislikes.filter((x) => x !== target) }))
 
   const handlePasswordChange = (field, value) => {
-  setIsPasswordValidated(false)
+    setIsPasswordValidated(false)
 
-  setPasswordForm((prev) => ({
-    ...prev,
-    [field]: value,
-  }))
-}
-
-const handleCheckPassword = async () => {
-  setError('')
-  setIsPasswordValidated(false)
-
-  const {
-    currentPassword,
-    newPassword,
-    newPassword2,
-  } = passwordForm
-
-  if (!currentPassword || !newPassword || !newPassword2) {
-    setError('모든 항목을 입력해주세요.')
-    return
+    setPasswordForm((prev) => ({
+      ...prev,
+      [field]: value,
+    }))
   }
 
-  if (newPassword !== newPassword2) {
-    setError('새 비밀번호가 일치하지 않습니다.')
-    return
+  const handleCheckPassword = async () => {
+    setError('')
+    setIsPasswordValidated(false)
+
+    const {
+      currentPassword,
+      newPassword,
+      newPassword2,
+    } = passwordForm
+
+    if (!currentPassword || !newPassword || !newPassword2) {
+      setError('모든 항목을 입력해주세요.')
+      return
+    }
+
+    if (newPassword !== newPassword2) {
+      setError('새 비밀번호가 일치하지 않습니다.')
+      return
+    }
+
+    if (newPassword.length < 4) {
+      setError('비밀번호는 4자리 이상이어야 합니다.')
+      return
+    }
+
+    try {
+      await verifyPassword(currentPassword)
+
+      setIsPasswordValidated(true)
+
+    } catch (err) {
+      setError(err.response?.data?.message ?? '비밀번호 확인 실패')
+    }
   }
-
-  if (newPassword.length < 4) {
-    setError('비밀번호는 4자리 이상이어야 합니다.')
-    return
-  }
-
-  try {
-    await verifyPassword(currentPassword)
-
-    setIsPasswordValidated(true)
-
-  } catch (err) {
-    setError(err.response?.data?.message ?? '비밀번호 확인 실패')
-  }
-}
   // ── 저장 ──────────────────────────────────────────────────────────────────
   const handleSubmit = async (e) => {
     e.preventDefault()
     if (!form.nickname.trim()) { setError('닉네임은 공백일 수 없습니다.'); return }
     if (isChangingPassword && !isPasswordValidated) {
-  setError('먼저 비밀번호 확인을 완료해주세요.')
-  return
-}
+      setError('먼저 비밀번호 확인을 완료해주세요.')
+      return
+    }
     setError('')
     setLoading(true)
     try {
@@ -170,11 +170,11 @@ const handleCheckPassword = async () => {
         security_answer: form.securityAnswer,
       }
       if (isChangingPassword) {
-  await changePassword(
-    passwordForm.currentPassword,
-    passwordForm.newPassword
-  )
-}
+        await changePassword(
+          passwordForm.currentPassword,
+          passwordForm.newPassword
+        )
+      }
       const updated = await updateMyPageProfile(payload)
       // App.jsx의 login()은 토큰이 없으면 setUser만 실행 → 프로필 갱신 용도로 적합
       login(updated)
@@ -194,19 +194,29 @@ const handleCheckPassword = async () => {
 
   return (
     <div className="max-w-[600px] w-full mx-auto">
-      <Link to="/mypage" className="inline-flex items-center gap-1 text-[.85rem] font-bold text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors bg-transparent border-0 cursor-pointer">
-        ← 마이페이지
+
+      {/* 마이페이지로 이동 */}
+      <Link to="/mypage" className="mt-5 inline-flex items-center transition hover:scale-160 cursor-pointer">
+        <img
+          src="/img/icon/arrow_left.png" alt="마이페이지"
+          className="h-10 w-10"
+        />
       </Link>
+      {/* 제목 */}
+      <div className="text-center mb-7">
+        <h2 className="inline-flex items-center justify-center gap-2 text-[2rem] font-extrabold text-[var(--text-primary)] mb-2">
+          <img
+            src="/img/icon/edit.png"
+            alt="프로필 수정"
+            className="w-8 h-8 object-contain"
+          />
+          <span>프로필 수정</span>
+        </h2>
 
-      <div className="text-center mb-8">
-  <h2 className="text-[2rem] font-extrabold text-[var(--text-primary)] mb-2">
-    ✏️ 프로필 수정
-  </h2>
-
-  <p className="text-[0.92rem] text-[var(--text-muted)]">
-    회원 정보를 수정하고 나만의 취향을 관리해보세요.
-  </p>
-</div>
+        <p className="text-[0.92rem] text-[var(--text-muted)]">
+          회원 정보를 수정하고 나만의 취향을 관리해보세요.
+        </p>
+      </div>
 
       <div className="bg-[var(--bg-white)] border border-[var(--border-color)] rounded-[var(--border-radius-xl)] p-8">
         <form onSubmit={handleSubmit}>
@@ -232,11 +242,10 @@ const handleCheckPassword = async () => {
                   type="button"
                   key={g}
                   onClick={() => setForm({ ...form, gender: g })}
-                  className={`px-[18px] py-1.5 rounded-full border-[1.5px] cursor-pointer text-[.85rem] font-semibold ${
-                    form.gender === g
-                      ? 'border-[var(--color-primary)] bg-[var(--color-primary)] text-white'
-                      : 'border-[var(--border-color)] bg-[var(--bg-white)] text-[var(--text-secondary)]'
-                  }`}
+                  className={`px-[18px] py-1.5 rounded-full border-[1.5px] cursor-pointer text-[.85rem] font-semibold ${form.gender === g
+                    ? 'border-[var(--color-primary)] bg-[var(--color-primary)] text-white'
+                    : 'border-[var(--border-color)] bg-[var(--bg-white)] text-[var(--text-secondary)]'
+                    }`}
                 >
                   {g}
                 </button>
@@ -280,11 +289,10 @@ const handleCheckPassword = async () => {
                   type="button"
                   key={food}
                   onClick={() => togglePref(food)}
-                  className={`px-3.5 py-[5px] rounded-full border-[1.5px] cursor-pointer text-[.82rem] font-semibold ${
-                    form.preferences.includes(food)
-                      ? 'border-[#1890ff] bg-[#e6f7ff] text-[#1890ff]'
-                      : 'border-[var(--border-color)] bg-[var(--bg-white)] text-[var(--text-secondary)]'
-                  }`}
+                  className={`px-3.5 py-[5px] rounded-full border-[1.5px] cursor-pointer text-[.82rem] font-semibold ${form.preferences.includes(food)
+                    ? 'border-[#1890ff] bg-[#e6f7ff] text-[#1890ff]'
+                    : 'border-[var(--border-color)] bg-[var(--bg-white)] text-[var(--text-secondary)]'
+                    }`}
                 >
                   {food}
                 </button>
@@ -333,11 +341,10 @@ const handleCheckPassword = async () => {
                   type="button"
                   key={food}
                   onClick={() => toggleDislike(food)}
-                  className={`px-3.5 py-[5px] rounded-full border-[1.5px] cursor-pointer text-[.82rem] font-semibold ${
-                    form.dislikes.includes(food)
-                      ? 'border-[#ff4d4f] bg-[#fff1f0] text-[#ff4d4f]'
-                      : 'border-[var(--border-color)] bg-[var(--bg-white)] text-[var(--text-secondary)]'
-                  }`}
+                  className={`px-3.5 py-[5px] rounded-full border-[1.5px] cursor-pointer text-[.82rem] font-semibold ${form.dislikes.includes(food)
+                    ? 'border-[#ff4d4f] bg-[#fff1f0] text-[#ff4d4f]'
+                    : 'border-[var(--border-color)] bg-[var(--bg-white)] text-[var(--text-secondary)]'
+                    }`}
                 >
                   {food}
                 </button>
@@ -377,161 +384,161 @@ const handleCheckPassword = async () => {
             )}
 
             {/* 보안 질문 */}
-<div className="form-group border-t border-dashed border-gray-200 pt-6 mt-6">
-  <div className="flex justify-between items-center mb-3">
+            <div className="form-group border-t border-dashed border-gray-200 pt-6 mt-6">
+              <div className="flex justify-between items-center mb-3">
 
-  <label className="form-label mb-0">
-    🔑 아이디 찾기 설정
-  </label>
+                <label className="form-label mb-0">
+                  🔑 아이디 찾기 설정
+                </label>
 
-  <button
-    type="button"
-    onClick={() => setIsEditingSecurity(!isEditingSecurity)}
-    className="text-xs text-gray-500 hover:text-gray-700 bg-transparent border-0 cursor-pointer font-medium"
-  >
-    {isEditingSecurity ? '설정 취소' : '설정하기'}
-  </button>
+                <button
+                  type="button"
+                  onClick={() => setIsEditingSecurity(!isEditingSecurity)}
+                  className="text-xs text-gray-500 hover:text-gray-700 bg-transparent border-0 cursor-pointer font-medium"
+                >
+                  {isEditingSecurity ? '설정 취소' : '설정하기'}
+                </button>
 
-</div>
-  
-  {isEditingSecurity && (
+              </div>
 
-<div className="bg-gray-50 border border-gray-200 rounded-xl p-4 space-y-4">
-<label className="form-label">아이디 찾기용 보안 질문</label>
-  <select
-    className="form-control mb-3"
-    value={form.securityQuestion}
-    onChange={(e) =>
-      setForm({
-        ...form,
-        securityQuestion: e.target.value,
-      })
-    }
-  >
-    <option value="">질문을 선택하세요.</option>
-    <option value="초등학교 담임선생님 성함은?">
-      초등학교 담임선생님 성함은?
-    </option>
-    <option value="가장 좋아했던 음식은?">
-      가장 좋아했던 음식은?
-    </option>
-    <option value="처음 키운 반려동물 이름은?">
-      처음 키운 반려동물 이름은?
-    </option>
-    <option value="가장 기억에 남는 여행지는?">
-      가장 기억에 남는 여행지는?
-    </option>
-    <option value="가장 좋아하는 영화는?">
-      가장 좋아하는 영화는?
-    </option>
-  </select>
+              {isEditingSecurity && (
 
-  <input
-    type="text"
-    className="form-control"
-    placeholder="답변을 입력하세요."
-    value={form.securityAnswer}
-    onChange={(e) =>
-      setForm({
-        ...form,
-        securityAnswer: e.target.value,
-      })
-    }
-  />
+                <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 space-y-4">
+                  <label className="form-label">아이디 찾기용 보안 질문</label>
+                  <select
+                    className="form-control mb-3"
+                    value={form.securityQuestion}
+                    onChange={(e) =>
+                      setForm({
+                        ...form,
+                        securityQuestion: e.target.value,
+                      })
+                    }
+                  >
+                    <option value="">질문을 선택하세요.</option>
+                    <option value="초등학교 담임선생님 성함은?">
+                      초등학교 담임선생님 성함은?
+                    </option>
+                    <option value="가장 좋아했던 음식은?">
+                      가장 좋아했던 음식은?
+                    </option>
+                    <option value="처음 키운 반려동물 이름은?">
+                      처음 키운 반려동물 이름은?
+                    </option>
+                    <option value="가장 기억에 남는 여행지는?">
+                      가장 기억에 남는 여행지는?
+                    </option>
+                    <option value="가장 좋아하는 영화는?">
+                      가장 좋아하는 영화는?
+                    </option>
+                  </select>
 
-  <p className="text-xs text-gray-500 mt-2">
-    아이디를 잊어버렸을 때 본인 확인에 사용됩니다.
-  </p>
-  </div>
+                  <input
+                    type="text"
+                    className="form-control"
+                    placeholder="답변을 입력하세요."
+                    value={form.securityAnswer}
+                    onChange={(e) =>
+                      setForm({
+                        ...form,
+                        securityAnswer: e.target.value,
+                      })
+                    }
+                  />
 
-)}
-</div>
+                  <p className="text-xs text-gray-500 mt-2">
+                    아이디를 잊어버렸을 때 본인 확인에 사용됩니다.
+                  </p>
+                </div>
+
+              )}
+            </div>
             {/* 🔐 비밀번호 변경 */}
-<div className="form-group border-t border-dashed border-gray-200 pt-6 mt-6">
-  <div className="flex justify-between items-center mb-3">
-    <label className="form-label mb-0">
-      🔐 비밀번호 변경
-    </label>
+            <div className="form-group border-t border-dashed border-gray-200 pt-6 mt-6">
+              <div className="flex justify-between items-center mb-3">
+                <label className="form-label mb-0">
+                  🔐 비밀번호 변경
+                </label>
 
-    <button
-      type="button"
-      onClick={() => {
-        setIsChangingPassword(!isChangingPassword)
-        setIsPasswordValidated(false)
-      }}
-      className="text-xs text-gray-500 hover:text-gray-700 bg-transparent border-0 cursor-pointer font-medium"
-    >
-      {isChangingPassword ? '변경 취소' : '비밀번호 변경하기'}
-    </button>
-  </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsChangingPassword(!isChangingPassword)
+                    setIsPasswordValidated(false)
+                  }}
+                  className="text-xs text-gray-500 hover:text-gray-700 bg-transparent border-0 cursor-pointer font-medium"
+                >
+                  {isChangingPassword ? '변경 취소' : '비밀번호 변경하기'}
+                </button>
+              </div>
 
-  {isChangingPassword && (
-    <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 space-y-4">
+              {isChangingPassword && (
+                <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 space-y-4">
 
-      <div>
-        <label className="block text-sm font-semibold mb-1">
-          현재 비밀번호
-        </label>
+                  <div>
+                    <label className="block text-sm font-semibold mb-1">
+                      현재 비밀번호
+                    </label>
 
-        <input
-          type="password"
-          className="form-control"
-          placeholder="현재 비밀번호"
-          value={passwordForm.currentPassword}
-          onChange={(e) =>
-            handlePasswordChange('currentPassword', e.target.value)
-          }
-        />
-      </div>
+                    <input
+                      type="password"
+                      className="form-control"
+                      placeholder="현재 비밀번호"
+                      value={passwordForm.currentPassword}
+                      onChange={(e) =>
+                        handlePasswordChange('currentPassword', e.target.value)
+                      }
+                    />
+                  </div>
 
-      <div>
-        <label className="block text-sm font-semibold mb-1">
-          새 비밀번호
-        </label>
+                  <div>
+                    <label className="block text-sm font-semibold mb-1">
+                      새 비밀번호
+                    </label>
 
-        <input
-          type="password"
-          className="form-control"
-          placeholder="새 비밀번호"
-          value={passwordForm.newPassword}
-          onChange={(e) =>
-            handlePasswordChange('newPassword', e.target.value)
-          }
-        />
-      </div>
+                    <input
+                      type="password"
+                      className="form-control"
+                      placeholder="새 비밀번호"
+                      value={passwordForm.newPassword}
+                      onChange={(e) =>
+                        handlePasswordChange('newPassword', e.target.value)
+                      }
+                    />
+                  </div>
 
-      <div>
-        <label className="block text-sm font-semibold mb-1">
-          새 비밀번호 확인
-        </label>
+                  <div>
+                    <label className="block text-sm font-semibold mb-1">
+                      새 비밀번호 확인
+                    </label>
 
-        <input
-          type="password"
-          className="form-control"
-          placeholder="새 비밀번호 확인"
-          value={passwordForm.newPassword2}
-          onChange={(e) =>
-            handlePasswordChange('newPassword2', e.target.value)
-          }
-        />
-      </div>
+                    <input
+                      type="password"
+                      className="form-control"
+                      placeholder="새 비밀번호 확인"
+                      value={passwordForm.newPassword2}
+                      onChange={(e) =>
+                        handlePasswordChange('newPassword2', e.target.value)
+                      }
+                    />
+                  </div>
 
-      <button
-        type="button"
-        onClick={handleCheckPassword}
-        className="inline-flex items-center gap-1 text-[.85rem] font-bold text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors bg-transparent border-0 cursor-pointer"
-      >
-        비밀번호 확인
-      </button>
+                  <button
+                    type="button"
+                    onClick={handleCheckPassword}
+                    className="inline-flex items-center gap-1 text-[.85rem] font-bold text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors bg-transparent border-0 cursor-pointer"
+                  >
+                    비밀번호 확인
+                  </button>
 
-      {isPasswordValidated && (
-        <div className="rounded-lg border border-green-200 bg-green-50 text-green-700 text-sm px-3 py-2">
-          ✓ 현재 비밀번호가 확인되었습니다.
-        </div>
-      )}
-    </div>
-  )}
-</div>
+                  {isPasswordValidated && (
+                    <div className="rounded-lg border border-green-200 bg-green-50 text-green-700 text-sm px-3 py-2">
+                      ✓ 현재 비밀번호가 확인되었습니다.
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
 
           {error && <div className="alert alert-danger">{error}</div>}
