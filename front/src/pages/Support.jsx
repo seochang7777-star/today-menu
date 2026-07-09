@@ -45,17 +45,7 @@ export default function Support() {
     { id: 4, q: "최소 주문 금액 매칭은 어떻게 정해지나요?", a: "파티원들이 각자 고른 메뉴의 합계 금액이 해당 식당의 최소 주문 금액을 넘기면 자동으로 매칭 성공 알림이 갑니다." },
   ];
 
-  // 4. 1:1 문의사항 로컬 목록 상태
-  const [inquiries, setInquiries] = useState(() => {
-    const _d = [
-      { id: 1, title: "방장이 약속 장소에 나오지 않았어요.", content: "오늘 점심 파티 약속인데 방장님이 아무 말 없이 안 나오셨어요.", writer: "leewh", date: "2026-06-30", answer: "안녕하세요, 투데이메뉴 관리자입니다. 패널티 시스템을 즉시 가동하겠습니다." },
-      { id: 2, title: "룰렛 게임 판이 도중에 멈추는 현상이 있습니다.", content: "모바일 크롬 브라우저로 룰렛 돌릴 때 화면이 멈추는데 확인 부탁드립니다.", writer: "gildong", date: "2026-06-29", answer: null }
-    ];
-    try {
-      const saved = localStorage.getItem('today_menu_inquiries');
-      return saved ? JSON.parse(saved) : _d;
-    } catch { return _d; }
-  });
+  const [inquiries, setInquiries] = useState([]);
 
 
   // 6. 문의글 아코디언 핸들러
@@ -69,7 +59,20 @@ export default function Support() {
     item.a.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  // ✍️ 일반 회원 질문 생성 (모달 내부에서 작동)
+  const loadInquiries = async () => {
+  try {
+    const { data } = await api.get('/api/support/inquiries');
+    setInquiries(Array.isArray(data) ? data : []);
+  } catch (error) {
+    console.error(error);
+    setInquiries([]);
+  }
+  };
+
+  useEffect(() => {
+  loadInquiries();
+  }, []);
+
   // ✍️ 일반 회원 질문 생성 (수정된 버전)
   const handleCreateInquiry = async (e) => {
     e.preventDefault();
@@ -111,23 +114,15 @@ export default function Support() {
 
       if (res.status < 400) {
 
-        const updated = [result, ...inquiries];
-        setInquiries(updated);
-        try {
-          localStorage.setItem('today_menu_inquiries', JSON.stringify(updated));
-        } catch (e) {
-          console.error("로컬 스토리지 저장 실패", e);
-        }
+        await loadInquiries();
+
         setNewTitle("");
         setNewContent("");
         setIsInquiryModalOpen(false);
         alert("문의사항이 등록되었습니다.")
       setActiveTab('inquiry')
       window.scrollTo({ top: 0, behavior: 'smooth' })
-        try {
-          const listRes = await api.get('/api/support/inquiries');
-          setInquiries(Array.isArray(listRes.data) ? listRes.data : []);
-        } catch { }
+        
       } else {
         // 서버에서 422 에러가 올 경우 상세 내용 출력
         console.error("서버 에러:", result);
@@ -141,34 +136,32 @@ export default function Support() {
 
   // 👑 관리자 답변 등록
   const handleAddAnswer = async (id) => {
-    if (userRole !== "admin") return;
-    if (!adminReplyText.trim()) return alert("답변 내용을 입력하세요.");
+  if (userRole !== "admin") return;
+  if (!adminReplyText.trim()) {
+    alert("답변 내용을 입력하세요.");
+    return;
+  }
 
-
-    try {
-      const response = await api.patch(`/api/support/inquiries/${id}/answer`, {
+  try {
+    const response = await api.patch(
+      `/api/support/inquiries/${id}/answer`,
+      {
         answer: adminReplyText
-      });
-
-      if (response.status < 400) {
-
-        if (response.ok) {
-          const updated2 = inquiries.map(item =>
-            item.id === id ? { ...item, answer: adminReplyText } : item
-          );
-          setInquiries(updated2);
-          try { localStorage.setItem('today_menu_inquiries', JSON.stringify(updated2)); } catch { }
-          // dummy to avoid duplicate
-          ((x) => x);
-          setAdminReplyText("");
-          alert("👑 답변 등록이 완료되었습니다.");
-        } else {
-          alert("⚠️ 답변 등록 실패.");
-        }}
-      } catch (error) {
-        console.error("오류 발생:", error);
       }
-    };    
+    );
+
+    if (response.status < 400) {
+      await loadInquiries();
+
+      setAdminReplyText("");
+
+      alert("답변 등록이 완료되었습니다.");
+    }
+  } catch (error) {
+    console.error(error);
+    alert("답변 등록 실패");
+  }
+};
 
     // 🔍 [필터링 및 페이징] 실시간 내부 검색 반영
     // 1. useMemo를 사용해 데이터 계산 로직을 캐싱합니다. (이게 핵심입니다!)
@@ -332,7 +325,7 @@ export default function Support() {
                             </div>
 
                             {item.answer ? (
-                              <div className="bg-[var(--bg-surface)] border border-[var(--border-color)] p-4 rounded-[16px]">
+                              <div className="bg-[var(--bg-white)] border border-[var(--border-color)] p-4 rounded-[16px]">
                                 <p className="text-[11px] font-black text-[var(--color-primary)] mb-1">👑 관리자 답변</p>
                                 <p className="text-[var(--text-primary)] leading-relaxed font-semibold">{item.answer}</p>
                               </div>

@@ -2087,11 +2087,18 @@ def create_inquiry():
 @support_bp.route('/inquiries/<int:id>/answer', methods=['PATCH'])
 @admin_required
 def answer_inquiry(id):
-    inquiry = Inquiry.query.get_or_404(id)
+    print("PATCH 들어옴:", id)
+
+    inquiry = Inquiry.query.get(id)
+    print("조회 결과:", inquiry)
+
+    if inquiry is None:
+        return jsonify({"msg": "문의가 없습니다."}), 404
+
     inquiry.answer = request.json['answer']
     db.session.commit()
-    return jsonify(inquiry.to_dict()), 200
 
+    return jsonify(inquiry.to_dict()), 200
 # ── FAVORITES API ────────────────────────────────────────────────────────
 
 @api_bp.route('/favorites', methods=['POST'])
