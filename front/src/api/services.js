@@ -164,10 +164,17 @@ export async function findPassword({ email, nickname, newPassword }) {
   return data
 }
 
-
 export async function sendChat(message, history = [], mode = 'recommend', lat = null, lng = null, loc_index = null) {
-  const { data } = await api.post('/api/chat', { message, history, mode, lat, lng, loc_index })
-  return data
+  try {
+    const { data } = await api.post('/api/chat', { message, history, mode, lat, lng, loc_index })
+    return data
+  } catch (error) {
+    // 💡 개발자 도구(F12) 콘솔에서는 실제 OpenAI 에러 원인을 확인할 수 있도록 남겨둡니다.
+    console.error('OpenAI 챗봇 통신 에러:', error);
+
+    // ❌ 에러 객체나 코드를 그대로 던지는 대신, 요청하신 커스텀 문구로 에러를 가공해 던집니다.
+    throw new Error('챗봇 이용이 어렵습니다. 잠시 후 다시 시도해주세요.');
+  }
 }
 
 // ── PARTY ACTIONS ────────────────────────────────────────────────────────────
