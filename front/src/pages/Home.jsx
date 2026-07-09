@@ -25,48 +25,7 @@ const CAT_ICON = {
 };
 const TREND_FOODS = ['삼겹살', '치킨', '짜장면', '순대국', '초밥', '파스타', '비빔밥', '떡볶이']
 
-const SAMPLE_RESTAURANTS = [
-  {
-    id: '1',
-    name: '홍대 고기집',
-    category: '한식',
-    address: '서울 마포구 홍대입구',
-    avg_rating: 4.8,
-    review_count: 128,
-    image: 'https://images.unsplash.com/photo-1529193591184-b1d58069ecdd?auto=format&fit=crop&w=900&q=80',
-    tags: ['#홍대', '#데이트', '#고기맛집'],
-  },
-  {
-    id: '2',
-    name: '연남 파스타',
-    category: '양식',
-    address: '서울 마포구 연남동',
-    avg_rating: 4.6,
-    review_count: 96,
-    image: 'https://images.unsplash.com/photo-1621996346565-e3dbc646d9a9?auto=format&fit=crop&w=900&q=80',
-    tags: ['#연남동', '#파스타', '#데이트'],
-  },
-  {
-    id: '3',
-    name: '중화루',
-    category: '중식',
-    address: '서울 중구 명동',
-    avg_rating: 4.5,
-    review_count: 78,
-    image: 'https://images.unsplash.com/photo-1585032226651-759b368d7246?auto=format&fit=crop&w=900&q=80',
-    tags: ['#중식', '#짜장면', '#가성비'],
-  },
-  {
-    id: '4',
-    name: '카페 모먼트',
-    category: '카페',
-    address: '서울 성동구 성수동',
-    avg_rating: 4.7,
-    review_count: 54,
-    image: 'https://images.unsplash.com/photo-1551024506-0bccd828d307?auto=format&fit=crop&w=900&q=80',
-    tags: ['#카페', '#디저트', '#분위기'],
-  },
-]
+// ❌ SAMPLE_RESTAURANTS 변수가 완벽하게 삭제되었습니다.
 
 const heroLayoutClass = 'mb-[26px] grid grid-cols-[minmax(0,3fr)_minmax(0,1fr)] gap-5 max-lg:grid-cols-1'
 const mainBannerClass = 'relative h-[400px] overflow-hidden rounded-[10px] shadow-[0_8px_22px_rgba(42,29,26,0.08)] max-md:h-[360px]'
@@ -102,27 +61,13 @@ const categoryGridClass = 'mb-11 grid grid-cols-8 gap-3 max-lg:grid-cols-4 max-s
 const categoryItemClass = 'flex min-h-[90px] flex-col items-center justify-center gap-0 rounded-[10px] border border-[var(--border-color)] bg-white shadow-[0_8px_18px_rgba(42,29,26,0.07)] transition-all hover:-translate-y-1 hover:border-[var(--color-primary)] hover:shadow-[var(--shadow)]'
 const categoryIconClass = 'grid h-13 w-13 place-items-center text-[1.75rem] -mt-1'
 const categoryLabelClass = 'text-[0.86rem] font-black text-[var(--text-primary)]'
-const recommendSectionClass =
-  'mb-[38px]'
-
-const recommendTitleWrapClass =
-  'mb-[18px] flex items-center justify-between font-black max-[540px]:items-end'
-
-const recommendTitleClass =
-  'relative text-[1.55rem] after:absolute after:left-0 after:bottom-[-8px] after:h-[3px] after:w-[34px] after:rounded-full after:bg-[var(--color-primary)] max-[540px]:text-[1.28rem]'
-
-const recommendMoreClass =
-  'text-[0.9rem] text-[#7D4213]'
-
-const cafeteriaGridClass =
-  'grid grid-cols-4 gap-[15px] max-lg:grid-cols-2 max-[540px]:grid-cols-2'
-
-const rankBadgeBaseClass =
-  'absolute left-0 top-0 grid h-[52px] w-[52px] place-items-center bg-[var(--color-primary)] text-[1.35rem] font-black text-white'
-
-const rankBadgeAccentClass =
-  'bg-[var(--color-accent)]'
-
+const recommendSectionClass = 'mb-[38px]'
+const recommendTitleWrapClass = 'mb-[18px] flex items-center justify-between font-black max-[540px]:items-end'
+const recommendTitleClass = 'relative text-[1.55rem] after:absolute after:left-0 after:bottom-[-8px] after:h-[3px] after:w-[34px] after:rounded-full after:bg-[var(--color-primary)] max-[540px]:text-[1.28rem]'
+const recommendMoreClass = 'text-[0.9rem] text-[#7D4213]'
+const cafeteriaGridClass = 'grid grid-cols-4 gap-[15px] max-lg:grid-cols-2 max-[540px]:grid-cols-2'
+const rankBadgeBaseClass = 'absolute left-0 top-0 grid h-[52px] w-[52px] place-items-center bg-[var(--color-primary)] text-[1.35rem] font-black text-white'
+const rankBadgeAccentClass = 'bg-[var(--color-accent)]'
 const quickPanelsClass = 'mb-[18px] grid grid-cols-2 gap-[18px] max-md:grid-cols-1'
 const quickCardBaseClass = 'flex min-h-[230px] items-center justify-between gap-[18px] overflow-hidden rounded-[10px] px-[38px] py-8 max-md:px-[22px] max-md:py-7'
 const quickMapCardClass = '[background:radial-gradient(circle_at_82%_70%,rgba(255,255,255,0.68),transparent_30%),linear-gradient(135deg,#FFF4A8,#FFE67C)]'
@@ -198,7 +143,8 @@ export default function Home() {
       }
     }).catch((err) => {
       console.error('trending 로드 실패:', err);
-      setTrending(SAMPLE_RESTAURANTS);
+      // 🛠️ 에러 발생 시 가짜 데이터 대신 빈 배열로 초기화되도록 수정했습니다.
+      setTrending([]);
     });
   }, [user]);
 
@@ -207,8 +153,6 @@ export default function Home() {
     return () => clearInterval(bannerTimer.current)
   }, [])
 
-
-  // ⭕ 버튼을 눌렀을 때 지도 위치로 부드럽게 스크롤하는 함수
   const scrollToMapSection = () => {
     mapSectionRef.current?.scrollIntoView({
       behavior: 'smooth',
@@ -218,18 +162,15 @@ export default function Home() {
 
   const nearbyRef = useRef(null)
 
-
   const findNearby = () => {
     if (!navigator.geolocation) return alert('위치 서비스 미지원')
     setLocStatus('loading')
     
-    // 버튼을 누르자마자 사용자가 작동 여부를 인지할 수 있도록 스크롤 먼저 이동시킵니다.
     scrollToMapSection();
 
     navigator.geolocation.getCurrentPosition(async ({ coords }) => {
       const loc = { lat: coords.latitude, lng: coords.longitude }
       setUserLoc(loc)
-      // 내 주변 섹션으로 스크롤
       setTimeout(() => {
         nearbyRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
       }, 300)
@@ -270,11 +211,8 @@ export default function Home() {
     });
   };
 
-  // ⭕ 챗봇 창을 강제로 열어주는 트리거 함수 추가
   const handleOpenChatBot = (e) => {
     e.preventDefault();
-    // ChatBot 컴포넌트를 열어주는 버튼 요소를 찾아서 클릭 이벤트를 시뮬레이션합니다.
-    // (일반적인 플로팅 챗봇 아이콘의 클래스명이나 id, 혹은 버튼 태그를 타겟팅)
     const chatBtn = document.querySelector('.chatbot-toggle-btn') || 
                     document.querySelector('#chatbot-button') || 
                     document.querySelector('.chatbot-container button');
@@ -282,12 +220,9 @@ export default function Home() {
     if (chatBtn) {
       chatBtn.click();
     } else {
-      // 만약 트리거 버튼 커스텀이 까다롭다면 챗봇에 설정된 세션이나 스토리지 이벤트를 발생시킵니다.
       alert('챗봇 창은 화면 우측 하단의 아이콘을 통해서도 상시 이용하실 수 있습니다!');
     }
   };
-
-
 
   return (
     <div className="home-page">
@@ -327,7 +262,6 @@ export default function Home() {
               </p>
               <div className={bannerActionsClass}>
                 <Link to="/party" className={heroButtonLightClass}>밥친구 찾기 →</Link>
-                {/* ⭕ 내 주변 찾기 버튼 클릭 시 findNearby 함수 호출 */}
                 <button type="button" className={heroButtonYellowClass} onClick={findNearby}>내 주변 찾기 📍</button>
               </div>
             </div>
@@ -347,7 +281,6 @@ export default function Home() {
                 오늘 먹기 좋은 메뉴를 골라드려요
               </p>
               <div className={bannerActionsClass}>
-
                 <button
                   className={heroButtonLightClass}
                   onClick={() => {
@@ -450,7 +383,6 @@ export default function Home() {
       </section>
 
       <section className={quickPanelsClass}>
-        {/* ⭕ 내 인생 맛집 찾기 노란색 패널을 눌러도 하단 지도로 스크롤되도록 onClick 핸들러 연동 */}
         <div 
           className={`${quickCardBaseClass} ${quickMapCardClass} cursor-pointer`}
           onClick={scrollToMapSection}
@@ -477,7 +409,6 @@ export default function Home() {
               <br />
               오늘의 메뉴를 추천해드려요!
             </p>
-            {/* ⭕ 하단 퀵 패널도 똑같이 onClick 이벤트로 변경 */}
             <button onClick={handleOpenChatBot} className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-[12px] bg-white px-6 text-[0.94rem] font-black text-[var(--color-primary)] shadow-[var(--shadow-sm)] transition-transform hover:-translate-y-0.5">
               추천 받기 →
             </button>
