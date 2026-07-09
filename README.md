@@ -131,8 +131,6 @@
 
 ## 화면 구성
 
-> 스크린샷은 `docs/screenshots/` 폴더에 저장해주세요.
-
 ### 홈 화면
 ![홈 화면](./docs/screenshots/home.jpeg)
 
