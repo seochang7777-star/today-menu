@@ -121,7 +121,9 @@ export default function Support() {
         setNewTitle("");
         setNewContent("");
         setIsInquiryModalOpen(false);
-        alert("문의사항이 등록되었습니다.");
+        alert("문의사항이 등록되었습니다.")
+      setActiveTab('inquiry')
+      window.scrollTo({ top: 0, behavior: 'smooth' })
         try {
           const listRes = await api.get('/api/support/inquiries');
           setInquiries(Array.isArray(listRes.data) ? listRes.data : []);

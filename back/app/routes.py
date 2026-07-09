@@ -416,7 +416,7 @@ def delete_account():
         Review.query.filter_by(user_id=user_id).delete()
         Inquiry.query.filter_by(user_id=user_id).delete()
         Report.query.filter(
-            (Report.reporter_id == user_id) | (Report.reported_user_id == user_id)
+            (Report.reporter_id == user_id) | (Report.target_id == user_id)
         ).delete(synchronize_session=False)
         db.session.delete(user)
         db.session.commit()
@@ -1091,7 +1091,7 @@ def admin_delete_user(user_id):
         Review.query.filter_by(user_id=user_id).delete()
         Inquiry.query.filter_by(user_id=user_id).delete()
         Report.query.filter(
-            (Report.reporter_id == user_id) | (Report.reported_user_id == user_id)
+            (Report.reporter_id == user_id) | (Report.target_id == user_id)
         ).delete(synchronize_session=False)
         db.session.delete(user)
         db.session.commit()
@@ -1837,7 +1837,7 @@ def create_notice():
     user_id = int(get_jwt_identity())
     user    = User.query.get_or_404(user_id)
 
-    if user.role.value != 'admin':
+    if user.role.value.lower() != 'admin':
         return jsonify({'message': '관리자만 공지사항을 작성할 수 있습니다.'}), 403
 
     data    = request.get_json(force=True)
@@ -1866,7 +1866,7 @@ def delete_notice(notice_id):
     user_id = int(get_jwt_identity())
     user    = User.query.get_or_404(user_id)
 
-    if user.role.value != 'admin':
+    if user.role.value.lower() != 'admin':
         return jsonify({'message': '관리자만 삭제할 수 있습니다.'}), 403
 
     notice = Notice.query.get_or_404(notice_id)
@@ -1994,6 +1994,11 @@ def manner_history():
     negative_count = total_received - positive_count
 
     return jsonify({
+        'stats': {
+            'total_received': total_received,
+            'positive':       positive_count,
+            'negative':       negative_count,
+        },
         'manner_score': user.manner_score,
         'stats': {
             'total_received': total_received,
@@ -2018,7 +2023,6 @@ def manner_history():
             for v in given
         ],
     })
-
 
 @api_bp.route('/manner/status', methods=['GET'])
 @jwt_login_required
