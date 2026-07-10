@@ -54,6 +54,18 @@ export default function PartyDetail() {
       .catch(() => navigate('/party'))
   }, [partyId, navigate])
 
+  useEffect(() => {
+    getMannerVoteStatus()
+      .then(data => {
+        const formattedVotes = Object.entries(data).map(([id, type]) => ({
+          id: parseInt(id),
+          type: type
+        }));
+        setVotedToday(formattedVotes);
+      })
+      .catch(err => console.error("투표 현황 로드 실패", err));
+  }, []);
+
   // ── 채팅 스크롤 ────────────────────────────────────────────────────────────
   useEffect(() => {
     if (chatRef.current) chatRef.current.scrollTop = chatRef.current.scrollHeight
@@ -134,29 +146,72 @@ export default function PartyDetail() {
     <div style={{ textAlign: 'center', padding: 60, color: 'var(--text-muted)' }}>로딩 중...</div>
   )
 
-
+  const checkAndToggleRecruitment = async (partyId) => {
+    const updatedParty = await getParty(partyId);
+    
+    if (updatedParty.member_count < updatedParty.max_people && updatedParty.status === 'CLOSED') {
+      try {
+        await api.patch(`/api/party/${partyId}/close`, { status: 'RECRUITING' });
+        return await getParty(partyId); 
+      } catch (e) {
+        console.error("자동 모집 전환 실패:", e);
+      }
+    }
+    return updatedParty;
+  };
 
   const handleVote = async (targetId, isPositive) => {
-    if (voteRemaining <= 0) { setVoteMsg('오늘 투표 횟수(2회)를 모두 사용했습니다.'); return }
+    if (voteRemaining <= 0) { 
+      setVoteMsg('오늘 투표 횟수를 모두 사용했습니다.'); 
+      return; 
+    }
+
     try {
-      const res = await voteManner(targetId, isPositive)
-      setVoteMsg(res.message); setVoteRemaining(res.remaining)
-      setVotedToday((prev) => [...prev, targetId])
-      setTimeout(() => setVoteMsg(''), 3000)
-    } catch (e) { setVoteMsg(e.response?.data?.message ?? '투표 실패'); setTimeout(() => setVoteMsg(''), 3000) }
-  }
+      const res = await voteManner(targetId, isPositive);
+      
+      setVotedToday(prev => [...prev, { id: targetId, type: isPositive }])
+      
+      setVoteMsg(res.message);
+      setVoteRemaining(res.remaining);
+      
+      setTimeout(() => setVoteMsg(''), 3000);
+    } catch (e) {
+      const errMsg = e.response?.data?.message || '투표 실패';
+      setVoteMsg(errMsg);
+      setTimeout(() => setVoteMsg(''), 3000);
+    }
+  };
+
   const handleKick = async (targetUserId) => {
     try {
-      await api.delete(`/api/party/${partyId}/kick/${targetUserId}`)
-      alert('강퇴 처리가 완료되었습니다.')
-      const d = await getParty(partyId); setParty(d)
-    } catch (e) { alert(e?.response?.data?.message || '강퇴 실패') }
+      // 1. 서버에 강퇴 요청
+      await api.delete(`/api/party/${partyId}/kick/${targetUserId}`);
+      
+      // 2. 강퇴 성공 시 서버 데이터가 DB에서 인원수 감소 반영됨
+      // 여기서 즉시 모집 재개 API를 호출하여 상태를 강제 변경
+      // 마감된 상태라면 모집 중으로 전환 시도
+      try {
+        await api.patch(`/api/party/${partyId}/status`, { status: 'RECRUITING' });
+      } catch (err) {
+        console.log("이미 모집 중이거나 상태 변경 불필요");
+      }
+
+      // 3. 모든 작업이 끝난 후 최신 파티 데이터 조회
+      const updatedParty = await getParty(partyId);
+      setParty({ ...updatedParty, status: 'RECRUITING', member_count: updatedParty.member_count - 1 });
+      
+      alert('강퇴 처리가 완료되었습니다.');
+      
+    } catch (e) { 
+      alert(e?.response?.data?.message || '강퇴 실패');
+    }
   }
 
   const handleLeaveParty = async () => {
     if (!window.confirm('정말로 파티에서 퇴장하시겠습니까?')) return
     try {
-      await api.delete(`/api/party/${partyId}/leave`)
+      await api.delete(`/api/party/${partyId}/leave`);
+
       window.dispatchEvent(new CustomEvent('party-local-notification', {
         detail: {
           id: `leave-${partyId}-${user.user_id}-${Date.now()}`,
@@ -165,10 +220,19 @@ export default function PartyDetail() {
           message: `"${party.title}" 파티에서 내가 나갔습니다.`,
           time: new Date(),
         },
-      }))
-      window.dispatchEvent(new Event('party-membership-changed'))
-      alert('파티에서 퇴장했습니다.')
-      navigate('/party')
+      }));
+      window.dispatchEvent(new Event('party-membership-changed'));
+
+      const updatedParty = await getParty(partyId);
+      
+      if (updatedParty.member_count < updatedParty.max_people && updatedParty.status === 'CLOSED') {
+        await api.patch(`/api/party/${partyId}/close`, { status: 'RECRUITING' });
+        alert('자리가 생겨 파티가 자동으로 모집 중으로 전환되었습니다.');
+      } else {
+        alert('파티에서 퇴장했습니다.');
+      }
+      
+      navigate('/party');
     }
     catch (e) { alert(e.response?.data?.message || '퇴장 오류') }
   }
@@ -220,14 +284,19 @@ export default function PartyDetail() {
     }
   };
 
-  const handleStatusChange = async (newStatus) => {
-    if (!window.confirm(newStatus === 'CLOSED' ? '모집을 마감하시겠습니까?' : '모집을 재개하시겠습니까?')) return
-    try { 
-      await api.patch(`/api/party/${partyId}/close`, { status: newStatus }); 
-      const d = await getParty(partyId); 
-      setParty(d); 
-    } catch (e) { 
-      alert(e.response?.data?.message || '상태 변경 실패'); 
+  const handleToggleStatus = async () => {
+    const isClosing = party.status === 'RECRUITING';
+    if (!window.confirm(isClosing ? '모집을 마감하시겠습니까?' : '모집을 다시 시작하시겠습니까?')) return;
+    
+    try {
+      await api.patch(`/api/party/${partyId}/close`); 
+      
+      const d = await getParty(partyId);
+      setParty(d);
+      
+      alert(`파티가 ${d.status === 'RECRUITING' ? '모집 중' : '모집 마감'} 상태로 변경되었습니다.`);
+    } catch (e) {
+      alert(e.response?.data?.message || '상태 변경 실패');
     }
   }
 
@@ -637,13 +706,24 @@ export default function PartyDetail() {
                 </button>
               )}
 
-              {/* 1. 호스트 전용: 모집 중일 때 마감 버튼 */}
-              {party.is_host && isRecruiting && (
+              {party.is_host && (
                 <button
-                  onClick={handleStatusChange.bind(null, 'CLOSED')}
+                  onClick={async () => {
+                    try {
+
+                      await api.patch(`/api/party/${partyId}/close`); 
+                      
+                      const d = await getParty(partyId);
+                      setParty(d);
+                      
+                      alert(`파티가 ${d.status === 'RECRUITING' ? '모집 중' : '모집 마감'} 상태로 변경되었습니다.`);
+                    } catch (e) {
+                      alert(e.response?.data?.message || '상태 변경 실패');
+                    }
+                  }}
                   className="w-full rounded-[8px] border border-[var(--border-color)] bg-[var(--bg-surface)] px-4 py-3 font-black text-[var(--text-secondary)] transition hover:bg-[var(--bg-surface-2)]"
                 >
-                  모집 마감하기
+                  {party.status === 'RECRUITING' ? '모집 마감하기' : '다시 모집하기'}
                 </button>
               )}
 
@@ -683,12 +763,12 @@ export default function PartyDetail() {
               <div className="flex items-center justify-between mb-3.5">
                 {/* 타이틀은 단단하고 깔끔한 기본 텍스트 색상 */}
                 <h3 className="text-base font-extrabold text-[var(--text-main)] flex items-center gap-1.5">
-                  <sapn><svg
+                  <span><svg
                     viewBox="0 0 24 24"
                     className="h-5 w-5 fill-[#F46C6F]"
                   >
                     <path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5s-3 1.34-3 3 1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5C15 14.17 10.33 13 8 13zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z" />
-                  </svg></sapn> 참여 인원
+                  </svg></span> 참여 인원
                 </h3>
 
                 {/* 보여주신 하단 스타일처럼 튀지 않고 은은하게 매칭한 인원수 표시 */}
@@ -797,23 +877,22 @@ export default function PartyDetail() {
                   {user && m.user?.user_id !== user.user_id && (
                     <div style={{ display: 'flex', gap: 3, flexShrink: 0 }}>
                       <button onClick={() => handleVote(m.user.user_id, true)}
-                        disabled={votedToday.includes(m.user?.user_id) || voteRemaining <= 0}
+                        disabled={votedToday.some(v => v.id === Number(m.user.user_id)) || voteRemaining <= 0}
                         title="매너 좋아요 +1°"
                         style={{
                           border: 'none', borderRadius: 6, padding: '3px 7px', cursor: 'pointer',
-                          background: votedToday.includes(m.user?.user_id) ? '#F0FFF4' : 'var(--bg-surface)',
+                          background: votedToday.some(v => v.id === m.user.user_id && v.type === true) ? '#FFEE7F' : 'var(--bg-surface)',
                           fontSize: '.75rem', opacity: voteRemaining <= 0 && !votedToday.includes(m.user?.user_id) ? .4 : 1
                         }}>
                         👍
                       </button>
                       <button onClick={() => handleVote(m.user.user_id, false)}
-                        disabled={votedToday.includes(m.user?.user_id) || voteRemaining <= 0}
+                        disabled={votedToday.some(v => v.id === Number(m.user.user_id)) || voteRemaining <= 0}
                         title="매너 싫어요 -1°"
                         style={{
                           border: 'none', borderRadius: 6, padding: '3px 7px', cursor: 'pointer',
-
-                          background: 'var(--bg-surface)', fontSize: '.75rem',
-                          opacity: voteRemaining <= 0 && !votedToday.includes(m.user?.user_id) ? .4 : 1
+                          background: votedToday.some(v => v.id === m.user.user_id && v.type === false) ? '#FFEE7F' : 'var(--bg-surface)',
+                          fontSize: '.75rem', opacity: voteRemaining <= 0 && !votedToday.includes(m.user?.user_id) ? .4 : 1
                         }}>
                         👎
                       </button>
