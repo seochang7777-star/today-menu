@@ -52,13 +52,6 @@ export default function FindId() {
   <div className="flex justify-center py-6">
     <div className="bg-[var(--bg-white)] rounded-[var(--border-radius-xl)] shadow-[var(--shadow-lg)] w-full max-w-[420px] p-10">
 
-      {/* 뒤로가기 */}
-      <button
-        onClick={() => navigate('/login')}
-        className="text-[.85rem] text-[var(--text-muted)] font-bold flex items-center gap-1 hover:text-[var(--text-primary)] transition-colors bg-transparent border-0 mb-5"
-      >
-        ← 로그인으로
-      </button>
 
       {/* 로고 */}
       <div className="text-center mb-[28px]">
@@ -148,6 +141,23 @@ export default function FindId() {
           </div>
         </div>
       )}
+      <p className="text-center mt-[20px] text-[0.88rem] text-gray-400">
+          <button
+            type="button"
+            onClick={() => navigate('/findpassword')}
+            className="text-[var(--color-primary)] font-semibold hover:underline bg-transparent border-none p-0 cursor-pointer"
+          >
+            비밀번호 찾기
+          </button>
+          {" · "}
+          <button
+            type="button"
+            onClick={() => navigate('/login')}
+            className="text-[var(--color-primary)] font-semibold hover:underline bg-transparent border-none p-0 cursor-pointer"
+          >
+            로그인
+          </button>
+        </p>
     </div>
   </div>
 )

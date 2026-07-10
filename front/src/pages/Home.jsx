@@ -6,6 +6,7 @@ import KakaoMap from '../components/KakaoMap'
 import RestaurantSearch from '../components/RestaurantSearch'
 import Cafeteria from '../components/Cafeteria'
 import RandomBanner from '../components/RandomBanner'
+import api from '../api/axiosInstance'
 
 const adBannerClass =
   'w-full overflow-hidden rounded-[12px] bg-white max-md:h-[70px]'
@@ -97,17 +98,35 @@ export default function Home() {
   const [userLoc, setUserLoc] = useState(null)
   const [locStatus, setLocStatus] = useState('idle')
   const [bannerIdx, setBannerIdx] = useState(0)
-  const [trendKeywords, setTrendKeywords] = useState(() => {
-    try {
-      const saved = localStorage.getItem('trendKeywords')
-      if (saved) return JSON.parse(saved)
-    } catch { }
-    return TREND_FOODS.map(f => ({ name: f, count: 0 }))
-  })
+  const [trendKeywords, setTrendKeywords] = useState([])
   const [showSearch, setShowSearch] = useState(false)
   const [likedCafeteriaIds, setLikedCafeteriaIds] = useState(() => new Set())
   const bannerTimer = useRef(null)
 
+  // 🚀 2. 새로 추가: 진짜 백엔드 24시간 실시간 트렌드 키워드를 로드하는 함수
+  const fetchTrendingKeywords = async () => {
+    try {
+      const response = await api.get('/api/menu/trending/keywords')
+      if (response.data && Array.isArray(response.data.items)) {
+        setTrendKeywords(response.data.items)
+      }
+    } catch (err) {
+      console.error('실시간 트렌드 키워드 로드 실패:', err)
+      setTrendKeywords([])
+    }
+  }
+
+  // 🚀 3. 새로 추가: 인기 검색어판의 키워드를 직접 클릭했을 때도 점수 반영하는 함수
+  const handleKeywordClick = async (keyword) => {
+    try {
+      await api.post('/api/menu/search/log', { keyword }) // DB에 로그 전송
+      await fetchTrendingKeywords() // 화면 순위 즉시 리프레시
+    } catch (err) {
+      console.error("키워드 클릭 로그 적재 오류:", err)
+    }
+  }
+
+  // 🔄 4. 기존 데이터 로드 useEffect (원형을 완전히 유지하되 가짜 랭킹 연산만 걷어냄)
   useEffect(() => {
     const favPromise = user ? getMyFavorites().catch(() => []) : Promise.resolve([]);
 
@@ -120,6 +139,7 @@ export default function Home() {
 
       const rawItems = d.items || [];
 
+      // 기존 맛집 랭킹 렌더링 세팅 (100% 원형 유지)
       setTrending(rawItems.map(r => ({
         ...r,
         id: String(r.id),
@@ -127,36 +147,12 @@ export default function Home() {
         is_liked: favIds.has(String(r.id))
       })));
 
-      if (rawItems.length > 0) {
-        let savedMap = {}
-        try {
-          const saved = localStorage.getItem('trendKeywords')
-          if (saved) {
-            JSON.parse(saved).forEach(k => { savedMap[k.name] = k.count })
-          }
-        } catch { }
+      // 🌟 [개편 구역]: 로컬스토리지 파싱 및 카테고리 누적 연산(mergedMap) 껍데기 로직을
+      // 완벽하게 청소하고, 백엔드가 제공하는 진짜 순수 데이터를 로드하도록 직접 이어 붙입니다.
+      fetchTrendingKeywords();
 
-        const apiMap = {}
-        rawItems.forEach(r => {
-          if (r.category) apiMap[r.category] = (apiMap[r.category] || 0) + 1
-        })
-
-        const mergedMap = { ...apiMap }
-        Object.entries(savedMap).forEach(([name, cnt]) => {
-          mergedMap[name] = (mergedMap[name] || 0) + cnt
-        })
-
-        const sorted = Object.entries(mergedMap)
-          .sort((a, b) => b[1] - a[1] || Math.random() - 0.5)
-          .slice(0, 8)
-          .map(([name, count]) => ({ name, count }))
-
-        setTrendKeywords(sorted)
-        try { localStorage.setItem('trendKeywords', JSON.stringify(sorted)) } catch { }
-      }
     }).catch((err) => {
       console.error('trending 로드 실패:', err);
-      // 🛠️ 에러 발생 시 가짜 데이터 대신 빈 배열로 초기화되도록 수정했습니다.
       setTrending([]);
     });
   }, [user]);
@@ -202,14 +198,6 @@ export default function Home() {
 
   const visibleRestaurants = trending.length ? trending : []
 
-  const handleKeywordClick = (keyword) => {
-    setTrendKeywords(prev => {
-      const updated = prev.map(k => k.name === keyword ? { ...k, count: k.count + 1 } : k)
-      const sorted = [...updated].sort((a, b) => b.count - a.count || Math.random() - 0.5)
-      try { localStorage.setItem('trendKeywords', JSON.stringify(sorted)) } catch { }
-      return sorted
-    })
-  }
 
   const handleCafeteriaLike = (r) => {
     const isLiked = Boolean(r.is_liked) || likedCafeteriaIds.has(r.id)
@@ -347,7 +335,6 @@ export default function Home() {
               >
                 <span className={trendRankClass}>{i + 1}</span>
                 <span className={trendNameClass}>{item.name}</span>
-                <span className={trendUpClass}>↑</span>
               </Link>
             ))}
           </div>

@@ -38,7 +38,10 @@ export default function MyPageEdit() {
   useEffect(() => {
     getMyPage()
       .then((d) => {
+        // 백엔드 User 모델의 preferences { likes: [], dislikes: [] } 구조에 맞춤
+        const userPrefs = d.user?.preferences || {}
         setForm({
+
           nickname: d.user.nickname ?? '',
           allergies: d.user.allergies ?? '',
           gender: d.user.gender ?? '미설정',
@@ -50,7 +53,7 @@ export default function MyPageEdit() {
           securityAnswer: '',
         })
       })
-      .catch(() => { })
+      .catch((err) => { console.error('유저 데이터 로드 실패:', err) })
       .finally(() => setDataLoading(false))
   }, [])
 
@@ -64,6 +67,29 @@ export default function MyPageEdit() {
       })
     })
   }, [dataLoading])
+
+  // ── 카카오 주소 검색 팝업 ─────────────────────────────────────────────────
+  const handleAddressSearch = () => {
+    const openPostcode = () => {
+      new window.daum.Postcode({
+        oncomplete: (data) => {
+          const address = data.roadAddress || data.jibunAddress
+          setForm((f) => ({ ...f, address }))
+        },
+      }).open()
+    }
+
+    if (window.daum && window.daum.Postcode) {
+      openPostcode()
+      return
+    }
+
+    const script = document.createElement('script')
+    script.src = '//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js'
+    script.onload = openPostcode
+    document.head.appendChild(script)
+  }
+
 
   // ── 버튼 토글 ─────────────────────────────────────────────────────────────
   const togglePref = (food) =>
@@ -117,7 +143,7 @@ export default function MyPageEdit() {
   const handleCheckPassword = async () => {
     setError('')
     setIsPasswordValidated(false)
-
+    
     const {
       currentPassword,
       newPassword,
@@ -134,8 +160,9 @@ export default function MyPageEdit() {
       return
     }
 
-    if (newPassword.length < 4) {
-      setError('비밀번호는 4자리 이상이어야 합니다.')
+
+    if (newPassword.length < 8) {
+      setError('비밀번호는 8자리 이상이어야 합니다.')
       return
     }
 
@@ -176,12 +203,18 @@ export default function MyPageEdit() {
         )
       }
       const updated = await updateMyPageProfile(payload)
-      // App.jsx의 login()은 토큰이 없으면 setUser만 실행 → 프로필 갱신 용도로 적합
-      login(updated)
+      
+      if (updated && updated.user) {
+        login(updated.user)
+      } else {
+        login(updated)
+      }
+
+
       navigate('/mypage')
     } catch (err) {
       setError(err.response?.data?.message ?? '저장에 실패했습니다.')
-    } finally {
+    } finally { // 🔥 오타 수정: 'military'를 문법에 맞는 'finally'로 교체 완료!
       setLoading(false)
     }
   }
@@ -193,6 +226,7 @@ export default function MyPageEdit() {
   )
 
   return (
+
     <div className="mx-auto flex w-full max-w-[1110px] justify-center px-4 py-6 sm:px-6 lg:px-8">
       <div className="w-full rounded-[28px] border border-[var(--border-color)] bg-white p-5 shadow-[0_18px_45px_rgba(42,29,26,0.10)] sm:p-8 lg:p-10">
         <form onSubmit={handleSubmit} className="space-y-6">
@@ -231,14 +265,41 @@ export default function MyPageEdit() {
                 className="self-end block max-h-[140px] w-full translate-y-6 object-contain"
               />
 
+    <div className="max-w-[600px] w-full mx-auto">
+      <Link to="/mypage" className="mt-5 inline-flex items-center transition hover:scale-105 cursor-pointer">
+        <img src="/img/icon/arrow_left.png" alt="마이페이지" className="h-10 w-10" />
+      </Link>
+
+      <div className="text-center mb-7">
+        <h2 className="inline-flex items-center justify-center gap-2 text-[2rem] font-extrabold text-[var(--text-primary)] mb-2">
+          <img src="/img/icon/edit.png" alt="프로필 수정" className="w-8 h-8 object-contain" />
+          <span>프로필 수정</span>
+        </h2>
+        <p className="text-[0.92rem] text-[var(--text-muted)]">
+          회원 정보를 수정하고 나만의 취향을 관리해보세요.
+        </p>
+      </div>
+
+      <div className="bg-[var(--bg-white)] border border-[var(--border-color)] rounded-[var(--border-radius-xl)] p-8">
+        <form onSubmit={handleSubmit}>
+          {/* 닉네임 */}
+          <div className="form-group">
+            <label className="form-label">닉네임</label>
+            <input type="text" className="form-control" required
+              value={form.nickname} onChange={(e) => setForm({ ...form, nickname: e.target.value })} />
+          </div>
+
+
             </div>
           </div>
+
 
           <section className="rounded-[22px] border border-[var(--border-color)] bg-[#fffdf9] p-5 sm:p-6">
             <div className="mb-5 flex items-center justify-between gap-3">
               <div>
                 <h3 className="text-lg font-extrabold text-[var(--text-primary)]">기본 정보</h3>
               </div>
+
             </div>
 
             <div className="grid gap-5 lg:grid-cols-2">

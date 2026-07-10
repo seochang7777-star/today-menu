@@ -66,13 +66,6 @@ export default function FindPassword() {
     <div className="flex justify-center py-6">
       <div className="bg-[var(--bg-white)] rounded-[var(--border-radius-xl)] shadow-[var(--shadow-lg)] w-full max-w-[420px] p-10">
 
-        {/* 뒤로가기 - FindId와 동일한 형태 */}
-        <button
-          onClick={() => navigate('/login')}
-          className="text-[.85rem] text-[var(--text-muted)] font-bold flex items-center gap-1 hover:text-[var(--text-primary)] transition-colors bg-transparent border-0 mb-5"
-        >
-          ← 로그인으로
-        </button>
 
         {/* 로고 */}
         <div className="text-center mb-[28px]">
@@ -135,6 +128,7 @@ export default function FindPassword() {
               id="newPassword"
               type="password"
               className="form-control"
+              minLength={8}
               placeholder="새 비밀번호"
               value={formData.newPassword}
               onChange={handleChange}

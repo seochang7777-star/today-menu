@@ -251,3 +251,10 @@ class Menu(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     menu_name = db.Column(db.String(100), nullable=False)
     category_id = db.Column(db.Integer, db.ForeignKey('categories.id'))
+
+class SearchLog(db.Model):
+    __tablename__ = 'search_log'
+    
+    log_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    keyword = db.Column(db.String(100), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow) # UTC 기준 실시간 시간 저장
