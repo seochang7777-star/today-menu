@@ -6,6 +6,8 @@ import RandomBanner from '../components/RandomBanner'
 import { getRestaurants, createLikeLog, toggleLike } from '../api/services'
 import api from '../api/axiosInstance'
 
+
+
 const CAT_ICON = {
   한식: './img/category/korean.png',
   일식: './img/category/japanese.webp',
@@ -181,20 +183,6 @@ export default function Menu() {
             aria-label="검색"
           >
 
-            <input
-              type="text"
-              placeholder="식당명을 검색하세요"
-              value={searchInput}
-              onChange={(e) => setSearchInput(e.target.value)}
-              className="h-12 min-w-0 flex-1 rounded-full border-[1.5px] border-[rgba(244,108,111,0.8)] bg-white px-5 text-[0.92rem] font-semibold text-[var(--text-primary)] shadow-[0_4px_18px_rgba(244,108,111,0.08)] outline-none placeholder:text-[#9D8C86]"
-            />
-            <button
-              type="submit"
-              className="relative grid h-12 w-12 shrink-0 place-items-center rounded-full border-0 bg-[linear-gradient(135deg,var(--color-primary),#F98082)] text-[1.8rem] font-bold text-white shadow-[0_4px_18px_rgba(244,108,111,0.16)] transition hover:brightness-105 hover:shadow-md"
-              aria-label="검색"
-            >
-              <span className="relative -top-[4px] leading-none">⌕</span>
-            </button>
           </form>
         </div>
 
