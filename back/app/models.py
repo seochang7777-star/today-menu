@@ -30,7 +30,6 @@ class User(db.Model):
     security_answer = db.Column(db.String(255), nullable=True)
     address      = db.Column(db.String(200), nullable=True)
     gender       = db.Column(db.String(20), nullable=True, default='미설정')
-    saved_locations = db.Column(db.JSON, default=list)
     role         = db.Column(db.Enum(RoleEnum), default=RoleEnum.USER)
     created_at   = db.Column(db.DateTime, default=datetime.utcnow)
 
@@ -66,6 +65,8 @@ class Party(db.Model):
     max_people    = db.Column(db.Integer,     nullable=False)
     status        = db.Column(db.Enum(StatusEnum), default=StatusEnum.RECRUITING)
     created_at    = db.Column(db.DateTime, default=datetime.utcnow)
+    status = db.Column(db.Enum(StatusEnum), default=StatusEnum.RECRUITING)
+    is_manual_close = db.Column(db.Boolean, default=False)
 
     members  = db.relationship('PartyMember',   backref='party', cascade='all, delete-orphan')
     messages = db.relationship('ChatMessage',   backref='party', cascade='all, delete-orphan')
@@ -258,3 +259,20 @@ class SearchLog(db.Model):
     log_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     keyword = db.Column(db.String(100), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow) # UTC 기준 실시간 시간 저장
+
+class SavedLocation(db.Model):
+    __tablename__ = 'saved_locations'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.user_id'), nullable=False)
+    name = db.Column(db.String(100), nullable=False)  
+    address = db.Column(db.String(200), nullable=False) 
+    
+    user = db.relationship('User', backref=db.backref('saved_locations_list', cascade='all, delete-orphan'))
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'name': self.name,
+            'address': self.address
+        }

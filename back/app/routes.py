@@ -18,7 +18,7 @@ from app.models import (  # noqa
 
     User, Restaurant, Party, PartyMember,
     ChatMessage, RecommendationLog, MannerVote, StatusEnum, RoleEnum,
-    Report, Inquiry, Review, Favorite, Notice, Menu, Category, SearchLog
+    Report, Inquiry, Review, Favorite, Notice, Menu, Category, SearchLog, SavedLocation
 )
 
 # ── 블루프린트 ────────────────────────────────────────────────────────────────
@@ -895,12 +895,15 @@ def manual_close_party(party_id):
     party = Party.query.get_or_404(party_id)
     
     if party.host_id != user_id:
-        return jsonify({'message': '호스트만 마감할 수 있습니다.'}), 403
+        return jsonify({'message': '호스트만 변경할 수 있습니다.'}), 403
     
-    if party.status != StatusEnum.RECRUITING:
-        return jsonify({'message': '이미 마감된 파티입니다.'}), 400
+    if party.status == StatusEnum.RECRUITING:
+        party.status = StatusEnum.CLOSED
+    elif party.status == StatusEnum.CLOSED:
+        party.status = StatusEnum.RECRUITING
+    else:
+        return jsonify({'message': '상태를 변경할 수 없는 파티입니다.'}), 400
         
-    party.status = StatusEnum.CLOSED
     db.session.commit()
     return jsonify(serialize_party(party, user_id)), 200
 
@@ -938,7 +941,10 @@ def kick_member(party_id, target_user_id):
         db.session.delete(party)
         db.session.commit()
         return jsonify({'message': '강퇴 후 파티원이 없어 파티가 삭제되었습니다.'}), 200
-    
+
+    if party.status == StatusEnum.CLOSED:
+        party.status = StatusEnum.RECRUITING
+
     db.session.commit()
     return jsonify({'message': '강퇴되었으며, 해당 파티에 재참여할 수 없습니다.'}), 200
 
@@ -1930,7 +1936,10 @@ def leave_party(party_id):
     party_title = party.title
     db.session.delete(member)
     db.session.flush()
+    
+    # 남은 인원 확인
     member_count = PartyMember.query.filter_by(party_id=party_id).count()
+    party = Party.query.get(party_id)
 
     if member_count == 0:
         db.session.delete(party)
@@ -1950,8 +1959,15 @@ def leave_party(party_id):
         except Exception:
             pass
         return jsonify({'message': '파티를 탈퇴했습니다. 마지막 멤버이므로 파티가 자동 삭제되었습니다.'}), 200
+    
+    db.session.commit()
+
+    if not party.is_manual_close and party.status == StatusEnum.CLOSED:
+        if member_count < party.max_people:
+            party.status = StatusEnum.RECRUITING
         
     db.session.commit()
+
     try:
         from app import socketio as _sio
         occurred_at = datetime.utcnow().isoformat()
@@ -1976,17 +1992,27 @@ def leave_party(party_id):
 @party_bp.route('/<int:party_id>/status', methods=['PATCH'])
 @jwt_login_required
 def change_party_status(party_id):
-    """파티 모집 마감/재개 (호스트 전용)"""
     user_id = int(get_jwt_identity())
-    party   = Party.query.get_or_404(party_id)
+    party = Party.query.get_or_404(party_id)
     if party.host_id != user_id:
         return jsonify({'message': '호스트만 상태를 변경할 수 있습니다.'}), 403
-    data       = request.get_json(force=True)
+    
+    data = request.get_json(force=True)
     new_status = data.get('status')
+    
     if new_status not in ['RECRUITING', 'CLOSED']:
         return jsonify({'message': '유효하지 않은 상태입니다.'}), 400
+    
+    # [수동 마감 시 플래그 설정]
+    if new_status == 'CLOSED':
+        party.is_manual_close = True
+    else:
+        # 다시 모집을 시작할 때는 수동 마감 상태를 해제함
+        party.is_manual_close = False
+        
     party.status = StatusEnum[new_status]
     db.session.commit()
+    
     return jsonify({'message': f"파티 상태가 '{new_status}'로 변경되었습니다.", 'status': new_status}), 200
 
 
@@ -2272,6 +2298,7 @@ def answer_inquiry(id):
     db.session.commit()
 
     return jsonify(inquiry.to_dict()), 200
+
 # ── FAVORITES API ────────────────────────────────────────────────────────
 
 @api_bp.route('/favorites', methods=['POST'])
@@ -2321,3 +2348,47 @@ def get_my_favorites():
                 'image':      getattr(f.restaurant, 'image', None),
             })
     return jsonify(result), 200
+
+
+# ── saved-locations API ────────────────────────────────────────────────────────
+
+# 장소 목록 가져오기
+@api_bp.route('/saved-locations', methods=['GET'])
+@jwt_login_required
+def get_locations():
+    user_id = get_jwt_identity() 
+    locs = SavedLocation.query.filter_by(user_id=user_id).all()
+    return jsonify([loc.to_dict() for loc in locs])
+
+# 장소 추가하기
+@api_bp.route('/saved-locations', methods=['POST'])
+@jwt_login_required
+def add_location():
+    user_id = get_jwt_identity()
+
+    count = SavedLocation.query.filter_by(user_id=user_id).count()
+    if count >= 3:
+        return jsonify({"msg": "장소는 최대 3개까지 저장 가능합니다."}), 400
+        
+    data = request.json
+
+    new_loc = SavedLocation(
+        user_id=user_id, 
+        name=data.get('name'), 
+        address=data.get('address')
+    )
+    
+    db.session.add(new_loc)
+    db.session.commit()
+    
+    return jsonify(new_loc.to_dict()), 201
+
+# 장소 삭제하기
+@api_bp.route('/saved-locations/<int:loc_id>', methods=['DELETE'])
+@jwt_login_required
+def delete_location(loc_id):
+    user_id = get_jwt_identity()
+    loc = SavedLocation.query.filter_by(id=loc_id, user_id=user_id).first_or_404()
+    db.session.delete(loc)
+    db.session.commit()
+    return '', 204

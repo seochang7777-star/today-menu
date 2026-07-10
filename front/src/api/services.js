@@ -158,6 +158,8 @@ export const findId = async (nickname, security_question, security_answer) => {
 
   return data
 }
+
+
 // ── CHATBOT ───────────────────────────────────────────────────────────────────
 export async function findPassword({ email, nickname, newPassword }) {
   const { data } = await api.post('/api/auth/reset-password-direct', { email, nickname, new_password: newPassword })
@@ -331,4 +333,22 @@ export async function createNotice({ title, content, category }) {
 export async function deleteNotice(noticeId) {
   const { data } = await api.delete(`/api/notices/${noticeId}`)
   return data
+}
+
+// ── SAVED LOCATIONS (장소 저장 기능) ──────────────────────────────────────────
+
+export async function getSavedLocations() {
+  const { data } = await api.get('/api/saved-locations');
+  return data; // [ {id, name, address}, ... ]
+}
+
+export async function addSavedLocation(place) {
+  // place: { name: "강남역", address: "서울특별시..." }
+  const { data } = await api.post('/api/saved-locations', place);
+  return data;
+}
+
+export async function deleteSavedLocation(locationId) {
+  await api.delete(`/api/saved-locations/${locationId}`);
+  return true;
 }
