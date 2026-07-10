@@ -182,7 +182,8 @@ export default function Menu() {
             className="relative grid h-12 w-12 shrink-0 place-items-center rounded-full border-0 bg-[linear-gradient(135deg,var(--color-primary),#F98082)] text-[1.8rem] font-bold text-white shadow-[0_4px_18px_rgba(244,108,111,0.16)] transition hover:brightness-105 hover:shadow-md"
             aria-label="검색"
           >
-
+            <span className="relative -top-[4px] leading-none">⌕</span>
+          </button>
           </form>
         </div>
 
