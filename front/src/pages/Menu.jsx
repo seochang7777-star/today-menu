@@ -6,8 +6,6 @@ import RandomBanner from '../components/RandomBanner'
 import { getRestaurants, createLikeLog, toggleLike } from '../api/services'
 import api from '../api/axiosInstance'
 
-
-
 const CAT_ICON = {
   한식: './img/category/korean.png',
   일식: './img/category/japanese.webp',
