@@ -665,8 +665,8 @@ export default function PartyDetail() {
                       )}
                     </div>
                   ) : isRecruiting ? (
-                    <button className="btn btn-primary btn-block btn-lg" onClick={handleJoin}>
-                      🍴 파티 참여하기
+                    <button className="w-full rounded-[8px] bg-[var(--color-primary)] px-4 py-3 font-black text-white transition hover:bg-[var(--color-primary-dark)]" onClick={handleJoin}>
+                      파티 참여하기
                     </button>
                   ) : (
                     <button className="btn btn-muted btn-block" disabled>모집 마감</button>

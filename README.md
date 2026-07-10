@@ -79,7 +79,7 @@
 
 ---
 
-### 게임 기능 (4종)
+### 게임 기능 (5종)
 
 | 게임 | 설명 |
 |---|---|
@@ -87,6 +87,7 @@
 | 스무고개 | 예/아니오 질문으로 AI가 메뉴 맞추기 |
 | 월드컵 | 32개 메뉴 토너먼트 1:1 대결 |
 | 뽑기 | 긁어서 메뉴 확인 |
+| 사다리 | 사다리 타고 메뉴확인 |
 
 ---
 
@@ -96,8 +97,8 @@
 - 찜 목록 / 활동 내역 / 파티 참여 기록
 - **내가 쓴 리뷰** 목록
 - 매너온도 상세 내역 확인
-- 저장 장소 최대 3개 관리 (집·직장 등)
-
+- 나의 맛집 장소 최대 3개 관리
+  
 ---
 
 ### 이메일 / 비밀번호 찾기
@@ -130,8 +131,6 @@
 
 ## 화면 구성
 
-> 스크린샷은 `docs/screenshots/` 폴더에 저장해주세요.
-
 ### 홈 화면
 ![홈 화면](./docs/screenshots/home.jpeg)
 
@@ -151,21 +150,27 @@
 | ![파티 목록](./docs/screenshots/party.jpeg) | ![파티 상세](./docs/screenshots/party_detail.jpeg) |
 
 ### AI 챗봇
-![챗봇](./docs/screenshots/chatbot.png)
+| 메뉴 추천 | Q & A |
+|---|---|
+| ![챗봇](./docs/screenshots/chatbot1.png) | !![챗봇](./docs/screenshots/chatbot2.png) |
 
 ### 마이페이지
 | 마이페이지 | 매너온도 상세 |
 |---|---|
-| ![마이페이지](./docs/screenshots/mypage.jpeg) | ![매너온도](./docs/screenshots/manner.jpeg) |
+| ![마이페이지](./docs/screenshots/mypage.jpeg) | ![프로필수정](./docs/screenshots/mypageedit.jpeg) |
 
 ### 게임
 | 룰렛 | 월드컵 |
 |---|---|
 | ![룰렛](./docs/screenshots/game_roulette.jpeg) | ![월드컵](./docs/screenshots/game_worldcup.jpeg) |
 
-| 스무고개 | 뽑기 |
+| 스무고개 | 뽑기 | 
 |---|---|
 | ![스무고개](./docs/screenshots/game_twentyq.jpeg) | ![뽑기](./docs/screenshots/game_scratch.jpeg) |
+
+| 사다리 | 
+|---|
+| ![사다리](./docs/screenshots/game_sd.jpeg) |
 
 ### 고객센터 / 관리자
 | 고객센터 | 관리자 |
@@ -208,61 +213,75 @@
 ```
 today-menu/
 ├── front/
-│   ├── index.html
-│   ├── vite.config.js              ← 프록시 (Flask :5000 자동 연결)
-│   ├── vercel.json                 ← Vercel 배포 설정
+│   ├── index.html                     ← Vite 진입점
+│   ├── vite.config.js                 ← 프록시 (Flask :5000 자동 연결)
+│   ├── package.json                   ← React 19 + Tailwind v4 + Axios + SocketIO
+│   ├── postcss.config.js
+│   ├── vercel.json                    ← Vercel 배포 설정
+│   ├── .env                           ← VITE_API_URL (배포용)
 │   └── src/
-│       ├── App.jsx                 ← 라우터 + AuthContext + PrivateRoute
-│       ├── utils.js
+│       ├── main.jsx
+│       ├── App.jsx                    ← 라우터 + AuthContext + PrivateRoute + useAuth
+│       ├── index.css                  ← Tailwind + 커스텀 컴포넌트
+│       ├── utils.js                   ← 공통 유틸 (processTags 등)
 │       ├── api/
-│       │   ├── axiosInstance.js    ← JWT 인터셉터
-│       │   └── services.js         ← API 함수 모음
+│       │   ├── axiosInstance.js       ← JWT 인터셉터 (401 → refresh 자동)
+│       │   └── services.js            ← API 엔드포인트 함수 모음
 │       ├── components/
-│       │   ├── Header.jsx          ← 헤더 + 파티 알림 벨
-│       │   ├── Footer.jsx
-│       │   ├── ChatBot.jsx         ← AI 챗봇 FAB
-│       │   ├── KakaoMap.jsx
-│       │   ├── Cafeteria.jsx       ← 식당 카드 (홈 트렌딩)
-│       │   ├── RestaurantCard.jsx
-│       │   ├── RestaurantImage.jsx
-│       │   ├── RestaurantSearch.jsx
-│       │   ├── ReviewModal.jsx
-│       │   ├── PartyNotification.jsx ← 파티 알림 (10분/5분 전)
-│       │   └── ScrollToTop.jsx
-│       └── pages/
-│           ├── Home.jsx            ← 홈 (트렌딩 + 실시간 인기 검색어)
-│           ├── Login.jsx
-│           ├── FindPassword.jsx    ← 비밀번호 찾기
-│           ├── FindId.jsx          ← 이메일 찾기
-│           ├── Register.jsx
-│           ├── Menu.jsx
-│           ├── MenuDetail.jsx
-│           ├── Party.jsx
-│           ├── PartyCreate.jsx
-│           ├── PartyDetail.jsx     ← 실시간 채팅 + 리뷰
-│           ├── MyPage.jsx          ← 찜/리뷰/활동내역
-│           ├── MyPageEdit.jsx
-│           ├── MannerHistory.jsx
-│           ├── Game.jsx            ← 룰렛/스무고개/월드컵/뽑기
-│           ├── Notice.jsx
-│           ├── Support.jsx
-│           ├── AdminPage.jsx       ← 관리자 (6탭)
-│           ├── Company.jsx
-│           ├── Terms.jsx
-│           ├── Terms2.jsx
-│           └── NotFound.jsx
+│       │   ├── Header.jsx             ← 헤더 (네비게이션 + 파티 알림 벨)
+│       │   ├── Footer.jsx             ← 푸터 (이용안내 + 패밀리사이트)
+│       │   ├── ChatBot.jsx            ← AI 챗봇 FAB (추천/Q&A + ACTION_LINKS)
+│       │   ├── KakaoMap.jsx           ← 카카오맵 지도
+│       │   ├── Cafeteria.jsx          ← 식당 카드 (홈 트렌딩)
+│       │   ├── RestaurantCard.jsx     ← 식당 카드 (검색 결과용)
+│       │   ├── RestaurantImage.jsx    ← 식당 이미지 처리
+│       │   ├── RestaurantSearch.jsx   ← 식당 검색 (카카오 로컬 API)
+│       │   ├── RandomBanner.jsx       ← 홈 랜덤 배너 (chatbot/party/game/menu)
+│       │   ├── ReviewModal.jsx        ← 리뷰/별점 작성 모달
+│       │   ├── PartyNotification.jsx  ← 파티 알림 (10분/5분 전 + 참여자 알림)
+│       │   └── ScrollToTop.jsx        ← 페이지 이동 시 스크롤 상단 이동
+│       ├── pages/
+│       │   ├── Home.jsx               ← 홈 (슬라이더+AI챗봇 연동 + 실시간 인기검색어)
+│       │   ├── Login.jsx              ← 로그인 (이메일/카카오/네이버)
+│       │   ├── FindPassword.jsx       ← 비밀번호 찾기 (이메일+닉네임 인증)
+│       │   ├── FindId.jsx             ← 이메일 찾기 (닉네임+보안질문 인증)
+│       │   ├── Register.jsx           ← 회원가입 (약관 동의 포함)
+│       │   ├── NaverCallback.jsx      ← 네이버 소셜 로그인 콜백
+│       │   ├── Menu.jsx               ← 메뉴 목록 (카테고리 필터 + 검색 + 페이지네이션)
+│       │   ├── MenuDetail.jsx         ← 메뉴 상세 (영업시간 + 카카오맵 + 리뷰)
+│       │   ├── Party.jsx              ← 파티 목록 (검색 + 상태 탭)
+│       │   ├── PartyCreate.jsx        ← 파티 생성 (식당 자동 선택)
+│       │   ├── PartyDetail.jsx        ← 파티 상세 + 실시간 채팅 (Socket.IO)
+│       │   ├── MyPage.jsx             ← 마이페이지 (프로필+찜+리뷰+활동내역+탈퇴)
+│       │   ├── MyPageEdit.jsx         ← 프로필 편집
+│       │   ├── MannerHistory.jsx      ← 매너온도 상세 내역 (stats 포함)
+│       │   ├── Game.jsx               ← 게임 (룰렛/스무고개/월드컵/뽑기/사다리)
+│       │   ├── Notice.jsx             ← 공지사항 (DB 우선, fallback 기본공지)
+│       │   ├── Support.jsx            ← 고객센터 (FAQ + 1:1 문의, useAuth 연동)
+│       │   ├── AdminPage.jsx          ← 관리자 (유저/식당/문의/공지/신고/리뷰 6탭)
+│       │   ├── Company.jsx            ← 회사 소개
+│       │   ├── ChatModal.jsx          ← 파티 채팅 모달
+│       │   ├── Terms.jsx              ← 이용약관
+│       │   ├── Terms2.jsx             ← 개인정보처리방침
+│       │   └── NotFound.jsx           ← 404 페이지
+│       └── data/
+│           ├── termsContent.js        ← 이용약관 내용
+│           └── privacyContent.js      ← 개인정보처리방침 내용
 └── back/
-    ├── run.py
-    ├── seed.py                     ← DB 초기화 + 시드 데이터
-    ├── config.py                   ← psycopg prepare_threshold 설정
+    ├── .env                           ← DATABASE_URL, SECRET_KEY, OPENAI_API_KEY 등
+    ├── run.py                         ← Flask 서버 실행 진입점
+    ├── seed.py                        ← DB 초기화 + 시드 데이터 (menus/categories)
+    ├── main.py                        ← 앱 팩토리 호출
+    ├── config.py                      ← DB 연결 + psycopg prepare_threshold 설정
     ├── requirements.txt
-    ├── render.yaml                 ← Render 배포 설정
+    ├── render.yaml                    ← Render 배포 설정
+    ├── instance/                      ← SQLite (로컬 개발용)
     └── app/
-        ├── __init__.py             ← CORS + SocketIO + JWT 초기화
-        ├── models.py               ← DB 모델 (14개 테이블)
-        ├── routes.py               ← REST API 전체
-        ├── constants.py
-        └── utils.py
+        ├── __init__.py                ← CORS + SocketIO + JWT + APScheduler 초기화
+        ├── models.py                  ← DB 모델 (14개 테이블)
+        ├── routes.py                  ← 전체 REST API (77개 함수)
+        ├── constants.py               ← 카테고리 등 상수 정의
+        └── utils.py                   ← 공통 유틸 함수
 ```
 
 ---
@@ -318,7 +337,7 @@ VITE_API_URL=
 
 ### 3. 자동 설치 (Windows)
 ```bash
-setup.bat   # 가상환경 + 패키지 + DB 초기화 한번에
+install.bat   # 가상환경 + 패키지 + DB 초기화 한번에
 start.bat   # 백엔드 + 프론트 동시 실행
 ```
 

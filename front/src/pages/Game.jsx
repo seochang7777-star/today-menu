@@ -6,13 +6,43 @@ import { getRandomMenus } from '../api/services'
 
 // ── 카테고리 아이콘 (룰렛 시각용 & 결과 출력용 통일) ───────────────────────────
 const CAT_ICON = {
-  한식: '🍚', 일식: '🍣', 중식: '🥟', 양식: '🥩',
-  분식: '🍜', 치킨: '🍗', 카페: '☕'
+  한식: '/img/category/korean.png',
+  일식: '/img/category/japanese.webp',
+  중식: '/img/category/chinese.webp',
+  양식: '/img/category/steak.webp',
+  분식: '/img/category/snack.webp',
+  치킨: '/img/category/chicken.webp',
+  카페: '/img/category/coffee.webp',
+  술집: '/img/category/beer.webp'
 }
 
-const catIcon = (categoryName) => {
-  if (categoryName === '피자') return CAT_ICON['양식'];
-  return CAT_ICON[categoryName] ?? '🍴';
+const getCategoryIconPath = (categoryName) => {
+  const normalizedCategory = categoryName === '피자' ? '양식' : categoryName;
+  return CAT_ICON[normalizedCategory];
+}
+
+const CategoryIcon = ({ category, size = '3rem', style }) => {
+  const iconPath = getCategoryIconPath(category);
+
+  if (!iconPath) {
+    return <span style={{ fontSize: size, ...style }}>🍴</span>;
+  }
+
+  return (
+    <img
+      src={iconPath}
+      alt={category ?? '카테고리'}
+      style={{
+        width: size,
+        height: size,
+        objectFit: 'contain',
+        display: 'inline-block',
+        verticalAlign: 'middle',
+        ...style,
+      }}
+      onError={(e) => { e.currentTarget.style.display = 'none' }}
+    />
+  );
 }
 
 // 카테고리 선택 목록
@@ -66,10 +96,8 @@ const MenuImage = ({ item, size = '100%' }) => {
 
         />
       ) : (
-        // 사진이 없을 때 뜨는 이모지 영역도 높이 균형을 맞춰줍니다.
-        <span style={{ fontSize: '3rem' }}>
-          {catIcon(item.category)}
-        </span>
+        // 사진이 없을 때 뜨는 아이콘 영역도 높이 균형을 맞춰줍니다.
+        <CategoryIcon category={item.category} size="3rem" />
       )}
     </div>
   );
@@ -96,7 +124,7 @@ function Roulette() {
   // 1️⃣ 카테고리 바뀔 때마다 API에서 메뉴 새로 불러오기
   useEffect(() => {
     setFetching(true)
-    setResult(null) 
+    setResult(null)
     angleRef.current = 0
     getRandomMenus(30, category)
       .then(data => {
@@ -223,7 +251,7 @@ function Roulette() {
         >
           {CATEGORIES.map(cat => (
             <option key={cat} value={cat}>
-              {cat === '전체' ? '전체' : `${catIcon(cat)} ${cat}`}
+              {cat}
             </option>
           ))}
         </select>
@@ -426,7 +454,7 @@ function TwentyQ({ menus }) {
 
             <div style={{ padding: '18px 20px' }}>
               <div style={{ fontSize: '2.5rem', marginBottom: 8 }}>
-                {catIcon(guess.category)}
+                <CategoryIcon category={guess.category} size="2.5rem" />
               </div>
 
               <div style={{ fontWeight: 900, fontSize: '1.4rem', marginBottom: 4 }}>
@@ -667,7 +695,7 @@ function ScratchCard({ menus }) {
       <div style={{ fontWeight: 800, fontSize: '1.1rem', color: 'var(--text-muted)' }}>🎟️ 오늘의 메뉴 복권</div>
       <div style={{ position: 'relative', width: 300, height: 160, borderRadius: 16, overflow: 'hidden', boxShadow: '0 8px 24px rgba(0,0,0,.15)', border: '3px solid var(--color-accent)' }}>
         <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(135deg,#FFFFF0,#FEFCBF)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-          {prize && (<><div style={{ fontSize: '3rem', marginBottom: 4 }}>{catIcon(prize.category)}</div><div style={{ fontWeight: 900, fontSize: '1.2rem' }}>{prize.name}</div><div style={{ fontSize: '.78rem', color: 'var(--text-muted)', marginTop: 3 }}>{prize.category}</div></>)}
+          {prize && (<><div style={{ fontSize: '2rem', marginBottom: 0 }}><CategoryIcon category={prize.category} size="4rem" /></div><div style={{ fontWeight: 900, fontSize: '1.2rem' }}>{prize.name}</div><div style={{ fontSize: '.78rem', color: 'var(--text-muted)', marginTop: 3 }}>{prize.category}</div></>)}
         </div>
         <canvas ref={canvasRef} width={300} height={160}
           style={{ position: 'absolute', inset: 0, cursor: 'crosshair', touchAction: 'none', width: '100%', height: '100%' }}
@@ -1141,14 +1169,46 @@ export default function Game() {
 
   return (
     <div className="game-wrap" style={{ maxWidth: 640 }}>
-      <h1 style={{ fontSize: '2rem', fontWeight: 900, marginBottom: 6, display: 'flex', alignItems: 'center', gap: 10 }}>
-        <img src="/img/icon/logo.png" alt="오늘 뭐먹지?" style={{ height: 38, width: 38, objectFit: 'contain' }}
-          onError={(e) => { e.target.style.display = 'none' }} />
+      <div style={{ marginLeft: -20 }}>
+      <h1
+        style={{
+          fontSize: '1.5rem',
+          fontWeight: 800,
+          marginBottom: 5,
+          display: 'flex',
+          alignItems: 'center',
+          gap: 10
+        }}
+      >
+        <img
+          src="/img/icon/logo.png"
+          alt="오늘 뭐먹지?"
+          style={{
+            height: 38,
+            width: 38,
+            objectFit: 'contain',
+            marginLeft:20
+          }}
+          onError={(e) => {
+            e.target.style.display = 'none'
+          }}
+        />
+
         게임창
       </h1>
-      <p style={{ color: 'var(--text-muted)', fontSize: '.88rem', marginBottom: 24 }}>
+
+      <p
+        style={{
+          color: 'var(--text-muted)',
+          fontSize: '.88rem',
+          marginBottom: 24,
+          marginLeft:20
+
+        }}
+      >
         게임으로 오늘 메뉴를 정해보세요!
       </p>
+      </div>
 
       {/* 탭 */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 8, marginBottom: 24 }}>
