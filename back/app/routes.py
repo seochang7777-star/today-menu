@@ -1,7 +1,7 @@
 import os
 import math
 import requests as req_lib
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 from functools import wraps
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy import func
@@ -18,7 +18,7 @@ from app.models import (  # noqa
 
     User, Restaurant, Party, PartyMember,
     ChatMessage, RecommendationLog, MannerVote, StatusEnum, RoleEnum,
-    Report, Inquiry, Review, Favorite, Notice, Menu, Category
+    Report, Inquiry, Review, Favorite, Notice, Menu, Category, SearchLog
 )
 
 # ── 블루프린트 ────────────────────────────────────────────────────────────────
@@ -204,6 +204,48 @@ def get_trending_data():
         
     return jsonify({'items': results})
 
+@menu_bp.route('/search/log', methods=['POST'])
+def log_search_keyword():
+    try:
+        data = request.get_json() or {}
+        keyword = data.get('keyword', '').strip()
+        
+        if keyword:
+            new_log = SearchLog(keyword=keyword, created_at=datetime.now(timezone.utc))
+            db.session.add(new_log)
+            db.session.commit()
+            return jsonify({"message": "검색 로그 기록 완료"}), 201
+        return jsonify({"message": "빈 검색어입니다"}), 400
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"error": "백엔드 저장 실패", "details": str(e)}), 500
+
+
+@menu_bp.route('/trending/keywords', methods=['GET'])
+def get_realtime_trending_keywords():
+    try:
+        twenty_four_hours_ago = datetime.now(timezone.utc) - timedelta(days=1)
+        
+        trending_keywords = (
+            db.session.query(
+                SearchLog.keyword,
+                func.count(SearchLog.log_id).label('search_count'),
+                func.max(SearchLog.created_at).label('latest_search')
+            )
+            .filter(SearchLog.created_at >= twenty_four_hours_ago)
+            .group_by(SearchLog.keyword)
+            .order_by(
+                func.count(SearchLog.log_id).desc(),
+                func.max(SearchLog.created_at).desc()
+            )
+            .limit(8)
+            .all()
+        )
+        
+        results = [{"name": row.keyword, "count": row.search_count} for row in trending_keywords]
+        return jsonify({'items': results}), 200
+    except Exception as e:
+        return jsonify({"error": "백엔드 조회 실패", "details": str(e)}), 500
 
 # ══════════════════════════════════════════════════════════════════════════════
 # AUTH

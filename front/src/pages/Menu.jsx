@@ -4,6 +4,9 @@ import { useAuth } from '../App'
 import RestaurantCard from '../components/RestaurantCard';
 import RandomBanner from '../components/RandomBanner'
 import { getRestaurants, createLikeLog, toggleLike } from '../api/services'
+import api from '../api/axiosInstance'
+
+
 
 const CAT_ICON = {
   한식: './img/category/korean.png',
@@ -88,22 +91,16 @@ export default function Menu() {
       return next
     })
 
-  const handleSearch = () => {
+  const handleSearch = async () => {
     const keyword = searchInput.trim()
+    
     if (keyword) {
       try {
-        const saved = localStorage.getItem('trendKeywords')
-        const keywords = saved ? JSON.parse(saved) : []
-        const exists = keywords.find(k => k.name === keyword)
-        let updated
-        if (exists) {
-          updated = keywords.map(k => k.name === keyword ? { ...k, count: k.count + 1 } : k)
-        } else {
-          updated = [...keywords, { name: keyword, count: 1 }]
-        }
-        const sorted = updated.sort((a, b) => b.count - a.count || Math.random() - 0.5).slice(0, 8)
-        localStorage.setItem('trendKeywords', JSON.stringify(sorted))
-      } catch {}
+        // 이미 상단에 import api가 잘 되어 있으므로, 이 코드 한 줄만 넣으면 작동합니다!
+        await api.post('/api/menu/search/log', { keyword })
+      } catch (err) {
+        console.error("메뉴 검색 로그 저장 실패:", err)
+      }
     }
     go({ q: searchInput, page: 1 })
   }
@@ -156,27 +153,28 @@ export default function Menu() {
 
       {/* 검색창 */}
       <div className="mb-8 flex flex-wrap items-center justify-between gap-3">
-        <div className="w-full max-w-[420px]">
-          <form
-            onSubmit={(e) => { e.preventDefault(); handleSearch(); }}
-            className="flex h-12 items-center gap-3"
+      <div className="w-full max-w-[420px]">
+        <form
+          onSubmit={(e) => { e.preventDefault(); handleSearch(); }}
+          className="flex h-12 items-center gap-3"
+        >
+          <input
+            type="text"
+            placeholder="식당명을 검색하세요"
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
+            className="h-12 min-w-0 flex-1 rounded-full border-[1.5px] border-[rgba(244,108,111,0.8)] bg-white px-5 text-[0.92rem] font-semibold text-[var(--text-primary)] shadow-[0_4px_18px_rgba(244,108,111,0.08)] outline-none placeholder:text-[#9D8C86]"
+          />
+          <button
+            type="submit"
+            className="relative grid h-12 w-12 shrink-0 place-items-center rounded-full border-0 bg-[linear-gradient(135deg,var(--color-primary),#F98082)] text-[1.8rem] font-bold text-white shadow-[0_4px_18px_rgba(244,108,111,0.16)] transition hover:brightness-105 hover:shadow-md"
+            aria-label="검색"
           >
-            <input
-              type="text"
-              placeholder="식당명을 검색하세요"
-              value={searchInput}
-              onChange={(e) => setSearchInput(e.target.value)}
-              className="h-12 min-w-0 flex-1 rounded-full border-[1.5px] border-[rgba(244,108,111,0.8)] bg-white px-5 text-[0.92rem] font-semibold text-[var(--text-primary)] shadow-[0_4px_18px_rgba(244,108,111,0.08)] outline-none placeholder:text-[#9D8C86]"
-            />
-            <button
-              type="submit"
-              className="relative grid h-12 w-12 shrink-0 place-items-center rounded-full border-0 bg-[linear-gradient(135deg,var(--color-primary),#F98082)] text-[1.8rem] font-bold text-white shadow-[0_4px_18px_rgba(244,108,111,0.16)] transition hover:brightness-105 hover:shadow-md"
-              aria-label="검색"
-            >
-              <span className="relative -top-[2px] leading-none">⌕</span>
-            </button>
-          </form>
-        </div>
+            <span className="relative -top-[2px] leading-none">⌕</span>
+          </button>
+        </form>
+      </div>
+    </div>
 
         <div className="flex items-center gap-2">
           <span className="text-[0.85rem] text-[var(--text-muted)]">
@@ -193,7 +191,6 @@ export default function Menu() {
             <option value="new">최신순</option>
           </select>
         </div>
-      </div>
 
       {/* 그리드카드 */}
       {loading ? (

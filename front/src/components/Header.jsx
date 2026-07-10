@@ -3,6 +3,7 @@ import { Link, NavLink, useNavigate } from 'react-router-dom'
 import { useAuth } from '../App'
 import { logout } from '../api/services'
 import PartyNotification from './PartyNotification'
+import api from '../api/axiosInstance' // 설정된 axios 인스턴스 경로
 
 const NAV_LINKS = [
   { to: '/', label: '홈', end: true },
@@ -30,13 +31,24 @@ export default function Header() {
     setMobileOpen(false)
   }
 
-  const handleSearch = (e) => {
-    e.preventDefault()
-    if (q.trim()) {
-      navigate(`/menu?q=${encodeURIComponent(q)}`)
-      setMobileOpen(false)
+  const handleSearch = async (e) => {
+  e.preventDefault()
+  const keyword = q.trim()
+  
+  if (keyword) {
+    try {
+      // 🚀 데이터 일변도: 검색 순간 DB에 로그 적재 요청
+      await api.post('/api/menu/search/log', { keyword })
+    } catch (err) {
+      // 🎯 print.error를 console.error로 안전하게 수정 완료!
+      console.error("헤더 검색 로그 저장 실패:", err)
     }
+    
+    // 네트워크 에러가 나더라도 유저 검색은 계속 진행되도록 주소 이동
+    navigate(`/menu?q=${encodeURIComponent(keyword)}`)
+    setMobileOpen(false)
   }
+}
 
   const navCls = ({ isActive }) => `${navLinkBase} ${isActive ? navLinkActive : ''}`
 
@@ -58,26 +70,23 @@ export default function Header() {
           </Link>
 
           <div className="max-md:hidden">
-            <form
-              onSubmit={handleSearch}
-              className="flex h-12 overflow-hidden rounded-[10px] border-[1.5px] border-[rgba(244,108,111,0.8)] bg-white shadow-[0_4px_18px_rgba(244,108,111,0.08)]"
-            >
-              <input
-                type="text"
-                placeholder="식당명, 메뉴 검색..."
-                value={q}
-                onChange={(e) => setQ(e.target.value)}
-                className="min-w-0 flex-1 border-0 px-[18px] text-[0.92rem] font-semibold text-[var(--text-primary)] outline-0 placeholder:text-[#9D8C86]"
-              />
-              <button
-                type="submit"
-                className="w-12 border-0 bg-[linear-gradient(135deg,var(--color-primary),#F98082)] text-[1.35rem] font-bold text-white"
-                aria-label="검색"
-              >
-                ⌕
-              </button>
-            </form>
-          </div>
+      <form onSubmit={handleSearch} className="flex h-12 overflow-hidden rounded-[10px] border-[1.5px] border-[rgba(244,108,111,0.8)] bg-white shadow-[0_4px_18px_rgba(244,108,111,0.08)]">
+        <input
+          type="text"
+          placeholder="식당명, 메뉴 검색..."
+          value={q}
+          onChange={(e) => setQ(e.target.value)}
+          className="min-w-0 flex-1 border-0 px-[18px] text-[0.92rem] font-semibold text-[var(--text-primary)] outline-0 placeholder:text-[#9D8C86]"
+        />
+        <button
+          type="submit"
+          className="w-12 border-0 bg-[linear-gradient(135deg,var(--color-primary),#F98082)] text-[1.35rem] font-bold text-white"
+          aria-label="검색"
+        >
+          ⌕
+        </button>
+      </form>
+    </div>
 
           <div className="flex items-center justify-end text-[0.9rem] font-extrabold" >
             {user &&
