@@ -77,4 +77,33 @@ def create_app():
         except Exception as e:
             print(f"[APP] DB ERROR: {e}")
 
+    # ── APScheduler: 파티 자동 종료 (1분마다) ──────────────────
+    from flask_apscheduler import APScheduler
+    scheduler = APScheduler()
+
+    if not scheduler.running:
+        @scheduler.task('interval', id='auto_close_parties', minutes=1, misfire_grace_time=30)
+        def auto_close_parties():
+            with app.app_context():
+                try:
+                    from datetime import datetime
+                    from app.models import Party, StatusEnum
+                    now = datetime.now()
+                    expired = Party.query.filter(
+                        Party.status.in_([StatusEnum.RECRUITING, StatusEnum.CLOSED]),
+                        Party.meeting_time < now
+                    ).all()
+                    for p in expired:
+                        p.status = StatusEnum.COMPLETED
+                    if expired:
+                        db.session.commit()
+                        print(f"[Scheduler] {len(expired)}개 파티 자동 종료")
+                except Exception as e:
+                    print(f"[Scheduler] 오류: {e}")
+                    db.session.rollback()
+
+        scheduler.init_app(app)
+        scheduler.start()
+        print("[APP] APScheduler 시작")
+
     return app
