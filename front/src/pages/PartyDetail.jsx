@@ -560,7 +560,9 @@ export default function PartyDetail() {
               <div className="rounded-[10px] border border-[#FFC8C4] bg-white p-8">
                 <div className="mb-4 flex items-center justify-between">
                   <h3 className="flex items-center gap-2 text-xl font-black text-[#221517]">
-                    <span className="text-2xl">⭐</span>
+                    <span className="text-2xl">
+                      
+                    </span>
                     리뷰
                   </h3>
                   <span className="text-[0.82rem] text-[var(--text-muted)]">총 {reviews.length}개</span>
@@ -616,12 +618,12 @@ export default function PartyDetail() {
                   }}
                   style={{
                     width: '100%', marginBottom: 8, padding: '10px 0',
-                    background: 'var(--color-secondary)', color: '#fff',
+                    background: 'var(--bg-surface)', color: 'var(--text-secondary)',
                     border: 'none', borderRadius: 8,
                     fontSize: '.88rem', fontWeight: 700, cursor: 'pointer',
                   }}
                 >
-                  🏁 파티 종료하기
+                 파티 종료하기
                 </button>
               )}
 
@@ -660,7 +662,7 @@ export default function PartyDetail() {
                       <button className="btn btn-secondary btn-block" disabled>✅ 참여 중</button>
                       {!isRecruiting && (
                         <button className="btn btn-info btn-block" onClick={() => setActiveTab('chat')}>
-                          <img className="w-10 h-8" src='/img/icon/speech-bubble.png' alt='파티제목' />
+                          {/* <img className="w-10 h-8" src='/img/icon/speech-bubble.png' alt='파티제목' /> */}
                            채팅방 입장
                         </button>
                       )}
