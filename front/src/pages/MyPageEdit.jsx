@@ -290,7 +290,7 @@ export default function MyPageEdit() {
                   />
                 </div>
 
-                {/* 주소지 (디자인이 변경된 main의 카카오 검색 방식 유지) */}
+                {/* 주소지 */}
                 <div>
                   <label className="mb-2 block text-sm font-bold text-[var(--text-secondary)]">
                     주소지
@@ -316,9 +316,12 @@ export default function MyPageEdit() {
                     </button>
                   </div>
 
+                  {/* 🔥 [수정 부분] 단순 텍스트를 정돈된 테두리 칸(Box) 레이아웃으로 변경 */}
                   {form.address && (
-                    <div className="mt-2 text-sm text-[var(--text-muted)]">
-                      📍 {form.address}
+                    <div className="mt-3 flex items-center gap-2 rounded-2xl border border-[var(--border-color)] bg-white p-3.5 text-[0.93rem] text-[var(--text-primary)] shadow-sm">
+                      <span className="text-base flex-shrink-0">📍</span>
+                      <span className="font-semibold text-[var(--text-secondary)] flex-shrink-0">선택된 주소:</span>
+                      <span className="truncate font-medium">{form.address}</span>
                     </div>
                   )}
                 </div>
@@ -546,7 +549,8 @@ export default function MyPageEdit() {
                         securityAnswer: e.target.value,
                       })
                     }
-                  />
+                  >
+                  </input>
 
                   <p className="mt-2 text-xs text-gray-500">
                     아이디를 잊어버렸을 때 본인 확인에 사용됩니다.
