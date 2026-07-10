@@ -98,9 +98,8 @@ export default function Menu() {
 
   const handleSearch = async () => {
     const keyword = searchInput.trim()
-    
+    // 실시간 인기 검색어 카운팅
     if (keyword) {
-      // localStorage 인기 검색어 카운팅
       try {
         const saved = localStorage.getItem('trendKeywords')
         const keywords = saved ? JSON.parse(saved) : []
@@ -108,11 +107,15 @@ export default function Menu() {
         const updated = exists
           ? keywords.map(k => k.name === keyword ? { ...k, count: k.count + 1 } : k)
           : [...keywords, { name: keyword, count: 1 }]
-        const sorted = updated.sort((a, b) => b.count - a.count).slice(0, 8)
-        localStorage.setItem('trendKeywords', JSON.stringify(sorted))
+        localStorage.setItem('trendKeywords', JSON.stringify(
+          updated.sort((a, b) => b.count - a.count).slice(0, 8)
+        ))
       } catch {}
-
+    }
+    
+    if (keyword) {
       try {
+        // 이미 상단에 import api가 잘 되어 있으므로, 이 코드 한 줄만 넣으면 작동합니다!
         await api.post('/api/menu/search/log', { keyword })
       } catch (err) {
         console.error("메뉴 검색 로그 저장 실패:", err)
