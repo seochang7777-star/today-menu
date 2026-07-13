@@ -103,13 +103,14 @@ export default function RestaurantSearch({ userLoc, onRegister }) {
       {/* 검색 바 */}
       <form onSubmit={handleSearch} style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
         <input
-          className="form-control"
+          className="h-12 min-w-0 flex-1 rounded-full border-[1.5px] border-[rgba(244,108,111,0.8)] bg-white px-5 text-[0.92rem] font-semibold text-[var(--text-primary)] shadow-[0_4px_18px_rgba(244,108,111,0.08)] outline-none placeholder:text-[#9D8C86]"
           placeholder="식당명 또는 음식 종류 검색 (예: 삼겹살, 초밥집...)"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
         />
-        <button type="submit" disabled={loading} className="btn btn-primary" style={{ whiteSpace: 'nowrap' }}>
-          {loading ? '검색 중...' : '🔍 검색'}
+        <button type="submit" disabled={loading} className="relative grid h-10 w-10 shrink-0 place-items-center rounded-full border-0 bg-[linear-gradient(135deg,var(--color-primary),#F98082)] text-[1.8rem] font-bold text-white shadow-[0_4px_18px_rgba(244,108,111,0.16)] transition hover:brightness-105 hover:shadow-md"
+              aria-label="검색">
+          <span className="relative -top-[4px] leading-none">⌕</span>
         </button>
       </form>
 

@@ -9,7 +9,7 @@ import RandomBanner from '../components/RandomBanner'
 import api from '../api/axiosInstance'
 
 const adBannerClass =
-  'w-full overflow-hidden rounded-[12px] bg-white'
+   'w-full overflow-hidden rounded-[12px] bg-white max-md:h-[70px] max-[540px]:mt-2 max-[540px]:mb-0 max-[540px]:h-[110px]'
 const adBannerLinkClass = 'block h-full w-full'
 const adBannerImageClass =
   'h-full w-full object-contain object-center'
@@ -33,7 +33,7 @@ const mainBannerClass = 'relative h-[400px] overflow-hidden rounded-[10px] shado
 const slideBaseClass = 'absolute left-0 top-0 z-[1] flex h-full w-full items-center px-8 py-9 text-white opacity-0 transition-opacity duration-[600ms] ease-in-out sm:px-8 md:px-9 lg:px-8 xl:px-10'
 const slideActiveClass = 'z-[2] opacity-100'
 const slideBackgrounds = [
-  '[background:radial-gradient(circle_at_83%_35%,rgba(255,255,255,0.28),transparent_29%),linear-gradient(135deg,#FF8A72,var(--color-accent))]',
+  '[background:radial-gradient(circle_at_83%_35%,rgba(255,255,255,0.28),transparent_29%),linear-gradient(135deg,#FFEE7F,var(--color-accent))]',
   '[background:radial-gradient(circle_at_85%_25%,rgba(255,255,255,0.28),transparent_24%),linear-gradient(135deg,#FEB95C,#F46C6F)]',
   '[background:radial-gradient(circle_at_85%_25%,rgba(255,238,127,0.35),transparent_25%),linear-gradient(135deg,#F1B8AE,#F46C6F)]',
 ]
@@ -44,6 +44,8 @@ const bannerTextClass = 'ml-5 mb-9 text-[1.08rem] font-extrabold leading-[1.65]'
 const bannerActionsClass = 'flex flex-wrap gap-[5px]'
 const heroButtonLightClass = 'ml-5 inline-flex min-h-[44px] items-center justify-center gap-2 rounded-[12px] bg-white px-5 text-[0.94rem] font-black text-[var(--color-primary)] shadow-[var(--shadow-sm)] transition-transform hover:-translate-y-0.5 max-[540px]:ml-5 max-[540px]:min-h-8 max-[540px]:gap-1.5 max-[540px]:rounded-[8px] max-[540px]:px-3 max-[540px]:text-[0.74rem]'
 const heroButtonYellowClass = 'ml-3 inline-flex min-h-[44px] items-center justify-center gap-2 rounded-[12px] bg-[linear-gradient(135deg,var(--color-secondary),var(--color-accent))] px-5 text-[0.94rem] font-black text-[#4B2D07] shadow-[0_10px_18px_rgba(254,185,92,0.25)] transition-transform hover:-translate-y-0.5 max-[540px]:ml-2 max-[540px]:min-h-8 max-[540px]:gap-1.5 max-[540px]:rounded-[8px] max-[540px]:px-3 max-[540px]:text-[0.74rem]'
+
+const pinkButtonClass='ml-3 inline-flex min-h-[44px] items-center justify-center gap-2 rounded-[12px] bg-[linear-gradient(135deg,#f8888a,var(--color-primary))] px-5 text-[0.94rem] font-bold text-[#ffff] shadow-[0_10px_18px_rgba(254,185,92,0.25)] transition-transform hover:-translate-y-0.5 max-[540px]:ml-2 max-[540px]:min-h-8 max-[540px]:gap-1.5 max-[540px]:rounded-[8px] max-[540px]:px-3 max-[540px]:text-[0.74rem]'
 
 const bannerFoodClass = 'absolute right-0 top-0 bottom-0 z-[1] h-full w-[52%] rounded-l-[999px] rounded-r-none object-cover object-center shadow-[0_18px_30px_rgba(85,34,26,0.2)] max-md:hidden xl:w-[51%]'
 
@@ -233,24 +235,25 @@ export default function Home() {
   };
 
   return (
-    <main className="mx-auto w-full max-w-7xl px-4 py-6">
+    <main className="mx-auto w-full max-w-7xl px-4 py-6 max-[540px]:pb-0">
       <div className="home-page">
         <section className={heroLayoutClass}>
           <div className={mainBannerClass}>
             <div className={`${slideBaseClass} ${slideBackgrounds[0]} ${bannerIdx === 0 ? slideActiveClass : ''}`}>
               <div className={bannerCopyClass}>
                 <h1 className={bannerTitleClass}>
-                  HAVE A G<span className={bannerTitleAccentClass}>😍</span>OD TIME
+                  랜덤도 실력이다.
+                  {/* HAVE A G<span className={bannerTitleAccentClass}>😍</span>OD TIME */}
                 </h1>
                 <p className={bannerTextClass}>
-                  AI가 추천하는 오늘의 베스트 맛집
+                  뭐 먹을지 고민할 시간에,
                   <br />
-                  지금 당신의 취향을 찾아보세요
+                  맛있게 먹자
                 </p>
 
                 <div className={bannerActionsClass}>
                   <Link to="/menu" className={heroButtonLightClass}>추천 맛집 보기 →</Link>
-                  <Link to="/game" className={heroButtonYellowClass}>랜덤 메뉴 추천 🎲</Link>
+                  <Link to="/game" className={pinkButtonClass}>랜덤 메뉴 추천 🎲</Link>
                 </div>
               </div>
 
@@ -283,11 +286,11 @@ export default function Home() {
 
             <div className={`${slideBaseClass} ${slideBackgrounds[2]} ${bannerIdx === 2 ? slideActiveClass : ''}`}>
               <div className={bannerCopyClass}>
-                <h1 className={bannerTitleClass}>AI 메뉴 추천</h1>
+                <h1 className={bannerTitleClass}>AI가 고른 찐맛집</h1>
                 <p className={bannerTextClass}>
-                  예산, 시간, 취향을 분석해서
+                  고민은 AI에게,
                   <br />
-                  오늘 먹기 좋은 메뉴를 골라드려요
+                  맛있는 건 당신에게
                 </p>
                 <div className={bannerActionsClass}>
                   <button
@@ -429,7 +432,7 @@ export default function Home() {
         </section>
 
         {user && (
-          <section ref={nearbyRef} className="nearby-section mb-[45px] mt-[11px]">
+          <section ref={nearbyRef} className="nearby-section mb-[45px] mt-[12px] max-[540px]:mb-4 ">
 
             <div className={nearbyTitleWrapClass}>
               <span>📍 내 주변 추천</span>
@@ -447,7 +450,7 @@ export default function Home() {
 
             {showSearch && (
               <div className="search-panel">
-                <h4>카카오 식당 검색 & DB 등록</h4>
+                
                 <RestaurantSearch
                   userLoc={userLoc}
                   onRegister={() => {

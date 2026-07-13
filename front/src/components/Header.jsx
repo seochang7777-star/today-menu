@@ -10,6 +10,7 @@ const NAV_LINKS = [
   { to: '/menu', label: '맛집 찾기' },
   { to: '/party', label: '밥친구' },
   { to: '/game', label: '게임찾기' },
+  {to: '/mypage', label: '마이페이지'},
 ]
 
 const pageContainer = 'container'
@@ -172,7 +173,7 @@ export default function Header() {
           />
           <div className="fixed bottom-0 right-0 top-0 z-[810] flex w-[min(320px,86vw)] flex-col bg-white shadow-[-18px_0_34px_rgba(0,0,0,0.14)]">
             <div className="flex items-center justify-between border-b border-[var(--border-color)] px-5 py-[18px] font-black">
-              <span>오늘 뭐먹지?</span>
+              <span><img className='grid h-[40px] w-[40px]' src='/img/icon/logo.png' /></span>
               <button className="border-0 bg-transparent text-xl" onClick={() => setMobileOpen(false)}>×</button>
             </div>
 
@@ -199,13 +200,6 @@ export default function Header() {
                   {label}
                 </Link>
               ))}
-              <Link
-                to="/mypage"
-                onClick={() => setMobileOpen(false)}
-                className="block border-b border-[#FFF0E9] px-[5px] py-[15px] font-black"
-              >
-                마이페이지
-              </Link>
             </div>
 
             <div className="flex flex-col gap-2 border-y border-[var(--border-color)] px-5 py-[18px]">
