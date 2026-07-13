@@ -88,7 +88,7 @@ export default function Party() {
       <div className="-mt-3 flex flex-col sm:flex-row justify-between items-center gap-4">
         <form
           onSubmit={(e) => { e.preventDefault(); handleSearch(); }}
-          className="flex h-12 w-full max-w-[420px] items-center gap-4"
+          className="flex h-12 w-full max-w-[420px] items-center gap-4 max-[540px]:order-last max-[540px]:pb-5"
         >
           <input
             type="text"
@@ -109,7 +109,7 @@ export default function Party() {
         <img
           src="/img/banner/party_diner.png"
           alt="식사하는 사람들"
-          className="w-[200px] md:w-[240px] h-auto object-contain flex-shrink-0 select-none"
+          className="w-[200px] md:w-[240px] h-auto object-contain flex-shrink-0 select-none max-[540px]:order-first max-[540px]:pt-4"
         />
       </div>
 
@@ -250,7 +250,7 @@ export default function Party() {
       {/* 흰색 박스 끝 */}
         </main>
 
-        <aside className="mt-5 rounded-2xl border border-[#FFE2E2] ml-7 bg-[#FFFDF7] shadow-sm lg:sticky lg:top-24">
+        <aside className="mt-5 rounded-2xl border border-[#FFE2E2] ml-7 bg-[#FFFDF7] shadow-sm lg:sticky lg:top-24 max-[540px]:ml-0">
           <div className="border-b border-[#FFE2E2] px-5 py-4">
             <div className="flex items-center gap-2">
               <svg
@@ -286,9 +286,9 @@ export default function Party() {
                 <Link
                   key={p.party_id}
                   to={`/party/${p.party_id}`}
-                  className="flex gap-3 rounded-xl border border-gray-100 bg-white p-3 shadow-sm transition hover:border-[#F46C6F]/50 hover:shadow-md"
+                  className="flex items-center gap-3 rounded-xl border border-gray-100 bg-white p-3 shadow-sm transition hover:border-[#F46C6F]/50 hover:shadow-md"
                 >
-                  <div className="h-20 w-24 shrink-0 overflow-hidden rounded-lg bg-gray-100">
+                  <div className="h-20 w-20 shrink-0 overflow-hidden rounded-lg bg-gray-100">
                     <RestaurantImage
                       imageUrl={p.restaurant?.image_url}
                       category={p.restaurant?.category}

@@ -108,13 +108,13 @@ button {
   font-weight: 900;
 }
 
-.section-title span {
+.section-title > span {
   position: relative;
   font-size: 1.55rem;
   letter-spacing: -0.03em;
 }
 
-.section-title span::after {
+.section-title > span::after {
   content: '';
   position: absolute;
   left: 0;
@@ -339,7 +339,7 @@ button {
     align-items: flex-end;
   }
 
-  .section-title span {
+  .section-title > span {
     font-size: 1.28rem;
   }
 

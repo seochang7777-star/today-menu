@@ -405,7 +405,7 @@ export default function PartyDetail() {
         </section>
 
         <div className="mt-8 grid grid-cols-1 gap-6 items-start lg:grid-cols-[300px_1fr]">
-          <main className="order-2 min-w-0">
+          <main className="order-2 min-w-0 max-[540px]:order-1">
             <div className="mb-4">
               <div className="flex gap-1.5 items-center flex-wrap mb-2">
                 {/* 1. 모집 상태 배지 */}
@@ -659,7 +659,7 @@ export default function PartyDetail() {
 
             {/* ── 사이드 컬럼 ── */}
           </main>
-          <aside className="order-1 space-y-4">
+          <aside className="order-1 space-y-4 max-[540px]:order-2">
             <div className="party-info-box mb-4">
               <div className="text-xs text-gray-500 mb-1">파티 참여</div>
               <div className="flex justify-between items-center mb-4">
@@ -791,109 +791,81 @@ export default function PartyDetail() {
                 </div>
               )}
               {(party.members ?? []).map((m, i) => (
-                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 0 20px', borderBottom: '1px solid var(--border-color)' }}>
-                  <div className="avatar-sm">{m.user?.nickname?.[0] ?? '?'}</div>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontWeight: 600, fontSize: '.9rem' }}>{m.user?.nickname ?? '알 수 없음'}</div>
-                    <div style={{ fontSize: '.75rem', color: 'var(--text-muted)' }}>{m.is_host ? '호스트' : '참여자'}</div>
+                <div key={i} className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-start gap-x-3 gap-y-2 py-2 border-b border-[var(--border-color)]">
+                  <div className="avatar-sm shrink-0">{m.user?.nickname?.[0] ?? '?'}</div>
+                  <div className="min-w-0 flex-1">
+                    <div className="truncate text-[0.9rem] font-semibold">{m.user?.nickname ?? '알 수 없음'}</div>
+                    <div className="text-[0.75rem] text-[var(--text-muted)]">{m.is_host ? '호스트' : '참여자'}</div>
                   </div>
 
+                  <div className="flex flex-wrap items-center justify-end gap-1">
+                    {/* 호스트가 타인 강퇴 */}
+                    {user && party.is_host && !m.is_host && (
+                      <button
+                        onClick={() => {
+                          if (window.confirm(`${m.user?.nickname}님을 정말로 강퇴하시겠습니까?`)) {
+                            handleKick(m.user.user_id)
+                          }
+                        }}
+                        className="cursor-pointer rounded-md border border-[var(--color-danger)] bg-transparent px-2 py-[3px] text-[0.72rem] font-bold text-[var(--color-danger)]"
+                      >
+                        강퇴
+                      </button>
+                    )}
+                    {user && m.user?.user_id !== user.user_id && isMember && (
+                      <button
+                        onClick={() => openReportModal(m.user.user_id)}
+                        className="cursor-pointer rounded-md border border-[var(--color-danger)] bg-transparent px-2 py-[3px] text-[0.72rem] font-bold text-[var(--color-danger)]">
+                        신고
 
-                  {/* 호스트가 타인 강퇴 */}
-                  {user && party.is_host && !m.is_host && (
-                    <button
-                      onClick={() => {
-                        if (window.confirm(`${m.user?.nickname}님을 정말로 강퇴하시겠습니까?`)) {
-                          handleKick(m.user.user_id)
-                        }
-                      }}
-                      style={{
-                        marginRight: 4, fontSize: '0.72rem', padding: '3px 8px',
-                        color: 'var(--color-danger)', border: '1px solid var(--color-danger)',
-                        borderRadius: 6, cursor: 'pointer', background: 'transparent', fontWeight: 700
-                      }}
-                    >
-                      강퇴
-                    </button>
-                  )}
-                  {user && m.user?.user_id !== user.user_id && isMember && (
-                    <button
-                      onClick={() => openReportModal(m.user.user_id)}
-                      className="text-xs text-red-500 border border-red-500 rounded px-2"
-                      style={{
-                        marginRight: 4, fontSize: '0.72rem', padding: '3px 8px',
-                        color: 'var(--color-danger)', border: '1px solid var(--color-danger)',
-                        borderRadius: 6, cursor: 'pointer', background: 'transparent', fontWeight: 700
-                      }}>
-                      신고
-
-                    </button>
-                  )}
+                      </button>
+                    )}
 
 
-                  {/* 일반 참여자 본인 탈퇴 버튼 */}
-                  {user && !party.is_host && m.user?.user_id === user.user_id && (
-                    <button
-                      onClick={handleLeaveParty}
-                      style={{
-                        marginRight: 4, fontSize: '0.72rem', padding: '3px 8px',
-                        color: 'var(--text-muted)', border: '1px solid var(--border-color)',
-                        borderRadius: 6, cursor: 'pointer', background: 'transparent', fontWeight: 700
-                      }}
-                    >
-                      탈퇴
+                    {/* 일반 참여자 본인 탈퇴 버튼 */}
+                    {user && !party.is_host && m.user?.user_id === user.user_id && (
+                      <button
+                        onClick={handleLeaveParty}
+                        className="cursor-pointer rounded-md border border-[var(--border-color)] bg-transparent px-2 py-[3px] text-[0.72rem] font-bold text-[var(--text-muted)]"
+                      >
+                        탈퇴
 
-                    </button>
-                  )}
+                      </button>
+                    )}
 
-                  {/* 호스트 본인 행 — 파티 중단(취소) 버튼 */}
-                  {user && party.is_host && m.user?.user_id === user.user_id && party.status !== 'COMPLETED' && (
-                    <button
-                      onClick={() => {
-                        // 파티원(본인 포함)이 1명 초과일 때(즉, 다른 사람이 있을 때) 경고
-                        if (party.members.length > 1) {
-                          alert('다른 파티원이 참여 중이므로 파티를 중단할 수 없습니다. 강퇴하거나 멤버가 모두 나간 뒤 시도해주세요.');
-                          return;
-                        }
-                        handleCancelParty();
-                      }}
-                      style={{
-                        marginRight: 4,
-                        fontSize: '0.72rem',
-                        padding: '3px 8px',
-                        // 파티원이 있을 때는 회색(비활성 느낌), 없으면 빨간색(활성)
-                        color: party.members.length > 1 ? '#999' : 'var(--color-danger)',
-                        border: `1px solid ${party.members.length > 1 ? '#ccc' : 'var(--color-danger)'}`,
-                        borderRadius: 6,
-                        cursor: party.members.length > 1 ? 'not-allowed' : 'pointer',
-                        background: 'transparent',
-                        fontWeight: 700
-                      }}
-                    >
-                      {party.members.length > 1 ? '중단 불가' : '파티중단'}
-                    </button>
-                  )}
+                    {/* 호스트 본인 행 — 파티 중단(취소) 버튼 */}
+                    {user && party.is_host && m.user?.user_id === user.user_id && party.status !== 'COMPLETED' && (
+                      <button
+                        onClick={() => {
+                          // 파티원(본인 포함)이 1명 초과일 때(즉, 다른 사람이 있을 때) 경고
+                          if (party.members.length > 1) {
+                            alert('다른 파티원이 참여 중이므로 파티를 중단할 수 없습니다. 강퇴하거나 멤버가 모두 나간 뒤 시도해주세요.');
+                            return;
+                          }
+                          handleCancelParty();
+                        }}
+                        className={`rounded-md border bg-transparent px-2 py-[3px] text-[0.72rem] font-bold ${party.members.length > 1
+                          ? 'cursor-not-allowed border-[#ccc] text-[#999]'
+                          : 'cursor-pointer border-[var(--color-danger)] text-[var(--color-danger)]'
+                          }`}
+                      >
+                        {party.members.length > 1 ? '중단 불가' : '파티중단'}
+                      </button>
+                    )}
+                  </div>
 
                   {user && m.user?.user_id !== user.user_id && (
-                    <div style={{ display: 'flex', gap: 3, flexShrink: 0 }}>
+                    <div className="col-span-3 flex w-full items-center gap-2">
                       <button onClick={() => handleVote(m.user.user_id, true)}
                         disabled={votedToday.some(v => v.id === Number(m.user.user_id)) || voteRemaining <= 0}
                         title="매너 좋아요 +1°"
-                        style={{
-                          border: 'none', borderRadius: 6, padding: '3px 7px', cursor: 'pointer',
-                          background: votedToday.some(v => v.id === m.user.user_id && v.type === true) ? '#FFEE7F' : 'var(--bg-surface)',
-                          fontSize: '.75rem', opacity: voteRemaining <= 0 && !votedToday.includes(m.user?.user_id) ? .4 : 1
-                        }}>
+                        className={`flex-1 cursor-pointer rounded-md border-0 px-2 py-[3px] text-[0.75rem] ${votedToday.some(v => v.id === m.user.user_id && v.type === true) ? 'bg-[#FFEE7F]' : 'bg-[var(--bg-surface)]'} ${voteRemaining <= 0 && !votedToday.includes(m.user?.user_id) ? 'opacity-40' : 'opacity-100'}`}>
                         👍
                       </button>
                       <button onClick={() => handleVote(m.user.user_id, false)}
                         disabled={votedToday.some(v => v.id === Number(m.user.user_id)) || voteRemaining <= 0}
                         title="매너 싫어요 -1°"
-                        style={{
-                          border: 'none', borderRadius: 6, padding: '3px 7px', cursor: 'pointer',
-                          background: votedToday.some(v => v.id === m.user.user_id && v.type === false) ? '#FFEE7F' : 'var(--bg-surface)',
-                          fontSize: '.75rem', opacity: voteRemaining <= 0 && !votedToday.includes(m.user?.user_id) ? .4 : 1
-                        }}>
+                        className={`flex-1 cursor-pointer rounded-md border-0 px-2 py-[3px] text-[0.75rem] ${votedToday.some(v => v.id === m.user.user_id && v.type === false) ? 'bg-[#FFEE7F]' : 'bg-[var(--bg-surface)]'} ${voteRemaining <= 0 && !votedToday.includes(m.user?.user_id) ? 'opacity-40' : 'opacity-100'}`}>
                         👎
                       </button>
                     </div>

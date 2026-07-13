@@ -35,6 +35,7 @@ export default function Menu() {
   const [pagination, setPagination] = useState({ total: 0, pages: 1, page: 1, has_prev: false, has_next: false })
   const [loading, setLoading] = useState(false)
   const [searchInput, setSearchInput] = useState(q)
+  const [isMobilePagination, setIsMobilePagination] = useState(false)
 
   const handleRestaurantLike = async (item) => {
     if (!user) { alert('로그인이 필요합니다.'); return }
@@ -60,6 +61,15 @@ export default function Menu() {
   }, [activeCat, q, page, sort])
 
   useEffect(() => { fetchData() }, [fetchData])
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia('(max-width: 540px)')
+    const handleChange = () => setIsMobilePagination(mediaQuery.matches)
+
+    handleChange()
+    mediaQuery.addEventListener('change', handleChange)
+    return () => mediaQuery.removeEventListener('change', handleChange)
+  }, [])
 
   const go = (params) =>
     setSearchParams((prev) => {
@@ -96,16 +106,19 @@ export default function Menu() {
 
   const pageNums = () => {
     const total = pagination.pages
-    if (total <= 10) return Array.from({ length: total }, (_, i) => i + 1)
+    const visibleCount = isMobilePagination ? 5 : 10
+    if (total <= visibleCount) return Array.from({ length: total }, (_, i) => i + 1)
     const cur = pagination.page
-    let start = Math.max(1, cur - 4)
-    const end = Math.min(total, start + 9)
-    if (end - start < 9) start = Math.max(1, end - 9)
+    const before = Math.floor((visibleCount - 1) / 2)
+    let start = Math.max(1, cur - before)
+    const end = Math.min(total, start + visibleCount - 1)
+    if (end - start < visibleCount - 1) start = Math.max(1, end - visibleCount + 1)
     return Array.from({ length: end - start + 1 }, (_, i) => start + i)
   }
 
   return (
     <>
+    <main className="mx-auto w-full max-w-7xl px-4 py-6">
       <h1 className="mb-6 text-[1.55rem] font-black">맛집찾기</h1>
 
       <section className={adBannerClass}>
@@ -160,7 +173,7 @@ export default function Menu() {
           </form>
         </div>
 
-        <div className="mt-6 flex items-center gap-4">
+        <div className="mt-6 flex items-center gap-4 max-[540px]:mt-2 max-[540px]:w-full max-[540px]:justify-between">
           <span className="text-[0.85rem] text-[var(--text-muted)]">
             총 {pagination.total.toLocaleString()}개
           </span>
@@ -234,6 +247,7 @@ export default function Menu() {
           )}
         </div>
       )}
+      </main>
     </>
   )
 }

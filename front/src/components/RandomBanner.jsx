@@ -38,12 +38,12 @@ export default function RandomBanner() {
   return (
     <div 
       onClick={handleBannerClick} 
-      className="block w-full h-[200px] sm:h-[300px] overflow-hidden rounded-2xl shadow-lg transition-transform hover:scale-[1.01] cursor-pointer"
+      className="block h-full w-full overflow-hidden rounded-2xl bg-white shadow-lg transition-transform hover:scale-[1.01] cursor-pointer"
     >
       <img
         src={banner.img}
         alt="랜덤 배너"
-        className="w-full h-full object-cover"
+        className="h-full w-full object-contain object-center"
       />
     </div>
   );

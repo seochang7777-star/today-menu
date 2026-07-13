@@ -60,17 +60,17 @@ export default function Support() {
   );
 
   const loadInquiries = async () => {
-  try {
-    const { data } = await api.get('/api/support/inquiries');
-    setInquiries(Array.isArray(data) ? data : []);
-  } catch (error) {
-    console.error(error);
-    setInquiries([]);
-  }
+    try {
+      const { data } = await api.get('/api/support/inquiries');
+      setInquiries(Array.isArray(data) ? data : []);
+    } catch (error) {
+      console.error(error);
+      setInquiries([]);
+    }
   };
 
   useEffect(() => {
-  loadInquiries();
+    loadInquiries();
   }, []);
 
   // ✍️ 일반 회원 질문 생성 (수정된 버전)
@@ -120,9 +120,9 @@ export default function Support() {
         setNewContent("");
         setIsInquiryModalOpen(false);
         alert("문의사항이 등록되었습니다.")
-      setActiveTab('inquiry')
-      window.scrollTo({ top: 0, behavior: 'smooth' })
-        
+        setActiveTab('inquiry')
+        window.scrollTo({ top: 0, behavior: 'smooth' })
+
       } else {
         // 서버에서 422 에러가 올 경우 상세 내용 출력
         console.error("서버 에러:", result);
@@ -136,211 +136,220 @@ export default function Support() {
 
   // 👑 관리자 답변 등록
   const handleAddAnswer = async (id) => {
-  if (userRole !== "admin") return;
-  if (!adminReplyText.trim()) {
-    alert("답변 내용을 입력하세요.");
-    return;
-  }
-
-  try {
-    const response = await api.patch(
-      `/api/support/inquiries/${id}/answer`,
-      {
-        answer: adminReplyText
-      }
-    );
-
-    if (response.status < 400) {
-      await loadInquiries();
-
-      setAdminReplyText("");
-
-      alert("답변 등록이 완료되었습니다.");
+    if (userRole !== "admin") return;
+    if (!adminReplyText.trim()) {
+      alert("답변 내용을 입력하세요.");
+      return;
     }
-  } catch (error) {
-    console.error(error);
-    alert("답변 등록 실패");
-  }
-};
 
-    // 🔍 [필터링 및 페이징] 실시간 내부 검색 반영
-    // 1. useMemo를 사용해 데이터 계산 로직을 캐싱합니다. (이게 핵심입니다!)
-    const filteredInquiries = useMemo(() => {
-      return inquiries.filter(item =>
-        item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        item.content.toLowerCase().includes(searchQuery.toLowerCase())
+    try {
+      const response = await api.patch(
+        `/api/support/inquiries/${id}/answer`,
+        {
+          answer: adminReplyText
+        }
       );
-    }, [inquiries, searchQuery]); // inquiries나 검색어가 바뀔 때만 다시 계산
 
-    // 2. 페이지네이션 변수
-    const itemsPerPage = 5;
-    const totalPages = Math.max(1, Math.ceil(filteredInquiries.length / itemsPerPage));
+      if (response.status < 400) {
+        await loadInquiries();
 
-    // 3. 페이지네이션 데이터 슬라이싱
-    const currentInquiries = useMemo(() => {
-      const indexOfLastItem = currentPage * itemsPerPage;
-      const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-      return filteredInquiries.slice(indexOfFirstItem, indexOfLastItem);
-    }, [filteredInquiries, currentPage]);
+        setAdminReplyText("");
 
-    // 4. 페이지 범위 자동 조정 (유효하지 않은 페이지 접근 방지)
-    useEffect(() => {
-      if (currentPage > totalPages) {
-        setCurrentPage(totalPages);
+        alert("답변 등록이 완료되었습니다.");
       }
-    }, [totalPages, currentPage]);
+    } catch (error) {
+      console.error(error);
+      alert("답변 등록 실패");
+    }
+  };
 
-    // 5. 검색어 변경 시에만 페이지 1로 초기화 (중요: filteredInquiries.length를 의존성으로 쓰지 마세요!)
-    useEffect(() => {
-      setCurrentPage(1);
-    }, [searchQuery]);
+  // 🔍 [필터링 및 페이징] 실시간 내부 검색 반영
+  // 1. useMemo를 사용해 데이터 계산 로직을 캐싱합니다. (이게 핵심입니다!)
+  const filteredInquiries = useMemo(() => {
+    return inquiries.filter(item =>
+      item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      item.content.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }, [inquiries, searchQuery]); // inquiries나 검색어가 바뀔 때만 다시 계산
 
-    return (
-      // 🌟 bg-[#FDFAD1]를 제거하고 bg-transparent를 넣어 투명하게 만듭니다.
-      <div className="bg-transparent min-h-screen text-gray-800 pb-20 font-sans antialiased">
+  // 2. 페이지네이션 변수
+  const itemsPerPage = 5;
+  const totalPages = Math.max(1, Math.ceil(filteredInquiries.length / itemsPerPage));
+
+  // 3. 페이지네이션 데이터 슬라이싱
+  const currentInquiries = useMemo(() => {
+    const indexOfLastItem = currentPage * itemsPerPage;
+    const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+    return filteredInquiries.slice(indexOfFirstItem, indexOfLastItem);
+  }, [filteredInquiries, currentPage]);
+
+  // 4. 페이지 범위 자동 조정 (유효하지 않은 페이지 접근 방지)
+  useEffect(() => {
+    if (currentPage > totalPages) {
+      setCurrentPage(totalPages);
+    }
+  }, [totalPages, currentPage]);
+
+  // 5. 검색어 변경 시에만 페이지 1로 초기화 (중요: filteredInquiries.length를 의존성으로 쓰지 마세요!)
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery]);
+
+  return (
+    // 🌟 bg-[#FDFAD1]를 제거하고 bg-transparent를 넣어 투명하게 만듭니다.
+    <div className="bg-transparent min-h-screen text-gray-800 pb-20 font-sans antialiased">
 
 
-        {/* 1. 타이틀 영역 */}
-        <div className="bg-transparent py-8 text-center border-b border-[#FEB95C]/40">
-          <h1 className="text-2xl sm:text-3xl font-black text-gray-950 tracking-tight">고객센터</h1>
+      {/* 1. 타이틀 영역 */}
+      <div className="bg-transparent py-8 text-center border-b border-[#FEB95C]/40">
+        <h1 className="text-2xl sm:text-3xl font-black text-gray-950 tracking-tight">고객센터</h1>
+      </div>
+
+      {/* 이하 나머지 코드 동일 ... */}
+
+
+      <div className="max-w-5xl mx-auto px-4 mt-8">
+
+        {/* 2. 클라이언트 검색창 */}
+        <div className="max-w-2xl mx-auto mb-8">
+          <div className="relative">
+            <input
+              type="text"
+              placeholder="찾는 단어를 입력하면 아래 리스트가 실시간으로 필터링됩니다..."
+              value={searchQuery}
+
+              onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }} // 검색 시 첫 페이징으로 이동하여 에러 방어
+              className="w-full py-2.5 px-6 bg-white text-gray-950 text-sm font-medium rounded-full shadow-sm border-2 border-[#FEB95C] focus:outline-none focus:border-[#F46C6F]"
+
+            />
+            <span className="absolute right-5 top-3 text-[var(--text-light)] text-sm">🔍</span>
+          </div>
         </div>
 
-        {/* 이하 나머지 코드 동일 ... */}
-
-
-        <div className="max-w-5xl mx-auto px-4 mt-8">
-
-          {/* 2. 클라이언트 검색창 */}
-          <div className="max-w-2xl mx-auto mb-8">
-            <div className="relative">
-              <input
-                type="text"
-                placeholder="찾는 단어를 입력하면 아래 리스트가 실시간으로 필터링됩니다..."
-                value={searchQuery}
-
-                onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }} // 검색 시 첫 페이징으로 이동하여 에러 방어
-                className="w-full py-2.5 px-6 bg-white text-gray-950 text-sm font-medium rounded-full shadow-sm border-2 border-[#FEB95C] focus:outline-none focus:border-[#F46C6F]"
-
-              />
-              <span className="absolute right-5 top-3 text-[var(--text-light)] text-sm">🔍</span>
-            </div>
-          </div>
-
-          {/* 3. 상단 탭 제어 & 우측 1:1 문의 버튼 배치 */}
-          <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mb-10">
-            <div className="flex gap-2">
-              {[
-                { id: "all", label: "📋 전체" },
-                { id: "faq", label: "✨ 자주 묻는 질문" },
-                { id: "inquiry", label: "💬 1:1 문의사항" }
-              ].map(tab => (
-                <button
-                  key={tab.id}
-                  onClick={() => { setActiveTab(tab.id); setCurrentPage(1); }}
-                  className={`px-4 py-2 rounded-full font-black text-xs sm:text-sm transition-all border shadow-sm
-                  ${activeTab === tab.id
-                      ? "bg-[var(--color-primary)] text-white border-[var(--color-primary)]"
-                      : "bg-white text-[var(--text-muted)] border-[var(--border-color)] hover:bg-[var(--bg-surface)]"
-                    }`}
-                >
-                  {tab.label}
-                </button>
-              ))}
-            </div>
-
-            {/* ✍️ 오른쪽 끝 구석에 깔끔히 박힌 모달 오픈 버튼 */}
-            {(activeTab === "all" || activeTab === "inquiry") && (
+        {/* 3. 상단 탭 제어 & 우측 1:1 문의 버튼 배치 */}
+        <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mb-10">
+          <div className="flex gap-2">
+            {[
+              { id: "all", label: "📋 전체" },
+              { id: "faq", label: "✨ 자주 묻는 질문" },
+              { id: "inquiry", label: "💬 1:1 문의사항" }
+            ].map(tab => (
               <button
-                onClick={() => { setIsInquiryModalOpen(true); setFormError(""); }}
-                className="w-full sm:w-auto px-5 py-2.5 bg-[var(--color-primary)] hover:bg-[var(--color-primary-dark)] text-white font-bold text-sm rounded-[12px] shadow-sm transition-colors flex items-center justify-center gap-1.5"
+                key={tab.id}
+                onClick={() => { setActiveTab(tab.id); setCurrentPage(1); }}
+                className={`px-4 py-2 rounded-full font-black text-xs sm:text-sm transition-all border shadow-sm
+                  ${activeTab === tab.id
+                    ? "bg-[var(--color-primary)] text-white border-[var(--color-primary)]"
+                    : "bg-white text-[var(--text-muted)] border-[var(--border-color)] hover:bg-[var(--bg-surface)]"
+                  }`}
               >
-                <span>✍️</span> 1:1 문의하기
+                {tab.label}
               </button>
-            )}
+            ))}
           </div>
 
-          {/* 4. FAQ 목록 출력 */}
-          {(activeTab === "all" || activeTab === "faq") && (
-            <section className="mb-12">
-              <div className="mb-4">
-                <span className="inline-block px-4 py-1.5 bg-[var(--bg-surface)] border border-[var(--color-accent)] text-[var(--text-primary)] font-extrabold text-xs tracking-wider rounded-[24px] shadow-sm">자주 묻는 질문</span>
-              </div>
-              {filteredFaqs.length === 0 ? (
-                <p className="text-sm text-[var(--text-muted)] py-4 bg-white text-center rounded-[24px]">검색 결과와 일치하는 FAQ가 없습니다.</p>
-              ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-                  {filteredFaqs.map(item => (
-                    <div
-                      key={item.id}
-                      onClick={() => setActiveFaq(item)}
-                      className="bg-white hover:bg-[var(--bg-surface)] p-5 rounded-[24px] min-h-[100px] flex items-center justify-center text-center cursor-pointer transition-all border border-[var(--border-color)] shadow-sm hover:shadow-md group"
-                    >
-                      <p className="text-xs font-bold text-[var(--text-primary)] group-hover:text-[var(--text-primary)] line-clamp-3">
-                        Q. {item.q}
-                      </p>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </section>
-          )}
-
-          {/* 5. 1:1 문의사항 리스트 및 다이나믹 대규모 페이지네이션 구역 */}
+          {/* ✍️ 오른쪽 끝 구석에 깔끔히 박힌 모달 오픈 버튼 */}
           {(activeTab === "all" || activeTab === "inquiry") && (
-            <section className="mb-10">
-              <div className="mb-4">
-                <span className="inline-block px-4 py-1.5 bg-[var(--bg-surface)] border border-[var(--color-accent)] text-[var(--text-primary)] font-extrabold text-xs tracking-wider rounded-[24px] shadow-sm">문의사항</span>
+            <button
+              onClick={() => { setIsInquiryModalOpen(true); setFormError(""); }}
+              className="w-full sm:w-auto px-5 py-2.5 bg-[var(--color-primary)] hover:bg-[var(--color-primary-dark)] text-white font-bold text-sm rounded-[12px] shadow-sm transition-colors flex items-center justify-center gap-1.5"
+            >
+              <span>✍️</span> 1:1 문의하기
+            </button>
+          )}
+        </div>
+
+        {/* 4. FAQ 목록 출력 */}
+        {(activeTab === "all" || activeTab === "faq") && (
+          <section className="mb-12">
+            <div className="mb-4">
+              <span className="inline-block px-4 py-1.5 bg-[var(--bg-surface)] border border-[var(--color-accent)] text-[var(--text-primary)] font-extrabold text-xs tracking-wider rounded-[24px] shadow-sm">자주 묻는 질문</span>
+            </div>
+            {filteredFaqs.length === 0 ? (
+              <p className="text-sm text-[var(--text-muted)] py-4 bg-white text-center rounded-[24px]">검색 결과와 일치하는 FAQ가 없습니다.</p>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+                {filteredFaqs.map(item => (
+                  <div
+                    key={item.id}
+                    onClick={() => setActiveFaq(item)}
+                    className="bg-white hover:bg-[var(--bg-surface)] p-5 rounded-[24px] min-h-[100px] flex items-center justify-center text-center cursor-pointer transition-all border border-[var(--border-color)] shadow-sm hover:shadow-md group"
+                  >
+                    <p className="text-xs font-bold text-[var(--text-primary)] group-hover:text-[var(--text-primary)] line-clamp-3">
+                      Q. {item.q}
+                    </p>
+                  </div>
+                ))}
               </div>
+            )}
+          </section>
+        )}
 
-              <div className="bg-white rounded-[24px] shadow-sm border border-gray-100 overflow-hidden divide-y divide-gray-100">
-                {currentInquiries.length === 0 ? (
-                  <p className="text-sm text-gray-500 py-8 text-center bg-white">등록된 문의글이 없거나 검색 결과가 없습니다.</p>
+        {/* 5. 1:1 문의사항 리스트 및 다이나믹 대규모 페이지네이션 구역 */}
+        {(activeTab === "all" || activeTab === "inquiry") && (
+          <section className="mb-10">
+            <div className="mb-4">
+              <span className="inline-block px-4 py-1.5 bg-[var(--bg-surface)] border border-[var(--color-accent)] text-[var(--text-primary)] font-extrabold text-xs tracking-wider rounded-[24px] shadow-sm">문의사항</span>
+            </div>
 
-                ) : (
-                  currentInquiries.map(item => {
-                    const isOpened = openInquiryId === item.id;
-                    return (
-                      <div key={item.id} className="divide-y divide-[var(--border-color)]">
-                        <div
-                          onClick={() => handleInquiryToggle(item.id)}
-                          className="w-full flex justify-between items-center p-4 bg-white hover:bg-[var(--bg-surface)]/80 cursor-pointer transition-colors"
-                        >
-                          <div className="flex items-center gap-3 overflow-hidden pr-4">
-                            <span className={`text-[10px] px-2.5 py-0.5 font-bold rounded-full shrink-0 ${item.answer ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700'}`}>
-                              {item.answer ? '답변완료' : '답변대기'}
-                            </span>
-                            <span className="text-xs sm:text-sm font-bold text-[var(--text-primary)] truncate">{item.title}</span>
-                          </div>
-                          <span className={`text-[var(--text-light)] text-xs transition-transform ${isOpened ? 'rotate-180' : ''}`}>▼</span>
+            <div className="bg-white rounded-[24px] shadow-sm border border-gray-100 overflow-hidden divide-y divide-gray-100">
+              {currentInquiries.length === 0 ? (
+                <p className="text-sm text-gray-500 py-8 text-center bg-white">등록된 문의글이 없거나 검색 결과가 없습니다.</p>
+
+              ) : (
+                currentInquiries.map(item => {
+                  const isOpened = openInquiryId === item.id;
+                  return (
+                    <div key={item.id} className="divide-y divide-[var(--border-color)]">
+                      <div
+                        onClick={() => handleInquiryToggle(item.id)}
+                        className="w-full flex justify-between items-center p-4 bg-white hover:bg-[var(--bg-surface)]/80 cursor-pointer transition-colors"
+                      >
+                        <div className="flex items-center gap-3 overflow-hidden pr-4">
+                          <span className={`text-[10px] px-2.5 py-0.5 font-bold rounded-full shrink-0 ${item.answer ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700'}`}>
+                            {item.answer ? '답변완료' : '답변대기'}
+                          </span>
+                          <span className="text-xs sm:text-sm font-bold text-[var(--text-primary)] truncate">{item.title}</span>
                         </div>
+                        <span className={`text-[var(--text-light)] text-xs transition-transform ${isOpened ? 'rotate-180' : ''}`}>▼</span>
+                      </div>
 
-                        {isOpened && (
-                          <div className="bg-[var(--bg-surface)] p-5 text-xs sm:text-sm space-y-4 border-t border-[var(--border-color)]">
-                            <div className="bg-white p-4 rounded-[16px] shadow-sm">
-                              <div className="flex justify-between text-[11px] text-[var(--text-light)] mb-2 font-medium">
-                                <span>작성자: {item.writer}</span>
-                                <span>{item.date}</span>
-                              </div>
-                              <p className="text-[var(--text-secondary)] leading-relaxed font-medium whitespace-pre-line">{item.content}</p>
+                      {isOpened && (
+                        <div className="bg-[var(--bg-surface)] p-5 text-xs sm:text-sm space-y-4 border-t border-[var(--border-color)]">
+                          <div className="bg-white p-4 rounded-[16px] shadow-sm">
+                            <div className="flex justify-between text-[11px] text-[var(--text-light)] mb-2 font-medium">
+                              <span>작성자: {item.writer}</span>
+                              <span>{item.date}</span>
                             </div>
+                            <p className="text-[var(--text-secondary)] leading-relaxed font-medium whitespace-pre-wrap break-words">
+                              {item.content}
+                            </p>
+                          </div>
 
-                            {item.answer ? (
-                              <div className="bg-[var(--bg-white)] border border-[var(--border-color)] p-4 rounded-[16px]">
-                                <p className="text-[11px] font-black text-[var(--color-primary)] mb-1">👑 관리자 답변</p>
-                                <p className="text-[var(--text-primary)] leading-relaxed font-semibold">{item.answer}</p>
-                              </div>
-                            ) : (
-                              userRole === "admin" && (
-                                <div className="bg-white p-4 rounded-[16px] border border-dashed border-[var(--border-color)] shadow-sm">
-                                  <p className="text-[11px] font-bold text-[var(--text-muted)] mb-2">🔧 관리자 전용 답변란</p>
-                                  <div className="flex gap-2">
-                                    <input
-                                      type="text"
-                                      placeholder="답변 내용을 입력하세요..."
-                                      value={adminReplyText}
-                                      onChange={(e) => setAdminReplyText(e.target.value)}
-                                      className="flex-1 p-2 border border-[var(--border-color)] rounded-[8px] text-xs font-medium focus:outline-none focus:border-[var(--color-primary)]"
-                                    />
+                          {item.answer ? (
+                            <div className="bg-[var(--bg-white)] border border-[var(--border-color)] p-4 rounded-[16px]">
+                              <p className="text-[11px] font-black text-[var(--color-primary)] mb-1">👑 관리자 답변</p>
+                              <p className="text-[var(--text-primary)] leading-relaxed font-semibold whitespace-pre-wrap break-words">{item.answer}</p>
+                            </div>
+                          ) : (
+                            userRole === "admin" && (
+                              <div className="bg-white p-4 rounded-[16px] border border-dashed border-[var(--border-color)] shadow-sm">
+                                <p className="text-[11px] font-bold text-[var(--text-muted)] mb-2">🔧 관리자 전용 답변란</p>
+                                <div className="flex flex-col gap-2">
+                                  <textarea
+                                    rows={4}
+                                    placeholder="답변 내용을 입력하세요..."
+                                    value={adminReplyText}
+                                    onChange={(e) => setAdminReplyText(e.target.value)}
+                                    maxLength={1000}
+                                    className="w-full p-2 border border-[var(--border-color)] rounded-[8px] text-xs font-medium focus:outline-none focus:border-[var(--color-primary)] resize-none"
+                                  />
+
+                                  <div className="flex justify-between items-center">
+                                    <span className="text-[11px] text-[var(--text-muted)]">
+                                      {adminReplyText.length}/1000
+                                    </span>
+
                                     <button
                                       onClick={() => handleAddAnswer(item.id)}
                                       className="px-4 py-2 bg-[var(--color-primary)] hover:bg-[var(--color-primary-dark)] text-white font-bold text-xs rounded-[8px] transition-colors"
@@ -349,172 +358,181 @@ export default function Support() {
                                     </button>
                                   </div>
                                 </div>
-                              )
-                            )}
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })
-                )}
-              </div>
+                              </div>
+                            )
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })
+              )}
+            </div>
 
-              {/* 🔢 [요청 기능] << < 숫자 > >> 형태의 콘트롤러 바 */}
-              {filteredInquiries.length > 0 && (
-                <div className="flex justify-center items-center gap-1 mt-8">
-                  {/* 처음으로 [<<] */}
-                  <button
-                    onClick={() => setCurrentPage(1)}
-                    disabled={currentPage === 1}
-                    className="px-2 py-1.5 rounded bg-white border border-gray-200 text-xs font-black disabled:opacity-40 disabled:cursor-not-allowed hover:bg-gray-50 shadow-sm"
-                  >
-                    &lt;&lt;
-                  </button>
+            {/* 🔢 [요청 기능] << < 숫자 > >> 형태의 콘트롤러 바 */}
+            {filteredInquiries.length > 0 && (
+              <div className="flex justify-center items-center gap-1 mt-8">
+                {/* 처음으로 [<<] */}
+                <button
+                  onClick={() => setCurrentPage(1)}
+                  disabled={currentPage === 1}
+                  className="px-2 py-1.5 rounded bg-white border border-gray-200 text-xs font-black disabled:opacity-40 disabled:cursor-not-allowed hover:bg-gray-50 shadow-sm"
+                >
+                  &lt;&lt;
+                </button>
 
-                  {/* 이전으로 [<] */}
-                  <button
-                    onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-                    disabled={currentPage === 1}
-                    className="px-2 py-1.5 rounded bg-white border border-gray-200 text-xs font-black disabled:opacity-40 disabled:cursor-not-allowed hover:bg-gray-50 shadow-sm"
-                  >
-                    &lt;
-                  </button>
+                {/* 이전으로 [<] */}
+                <button
+                  onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                  disabled={currentPage === 1}
+                  className="px-2 py-1.5 rounded bg-white border border-gray-200 text-xs font-black disabled:opacity-40 disabled:cursor-not-allowed hover:bg-gray-50 shadow-sm"
+                >
+                  &lt;
+                </button>
 
-                  {/* 페이지 목록 루프 출력 */}
-                  {Array.from({ length: totalPages }, (_, index) => {
-                    const pageNumber = index + 1;
-                    return (
-                      <button
-                        key={pageNumber}
-                        onClick={() => setCurrentPage(pageNumber)}
-                        className={`px-3 py-1.5 rounded text-xs font-bold border shadow-sm transition-all
+                {/* 페이지 목록 루프 출력 */}
+                {Array.from({ length: totalPages }, (_, index) => {
+                  const pageNumber = index + 1;
+                  return (
+                    <button
+                      key={pageNumber}
+                      onClick={() => setCurrentPage(pageNumber)}
+                      className={`px-3 py-1.5 rounded text-xs font-bold border shadow-sm transition-all
                         ${currentPage === pageNumber
-                            ? "bg-[#F46C6F] text-white border-[#F46C6F]"
-                            : "bg-white text-gray-600 border-gray-200 hover:bg-gray-50"
-                          }`}
-                      >
-                        {pageNumber}
-                      </button>
-                    );
-                  })}
-
-                  {/* 다음으로 [>] */}
-                  <button
-                    onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-                    disabled={currentPage === totalPages}
-                    className="px-2 py-1.5 rounded bg-white border border-gray-200 text-xs font-black disabled:opacity-40 disabled:cursor-not-allowed hover:bg-gray-50 shadow-sm"
-                  >
-                    &gt;
-                  </button>
-
-                  {/* 끝으로 [>>] */}
-                  <button
-                    onClick={() => setCurrentPage(totalPages)}
-                    disabled={currentPage === totalPages}
-                    className="px-2 py-1.5 rounded bg-white border border-gray-200 text-xs font-black disabled:opacity-40 disabled:cursor-not-allowed hover:bg-gray-50 shadow-sm"
-                  >
-                    &gt;&gt;
-                  </button>
-                </div>
-              )}
-            </section>
-          )}
-
-        </div>
-
-        {/* ✍️ 6. 1:1 새로운 문의 등록 모달 팝업창 */}
-        {isInquiryModalOpen && (
-          <div className="fixed inset-0 bg-black/40 flex justify-center items-center z-50 p-4">
-
-            <div className="bg-white p-6 rounded-[24px] max-w-xl w-full shadow-2xl border border-gray-100 relative">
-              <h3 className="text-sm font-black text-gray-900 mb-4 flex items-center gap-1.5">
-
-                <span>✍️</span> 1:1 새로운 문의 등록하기
-              </h3>
-
-              {userRole === "user" ? (
-                <form onSubmit={handleCreateInquiry} className="space-y-3">
-                  <input
-                    type="text"
-                    placeholder="문의 제목을 입력해 주세요 (최소 4자)."
-                    value={newTitle}
-                    onChange={(e) => setNewTitle(e.target.value)}
-                    className="w-full p-2.5 border border-[var(--border-color)] rounded-[12px] text-xs font-medium focus:outline-none focus:border-[var(--color-primary)]"
-                  />
-                  <textarea
-                    placeholder="문의하실 구체적인 내용을 작성해 주세요 (최소 10자)."
-                    rows="4"
-                    value={newContent}
-                    onChange={(e) => setNewContent(e.target.value)}
-                    className="w-full p-3 border border-[var(--border-color)] rounded-[12px] text-xs font-medium focus:outline-none focus:border-[var(--color-primary)] resize-none"
-                  />
-
-                  {formError && <p className="text-[11px] font-bold text-red-500">{formError}</p>}
-
-                  <div className="flex gap-2 pt-2">
-                    <button
-                      type="button"
-                      onClick={() => setIsInquiryModalOpen(false)}
-                      className="flex-1 py-2.5 bg-[var(--bg-surface)] hover:bg-gray-200 text-[var(--text-secondary)] font-bold text-xs rounded-full transition-all"
+                          ? "bg-[#F46C6F] text-white border-[#F46C6F]"
+                          : "bg-white text-gray-600 border-gray-200 hover:bg-gray-50"
+                        }`}
                     >
-                      취소
+                      {pageNumber}
                     </button>
-                    <button
-                      type="submit"
-                      className="flex-1 py-2.5 bg-[var(--color-primary)] hover:bg-[var(--color-primary-dark)] text-white font-bold text-xs rounded-full shadow transition-all"
-                    >
-                      질문 등록 완료
-                    </button>
-                  </div>
-                </form>
-              ) : (
-                <div className="bg-[var(--bg-surface)] py-6 px-4 rounded-[16px] text-center border border-dashed border-[var(--border-color)]">
-                  <p className="text-xs text-[var(--text-muted)] font-bold leading-relaxed mb-4">
-                    🔒 관리자(Admin) 계정은 답변 모드이므로 신규 문의를 남길 수 없습니다.
-                  </p>
-                  <button
-                    onClick={() => setIsInquiryModalOpen(false)}
-                    className="px-4 py-2 bg-gray-900 text-white font-bold text-xs rounded-full"
-                  >
-                    닫기
-                  </button>
-                </div>
-              )}
+                  );
+                })}
 
-              <button
-                onClick={() => setIsInquiryModalOpen(false)}
-                className="absolute top-4 right-5 text-[var(--text-light)] hover:text-black font-bold text-sm"
-              >
-                ✕
-              </button>
-            </div>
-          </div>
-        )}
+                {/* 다음으로 [>] */}
+                <button
+                  onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                  disabled={currentPage === totalPages}
+                  className="px-2 py-1.5 rounded bg-white border border-gray-200 text-xs font-black disabled:opacity-40 disabled:cursor-not-allowed hover:bg-gray-50 shadow-sm"
+                >
+                  &gt;
+                </button>
 
-        {/* 7. FAQ 모달 팝업창 */}
-        {activeFaq && (
-          <div className="fixed inset-0 bg-black/40 flex justify-center items-center z-50 p-4">
-            <div className="bg-white p-6 rounded-[24px] max-w-md w-full shadow-xl relative border border-[var(--border-color)]">
-              <div className="mb-4">
-                <span className="text-[10px] bg-[var(--bg-surface)] text-[var(--text-primary)] font-black px-2.5 py-0.5 rounded-full">자주 묻는 질문</span>
+                {/* 끝으로 [>>] */}
+                <button
+                  onClick={() => setCurrentPage(totalPages)}
+                  disabled={currentPage === totalPages}
+                  className="px-2 py-1.5 rounded bg-white border border-gray-200 text-xs font-black disabled:opacity-40 disabled:cursor-not-allowed hover:bg-gray-50 shadow-sm"
+                >
+                  &gt;&gt;
+                </button>
               </div>
-              <h4 className="text-sm font-black text-[var(--text-primary)] mb-3 pr-6">Q. {activeFaq.q}</h4>
-              <div className="bg-[var(--bg-surface)] p-4 rounded-[16px] mb-5 border border-[var(--border-color)]">
-                <p className="text-xs sm:text-sm text-[var(--text-muted)] leading-relaxed font-medium whitespace-pre-line">
-                  {activeFaq.a}
-                </p>
-              </div>
-              <button
-                onClick={() => setActiveFaq(null)}
-                className="w-full py-2 bg-gray-900 hover:bg-black text-white font-bold text-xs rounded-full transition-colors"
-              >
-                닫기
-              </button>
-              <button onClick={() => setActiveFaq(null)} className="absolute top-4 right-5 text-[var(--text-light)] hover:text-black font-bold text-sm">✕</button>
-            </div>
-          </div>
+            )}
+          </section>
         )}
 
       </div>
-    );
-  }
+
+      {/* ✍️ 6. 1:1 새로운 문의 등록 모달 팝업창 */}
+      {isInquiryModalOpen && (
+        <div className="fixed inset-0 bg-black/40 flex justify-center items-center z-50 p-4">
+
+          <div className="bg-white p-6 rounded-[24px] max-w-xl w-full shadow-2xl border border-gray-100 relative">
+            <h3 className="text-sm font-black text-gray-900 mb-4 flex items-center gap-1.5">
+
+              <span>✍️</span> 1:1 새로운 문의 등록하기
+            </h3>
+
+            {userRole === "user" ? (
+              <form onSubmit={handleCreateInquiry} className="space-y-3">
+                <input
+                  type="text"
+                  placeholder="문의 제목을 입력해 주세요 (최소 4자)."
+                  value={newTitle}
+                  maxLength={50}
+                  onChange={(e) => setNewTitle(e.target.value)}
+                  className="w-full p-2.5 border border-[var(--border-color)] rounded-[12px] text-xs font-medium focus:outline-none focus:border-[var(--color-primary)]"
+                />
+                <div className="text-right text-[11px] text-[var(--text-muted)]">
+                  {newTitle.length}/50
+                </div>
+                <textarea
+                  placeholder="문의하실 구체적인 내용을 작성해 주세요 (최소 10자)."
+                  rows="4"
+                  value={newContent}
+                  maxLength={1000}
+                  onChange={(e) => setNewContent(e.target.value)}
+                  className="w-full max-w-full box-border p-3 border border-[var(--border-color)] rounded-[12px] text-xs font-medium focus:outline-none focus:border-[var(--color-primary)] resize-none break-words"
+                />
+                <div className="text-right text-[11px] text-[var(--text-muted)]">
+                  {newContent.length}/1000
+                </div>
+
+                {formError && <p className="text-[11px] font-bold text-red-500">{formError}</p>}
+
+                <div className="flex gap-2 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setIsInquiryModalOpen(false)}
+                    className="flex-1 py-2.5 bg-[var(--bg-surface)] hover:bg-gray-200 text-[var(--text-secondary)] font-bold text-xs rounded-full transition-all"
+                  >
+                    취소
+                  </button>
+                  <button
+                    type="submit"
+                    className="flex-1 py-2.5 bg-[var(--color-primary)] hover:bg-[var(--color-primary-dark)] text-white font-bold text-xs rounded-full shadow transition-all"
+                  >
+                    질문 등록 완료
+                  </button>
+                </div>
+              </form>
+            ) : (
+              <div className="bg-[var(--bg-surface)] py-6 px-4 rounded-[16px] text-center border border-dashed border-[var(--border-color)]">
+                <p className="text-xs text-[var(--text-muted)] font-bold leading-relaxed mb-4">
+                  🔒 관리자(Admin) 계정은 답변 모드이므로 신규 문의를 남길 수 없습니다.
+                </p>
+                <button
+                  onClick={() => setIsInquiryModalOpen(false)}
+                  className="px-4 py-2 bg-gray-900 text-white font-bold text-xs rounded-full"
+                >
+                  닫기
+                </button>
+              </div>
+            )}
+
+            <button
+              onClick={() => setIsInquiryModalOpen(false)}
+              className="absolute top-4 right-5 text-[var(--text-light)] hover:text-black font-bold text-sm"
+            >
+              ✕
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* 7. FAQ 모달 팝업창 */}
+      {activeFaq && (
+        <div className="fixed inset-0 bg-black/40 flex justify-center items-center z-50 p-4">
+          <div className="bg-white p-6 rounded-[24px] max-w-md w-full shadow-xl relative border border-[var(--border-color)]">
+            <div className="mb-4">
+              <span className="text-[10px] bg-[var(--bg-surface)] text-[var(--text-primary)] font-black px-2.5 py-0.5 rounded-full">자주 묻는 질문</span>
+            </div>
+            <h4 className="text-sm font-black text-[var(--text-primary)] mb-3 pr-6">Q. {activeFaq.q}</h4>
+            <div className="bg-[var(--bg-surface)] p-4 rounded-[16px] mb-5 border border-[var(--border-color)]">
+              <p className="text-xs sm:text-sm text-[var(--text-muted)] leading-relaxed font-medium whitespace-pre-line">
+                {activeFaq.a}
+              </p>
+            </div>
+            <button
+              onClick={() => setActiveFaq(null)}
+              className="w-full py-2 bg-[var(--color-primary)] hover:bg-[var(--color-primary-dark)] text-white font-bold text-xs rounded-full transition-colors"
+            >
+              닫기
+            </button>
+            <button onClick={() => setActiveFaq(null)} className="absolute top-4 right-5 text-[var(--text-light)] hover:text-black font-bold text-sm">✕</button>
+          </div>
+        </div>
+      )}
+
+    </div>
+  );
+}

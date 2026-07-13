@@ -5,12 +5,12 @@ import { useAuth } from '../App'
 import api from '../api/axiosInstance'
 
 const TABS = [
-  { id: 'users',       label: '👤 유저 관리' },
+  { id: 'users', label: '👤 유저 관리' },
   { id: 'restaurants', label: '🍽️ 식당 관리' },
-  { id: 'inquiries',   label: '💬 문의 관리' },
-  { id: 'notices',     label: '📢 공지 관리' },
-  { id: 'reports',     label: '🚨 신고 관리' },
-  { id: 'reviews',     label: '⭐ 리뷰 관리' },
+  { id: 'inquiries', label: '💬 문의 관리' },
+  { id: 'notices', label: '📢 공지 관리' },
+  { id: 'reports', label: '🚨 신고 관리' },
+  { id: 'reviews', label: '⭐ 리뷰 관리' },
 ]
 
 export default function AdminPage() {
@@ -46,12 +46,12 @@ export default function AdminPage() {
         ))}
       </div>
 
-      {tab === 'users'       && <UserManager />}
+      {tab === 'users' && <UserManager />}
       {tab === 'restaurants' && <RestaurantManager />}
-      {tab === 'inquiries'   && <InquiryManager />}
-      {tab === 'notices'     && <NoticeManager />}
-      {tab === 'reports'     && <ReportManager />}
-      {tab === 'reviews'     && <ReviewManager />}
+      {tab === 'inquiries' && <InquiryManager />}
+      {tab === 'notices' && <NoticeManager />}
+      {tab === 'reports' && <ReportManager />}
+      {tab === 'reviews' && <ReviewManager />}
     </div>
   )
 }
@@ -59,10 +59,10 @@ export default function AdminPage() {
 // ── 유저 관리 ────────────────────────────────────────────────────────────────
 function UserManager() {
   const PAGE_SIZE = 15
-  const [users,   setUsers]   = useState([])
+  const [users, setUsers] = useState([])
   const [loading, setLoading] = useState(true)
-  const [search,  setSearch]  = useState('')
-  const [page,    setPage]    = useState(1)
+  const [search, setSearch] = useState('')
+  const [page, setPage] = useState(1)
 
   useEffect(() => { load() }, [])
   useEffect(() => { setPage(1) }, [search])
@@ -85,11 +85,11 @@ function UserManager() {
     } catch (e) { alert(e.response?.data?.message ?? '실패') }
   }
 
-  const filtered   = users.filter(u =>
+  const filtered = users.filter(u =>
     u.nickname?.includes(search) || u.email?.includes(search)
   )
   const totalPages = Math.ceil(filtered.length / PAGE_SIZE)
-  const paginated  = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
+  const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
 
   return (
     <div>
@@ -154,12 +154,12 @@ function UserManager() {
             <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 6, marginTop: 16 }}>
               <button
                 onClick={() => setPage(1)} disabled={page === 1}
-                style={{ padding: '5px 10px', border: '1px solid var(--border-color)', borderRadius: 6, background: 'var(--bg-white)', cursor: page===1 ? 'default' : 'pointer', opacity: page===1 ? 0.4 : 1, fontSize: '.82rem' }}>
+                style={{ padding: '5px 10px', border: '1px solid var(--border-color)', borderRadius: 6, background: 'var(--bg-white)', cursor: page === 1 ? 'default' : 'pointer', opacity: page === 1 ? 0.4 : 1, fontSize: '.82rem' }}>
                 «
               </button>
               <button
-                onClick={() => setPage(p => Math.max(1, p-1))} disabled={page === 1}
-                style={{ padding: '5px 10px', border: '1px solid var(--border-color)', borderRadius: 6, background: 'var(--bg-white)', cursor: page===1 ? 'default' : 'pointer', opacity: page===1 ? 0.4 : 1, fontSize: '.82rem' }}>
+                onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}
+                style={{ padding: '5px 10px', border: '1px solid var(--border-color)', borderRadius: 6, background: 'var(--bg-white)', cursor: page === 1 ? 'default' : 'pointer', opacity: page === 1 ? 0.4 : 1, fontSize: '.82rem' }}>
                 ‹
               </button>
               {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
@@ -181,13 +181,13 @@ function UserManager() {
                 )
               })}
               <button
-                onClick={() => setPage(p => Math.min(totalPages, p+1))} disabled={page === totalPages}
-                style={{ padding: '5px 10px', border: '1px solid var(--border-color)', borderRadius: 6, background: 'var(--bg-white)', cursor: page===totalPages ? 'default' : 'pointer', opacity: page===totalPages ? 0.4 : 1, fontSize: '.82rem' }}>
+                onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages}
+                style={{ padding: '5px 10px', border: '1px solid var(--border-color)', borderRadius: 6, background: 'var(--bg-white)', cursor: page === totalPages ? 'default' : 'pointer', opacity: page === totalPages ? 0.4 : 1, fontSize: '.82rem' }}>
                 ›
               </button>
               <button
                 onClick={() => setPage(totalPages)} disabled={page === totalPages}
-                style={{ padding: '5px 10px', border: '1px solid var(--border-color)', borderRadius: 6, background: 'var(--bg-white)', cursor: page===totalPages ? 'default' : 'pointer', opacity: page===totalPages ? 0.4 : 1, fontSize: '.82rem' }}>
+                style={{ padding: '5px 10px', border: '1px solid var(--border-color)', borderRadius: 6, background: 'var(--bg-white)', cursor: page === totalPages ? 'default' : 'pointer', opacity: page === totalPages ? 0.4 : 1, fontSize: '.82rem' }}>
                 »
               </button>
               <span style={{ fontSize: '.82rem', color: 'var(--text-muted)', marginLeft: 4 }}>
@@ -203,16 +203,16 @@ function UserManager() {
 
 // ── 식당 관리 ────────────────────────────────────────────────────────────────
 function RestaurantManager() {
-  const [rests,    setRests]    = useState([])
-  const [loading,  setLoading]  = useState(true)
-  const [search,   setSearch]   = useState('')
+  const [rests, setRests] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [search, setSearch] = useState('')
   const [catFilter, setCatFilter] = useState('전체')
-  const [page,     setPage]     = useState(1)
+  const [page, setPage] = useState(1)
   const [totalCount, setTotalCount] = useState(0)
   const PER_PAGE = 15
-  const [form,    setForm]    = useState({ name: '', address: '', category: '한식', phone: '', latitude: '', longitude: '', business_hours: '' })
+  const [form, setForm] = useState({ name: '', address: '', category: '한식', phone: '', latitude: '', longitude: '', business_hours: '' })
   const [showForm, setShowForm] = useState(false)
-  const CATS = ['전체','한식','중식','일식','양식','분식','치킨','피자','카페','술집']
+  const CATS = ['전체', '한식', '중식', '일식', '양식', '분식', '치킨', '피자', '카페', '술집']
 
   useEffect(() => { load(catFilter, page) }, [catFilter, page])
 
@@ -231,7 +231,7 @@ function RestaurantManager() {
     try {
       await api.post('/api/menu/', {
         ...form,
-        latitude:  form.latitude  ? parseFloat(form.latitude)  : null,
+        latitude: form.latitude ? parseFloat(form.latitude) : null,
         longitude: form.longitude ? parseFloat(form.longitude) : null,
       })
       setForm({ name: '', address: '', category: '한식', phone: '', latitude: '', longitude: '', business_hours: '' })
@@ -278,33 +278,33 @@ function RestaurantManager() {
         <form onSubmit={handleAdd} style={{ background: 'var(--bg-surface)', borderRadius: 12, padding: 20, marginBottom: 20, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
           <div className="form-group" style={{ margin: 0 }}>
             <label className="form-label">식당명 *</label>
-            <input className="form-control" value={form.name} onChange={e => setForm({...form, name: e.target.value})} required />
+            <input className="form-control" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} required />
           </div>
           <div className="form-group" style={{ margin: 0 }}>
             <label className="form-label">카테고리</label>
-            <select className="form-control" value={form.category} onChange={e => setForm({...form, category: e.target.value})}>
-              {['한식','중식','일식','양식','분식','치킨','피자','카페','술집'].map(c => <option key={c}>{c}</option>)}
+            <select className="form-control" value={form.category} onChange={e => setForm({ ...form, category: e.target.value })}>
+              {['한식', '중식', '일식', '양식', '분식', '치킨', '피자', '카페', '술집'].map(c => <option key={c}>{c}</option>)}
             </select>
           </div>
           <div className="form-group" style={{ margin: 0, gridColumn: '1/-1' }}>
             <label className="form-label">주소 *</label>
-            <input className="form-control" value={form.address} onChange={e => setForm({...form, address: e.target.value})} required />
+            <input className="form-control" value={form.address} onChange={e => setForm({ ...form, address: e.target.value })} required />
           </div>
           <div className="form-group" style={{ margin: 0 }}>
             <label className="form-label">전화번호</label>
-            <input className="form-control" value={form.phone} onChange={e => setForm({...form, phone: e.target.value})} />
+            <input className="form-control" value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} />
           </div>
           <div className="form-group" style={{ margin: 0 }}>
             <label className="form-label">영업시간</label>
-            <input className="form-control" placeholder="예: 09:00~22:00" value={form.business_hours} onChange={e => setForm({...form, business_hours: e.target.value})} />
+            <input className="form-control" placeholder="예: 09:00~22:00" value={form.business_hours} onChange={e => setForm({ ...form, business_hours: e.target.value })} />
           </div>
           <div className="form-group" style={{ margin: 0 }}>
             <label className="form-label">위도</label>
-            <input className="form-control" type="number" step="any" value={form.latitude} onChange={e => setForm({...form, latitude: e.target.value})} />
+            <input className="form-control" type="number" step="any" value={form.latitude} onChange={e => setForm({ ...form, latitude: e.target.value })} />
           </div>
           <div className="form-group" style={{ margin: 0 }}>
             <label className="form-label">경도</label>
-            <input className="form-control" type="number" step="any" value={form.longitude} onChange={e => setForm({...form, longitude: e.target.value})} />
+            <input className="form-control" type="number" step="any" value={form.longitude} onChange={e => setForm({ ...form, longitude: e.target.value })} />
           </div>
           <div style={{ gridColumn: '1/-1', display: 'flex', justifyContent: 'flex-end' }}>
             <button type="submit" style={{ padding: '9px 24px', background: 'var(--color-primary)', color: '#fff', border: 'none', borderRadius: 8, cursor: 'pointer', fontWeight: 700 }}>등록</button>
@@ -342,12 +342,12 @@ function RestaurantManager() {
           </table>
           {/* 페이지네이션 */}
           <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 8, padding: '12px 0' }}>
-            <button onClick={() => setPage(p => Math.max(1, p-1))} disabled={page === 1}
+            <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}
               style={{ padding: '6px 14px', borderRadius: 6, border: '1px solid var(--border-color)', cursor: 'pointer', fontWeight: 700, opacity: page === 1 ? .4 : 1 }}>◀</button>
             <span style={{ fontSize: '.85rem', color: 'var(--text-muted)' }}>
               {page} / {Math.ceil(totalCount / PER_PAGE)} 페이지 ({totalCount.toLocaleString()}개)
             </span>
-            <button onClick={() => setPage(p => p+1)} disabled={page >= Math.ceil(totalCount / PER_PAGE)}
+            <button onClick={() => setPage(p => p + 1)} disabled={page >= Math.ceil(totalCount / PER_PAGE)}
               style={{ padding: '6px 14px', borderRadius: 6, border: '1px solid var(--border-color)', cursor: 'pointer', fontWeight: 700, opacity: page >= Math.ceil(totalCount / PER_PAGE) ? .4 : 1 }}>▶</button>
           </div>
         </div>
@@ -359,9 +359,9 @@ function RestaurantManager() {
 // ── 문의 관리 ────────────────────────────────────────────────────────────────
 function InquiryManager() {
   const [inquiries, setInquiries] = useState([])
-  const [selected,  setSelected]  = useState(null)
-  const [reply,     setReply]     = useState('')
-  const [loading,   setLoading]   = useState(true)
+  const [selected, setSelected] = useState(null)
+  const [reply, setReply] = useState('')
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => { load() }, [])
 
@@ -402,30 +402,99 @@ function InquiryManager() {
                   {inq.answer ? '답변완료' : '답변대기'}
                 </span>
               </div>
-              <p style={{ fontSize: '.85rem', color: 'var(--text-secondary)', marginBottom: 10 }}>{inq.content}</p>
+              <p
+                style={{
+                  fontSize: '.85rem',
+                  color: 'var(--text-secondary)',
+                  marginBottom: 10,
+                  whiteSpace: 'pre-wrap',
+                  overflowWrap: 'anywhere',
+                  wordBreak: 'break-word'
+                }}
+              >
+                {inq.content}
+              </p>
               {inq.answer ? (
-                <div style={{ background: 'var(--bg-surface)', borderRadius: 8, padding: '10px 14px', fontSize: '.85rem', borderLeft: '3px solid var(--color-primary)' }}>
-                  <strong>관리자 답변:</strong> {inq.answer}
+                <div
+                  style={{
+                    background: 'var(--bg-surface)',
+                    borderRadius: 8,
+                    padding: '10px 14px',
+                    fontSize: '.85rem',
+                    borderLeft: '3px solid var(--color-primary)',
+                    whiteSpace: 'pre-wrap',
+                    overflowWrap: 'anywhere',
+                    wordBreak: 'break-word'
+                  }}
+                >
+                  <strong>관리자 답변:</strong><br />
+                  {inq.answer}
                 </div>
               ) : (
                 <div>
                   {selected === inq.id ? (
-                    <div style={{ display: 'flex', gap: 8 }}>
-                      <input
-                        className="form-control"
-                        style={{ flex: 1, fontSize: '.85rem' }}
-                        placeholder="답변 내용 입력..."
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                      <textarea
+                        rows={4}
+                        placeholder="답변 내용을 입력하세요..."
                         value={reply}
                         onChange={e => setReply(e.target.value)}
+                        maxLength={1000}
+                        style={{
+                          width: '100%',
+                          fontSize: '.85rem',
+                          padding: '10px',
+                          border: '1px solid var(--border-color)',
+                          borderRadius: 8,
+                          resize: 'vertical',
+                          boxSizing: 'border-box'
+                        }}
                       />
-                      <button onClick={() => handleAnswer(inq.id)}
-                        style={{ padding: '8px 16px', background: 'var(--color-primary)', color: '#fff', border: 'none', borderRadius: 8, cursor: 'pointer', fontWeight: 700, fontSize: '.85rem', whiteSpace: 'nowrap' }}>
-                        등록
-                      </button>
-                      <button onClick={() => setSelected(null)}
-                        style={{ padding: '8px 12px', background: 'transparent', border: '1px solid var(--border-color)', borderRadius: 8, cursor: 'pointer', fontSize: '.85rem' }}>
-                        취소
-                      </button>
+
+                      <div style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center'
+                      }}>
+                        <span style={{
+                          fontSize: '.75rem',
+                          color: 'var(--text-muted)'
+                        }}>
+                          {reply.length}/1000
+                        </span>
+
+                        <div style={{ display: 'flex', gap: 8 }}>
+                          <button
+                            onClick={() => handleAnswer(inq.id)}
+                            style={{
+                              padding: '8px 16px',
+                              background: 'var(--color-primary)',
+                              color: '#fff',
+                              border: 'none',
+                              borderRadius: 8,
+                              cursor: 'pointer',
+                              fontWeight: 700,
+                              fontSize: '.85rem'
+                            }}
+                          >
+                            등록
+                          </button>
+
+                          <button
+                            onClick={() => setSelected(null)}
+                            style={{
+                              padding: '8px 12px',
+                              background: 'transparent',
+                              border: '1px solid var(--border-color)',
+                              borderRadius: 8,
+                              cursor: 'pointer',
+                              fontSize: '.85rem'
+                            }}
+                          >
+                            취소
+                          </button>
+                        </div>
+                      </div>
                     </div>
                   ) : (
                     <button onClick={() => { setSelected(inq.id); setReply('') }}
@@ -445,10 +514,10 @@ function InquiryManager() {
 
 // ── 공지 관리 ────────────────────────────────────────────────────────────────
 function NoticeManager() {
-  const [notices,  setNotices]  = useState([])
-  const [loading,  setLoading]  = useState(true)
+  const [notices, setNotices] = useState([])
+  const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
-  const [form,     setForm]     = useState({ title: '', content: '', category: '서비스' })
+  const [form, setForm] = useState({ title: '', content: '', category: '서비스' })
 
   useEffect(() => { load() }, [])
 
@@ -494,17 +563,17 @@ function NoticeManager() {
         <form onSubmit={handleAdd} style={{ background: 'var(--bg-surface)', borderRadius: 12, padding: 20, marginBottom: 20 }}>
           <div className="form-group">
             <label className="form-label">카테고리</label>
-            <select className="form-control" value={form.category} onChange={e => setForm({...form, category: e.target.value})}>
-              {['서비스','운영','비즈니스','업데이트'].map(c => <option key={c}>{c}</option>)}
+            <select className="form-control" value={form.category} onChange={e => setForm({ ...form, category: e.target.value })}>
+              {['서비스', '운영', '비즈니스', '업데이트'].map(c => <option key={c}>{c}</option>)}
             </select>
           </div>
           <div className="form-group">
             <label className="form-label">제목 *</label>
-            <input className="form-control" value={form.title} onChange={e => setForm({...form, title: e.target.value})} required />
+            <input className="form-control" value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} required />
           </div>
           <div className="form-group">
             <label className="form-label">내용 *</label>
-            <textarea className="form-control" rows={6} value={form.content} onChange={e => setForm({...form, content: e.target.value})} required style={{ resize: 'vertical', fontFamily: 'inherit' }} />
+            <textarea className="form-control" rows={6} value={form.content} onChange={e => setForm({ ...form, content: e.target.value })} required style={{ resize: 'vertical', fontFamily: 'inherit' }} />
           </div>
           <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
             <button type="submit" style={{ padding: '9px 24px', background: 'var(--color-primary)', color: '#fff', border: 'none', borderRadius: 8, cursor: 'pointer', fontWeight: 700 }}>등록</button>
@@ -534,9 +603,9 @@ function NoticeManager() {
 
 // ── 신고 관리 ────────────────────────────────────────────────────────────────
 function ReportManager() {
-  const [reports,  setReports]  = useState([])
-  const [loading,  setLoading]  = useState(true)
-  const [filter,   setFilter]   = useState('all') // all | unprocessed | processed
+  const [reports, setReports] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [filter, setFilter] = useState('all') // all | unprocessed | processed
 
   useEffect(() => { load() }, [])
 
@@ -567,7 +636,7 @@ function ReportManager() {
 
   const filtered = reports.filter(r => {
     if (filter === 'unprocessed') return !r.is_processed
-    if (filter === 'processed')   return r.is_processed
+    if (filter === 'processed') return r.is_processed
     return true
   })
 
@@ -585,7 +654,7 @@ function ReportManager() {
           )}
         </div>
         <div style={{ display: 'flex', gap: 6 }}>
-          {[['all','전체'], ['unprocessed','미처리'], ['processed','처리완료']].map(([val, label]) => (
+          {[['all', '전체'], ['unprocessed', '미처리'], ['processed', '처리완료']].map(([val, label]) => (
             <button key={val} onClick={() => setFilter(val)}
               style={{
                 padding: '6px 14px', borderRadius: 8, fontSize: '.82rem', fontWeight: 700,
@@ -673,12 +742,12 @@ function ReportManager() {
 // ── 리뷰 관리 ────────────────────────────────────────────────────────────────
 function ReviewManager() {
   const PAGE_SIZE = 15
-  const [reviews,  setReviews]  = useState([])
-  const [loading,  setLoading]  = useState(true)
-  const [page,     setPage]     = useState(1)
-  const [total,    setTotal]    = useState(0)
-  const [search,   setSearch]   = useState('')
-  const [searchQ,  setSearchQ]  = useState('')
+  const [reviews, setReviews] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [page, setPage] = useState(1)
+  const [total, setTotal] = useState(0)
+  const [search, setSearch] = useState('')
+  const [searchQ, setSearchQ] = useState('')
 
   useEffect(() => { load(1, '') }, [])
 
@@ -778,10 +847,10 @@ function ReviewManager() {
           {/* 페이지네이션 */}
           {totalPages > 1 && (
             <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 6, marginTop: 16 }}>
-              <button onClick={() => load(1)} disabled={page===1}
-                style={{ padding: '5px 10px', border: '1px solid var(--border-color)', borderRadius: 6, background: 'var(--bg-white)', cursor: page===1?'default':'pointer', opacity: page===1?0.4:1, fontSize: '.82rem' }}>«</button>
-              <button onClick={() => load(page-1)} disabled={page===1}
-                style={{ padding: '5px 10px', border: '1px solid var(--border-color)', borderRadius: 6, background: 'var(--bg-white)', cursor: page===1?'default':'pointer', opacity: page===1?0.4:1, fontSize: '.82rem' }}>‹</button>
+              <button onClick={() => load(1)} disabled={page === 1}
+                style={{ padding: '5px 10px', border: '1px solid var(--border-color)', borderRadius: 6, background: 'var(--bg-white)', cursor: page === 1 ? 'default' : 'pointer', opacity: page === 1 ? 0.4 : 1, fontSize: '.82rem' }}>«</button>
+              <button onClick={() => load(page - 1)} disabled={page === 1}
+                style={{ padding: '5px 10px', border: '1px solid var(--border-color)', borderRadius: 6, background: 'var(--bg-white)', cursor: page === 1 ? 'default' : 'pointer', opacity: page === 1 ? 0.4 : 1, fontSize: '.82rem' }}>‹</button>
               {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
                 let p
                 if (totalPages <= 5) p = i + 1
@@ -790,15 +859,15 @@ function ReviewManager() {
                 else p = page - 2 + i
                 return (
                   <button key={p} onClick={() => load(p)}
-                    style={{ padding: '5px 12px', border: '1px solid var(--border-color)', borderRadius: 6, background: page===p ? 'var(--color-primary)' : 'var(--bg-white)', color: page===p ? '#fff' : 'var(--text-primary)', cursor: 'pointer', fontWeight: page===p ? 700 : 400, fontSize: '.82rem' }}>
+                    style={{ padding: '5px 12px', border: '1px solid var(--border-color)', borderRadius: 6, background: page === p ? 'var(--color-primary)' : 'var(--bg-white)', color: page === p ? '#fff' : 'var(--text-primary)', cursor: 'pointer', fontWeight: page === p ? 700 : 400, fontSize: '.82rem' }}>
                     {p}
                   </button>
                 )
               })}
-              <button onClick={() => load(page+1)} disabled={page===totalPages}
-                style={{ padding: '5px 10px', border: '1px solid var(--border-color)', borderRadius: 6, background: 'var(--bg-white)', cursor: page===totalPages?'default':'pointer', opacity: page===totalPages?0.4:1, fontSize: '.82rem' }}>›</button>
-              <button onClick={() => load(totalPages)} disabled={page===totalPages}
-                style={{ padding: '5px 10px', border: '1px solid var(--border-color)', borderRadius: 6, background: 'var(--bg-white)', cursor: page===totalPages?'default':'pointer', opacity: page===totalPages?0.4:1, fontSize: '.82rem' }}>»</button>
+              <button onClick={() => load(page + 1)} disabled={page === totalPages}
+                style={{ padding: '5px 10px', border: '1px solid var(--border-color)', borderRadius: 6, background: 'var(--bg-white)', cursor: page === totalPages ? 'default' : 'pointer', opacity: page === totalPages ? 0.4 : 1, fontSize: '.82rem' }}>›</button>
+              <button onClick={() => load(totalPages)} disabled={page === totalPages}
+                style={{ padding: '5px 10px', border: '1px solid var(--border-color)', borderRadius: 6, background: 'var(--bg-white)', cursor: page === totalPages ? 'default' : 'pointer', opacity: page === totalPages ? 0.4 : 1, fontSize: '.82rem' }}>»</button>
               <span style={{ fontSize: '.82rem', color: 'var(--text-muted)', marginLeft: 4 }}>
                 {page} / {totalPages} 페이지
               </span>

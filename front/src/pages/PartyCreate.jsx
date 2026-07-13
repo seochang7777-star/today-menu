@@ -2,6 +2,10 @@ import { useState, useEffect } from 'react'
 import { useNavigate, useSearchParams, useLocation } from 'react-router-dom'
 import { createParty, getRestaurants } from '../api/services'
 
+const TIME_HOURS = Array.from({ length: 24 }, (_, i) => String(i).padStart(2, '0'))
+const TIME_HOURS_12 = Array.from({ length: 12 }, (_, i) => String(i + 1).padStart(2, '0'))
+const TIME_MINUTES = Array.from({ length: 12 }, (_, i) => String(i * 5).padStart(2, '0'))
+
 export default function PartyCreate() {
   const navigate   = useNavigate()
   const location   = useLocation()
@@ -31,6 +35,10 @@ export default function PartyCreate() {
       alert('식당을 선택해주세요.')
       return
     }
+    if (!form.meeting_time) {
+      alert('약속 일시를 선택해주세요.')
+      return
+    }
     setLoading(true)
     try {
       const data = await createParty({
@@ -51,6 +59,35 @@ export default function PartyCreate() {
     return localISOTime;
   };
 
+  const [meetingDate = '', meetingTime = ''] = form.meeting_time.split('T')
+  const [meetingHour = '', meetingMinute = ''] = meetingTime.split(':')
+  const meetingHourNumber = Number(meetingHour || 12)
+  const meetingPeriod = meetingHourNumber >= 12 ? 'PM' : 'AM'
+  const meetingHour12 = String(meetingHourNumber % 12 || 12).padStart(2, '0')
+  const todayISO = getNowISO().slice(0, 10)
+
+  const setMeetingDate = (date) => {
+    const time = meetingTime || '12:00'
+    setForm({ ...form, meeting_time: date ? `${date}T${time}` : '' })
+  }
+
+  const setMeetingTimePart = (nextHour = meetingHour || '12', nextMinute = meetingMinute || '00') => {
+    const date = meetingDate || todayISO
+    setForm({ ...form, meeting_time: `${date}T${nextHour}:${nextMinute}` })
+  }
+
+  const setMeetingTime12Part = (
+    nextPeriod = meetingPeriod,
+    nextHour12 = meetingHour12,
+    nextMinute = meetingMinute || '00'
+  ) => {
+    const hourNumber = Number(nextHour12)
+    const hour24 = nextPeriod === 'PM'
+      ? (hourNumber === 12 ? 12 : hourNumber + 12)
+      : (hourNumber === 12 ? 0 : hourNumber)
+    setMeetingTimePart(String(hour24).padStart(2, '0'), nextMinute)
+  }
+
   // 선택한 식당명 표시
   const selectedName = preselected?.name ||
     restaurants.find(r => String(r.restaurant_id ?? r.id) === String(form.restaurant_id))?.name ||
@@ -62,7 +99,7 @@ export default function PartyCreate() {
         <button
           type="button"
           onClick={() => navigate('/party')}
-          className="ml-39 absolute left-0 top-0 z-10 inline-flex h-11 w-11 items-center justify-center rounded-full border border-[#f0ded4] bg-white shadow-sm transition hover:-translate-x-0.5 hover:shadow-md sm:left-2"
+          className="ml-39 absolute left-0 top-0 z-10 inline-flex h-11 w-11 items-center justify-center rounded-full border border-[#f0ded4] bg-white shadow-sm transition hover:-translate-x-0.5 hover:shadow-md sm:left-2 max-[540px]:ml-0 max-[540px]:left-0 max-[540px]:top-0"
           aria-label="목록으로 이동"
         >
           <img
@@ -151,16 +188,72 @@ export default function PartyCreate() {
                 </span>
                 <span>약속 일시 *</span>
               </label>
-              <div className="pl-0 sm:pl-11">
-                <input
-                  type="datetime-local"
-                  className="h-14 w-full rounded-2xl border border-[var(--border-color)] bg-white px-5 text-base font-semibold text-[var(--text-primary)] outline-none transition placeholder:text-[var(--text-light)] focus:border-[var(--color-primary)] focus:shadow-[0_0_0_3px_rgba(244,108,111,0.16)]"
-                  required
-                  value={form.meeting_time}
-                  min={getNowISO()}
-                  onClick={(e) => e.currentTarget.showPicker?.()}
-                  onChange={(e) => setForm({ ...form, meeting_time: e.target.value })}
-                />
+              <div className="w-full min-w-0 pl-0 sm:pl-11">
+                <div className="grid w-full min-w-0 grid-cols-[minmax(0,1fr)_92px_74px_74px] gap-2 max-[540px]:hidden">
+                  <input
+                    type="date"
+                    className="h-14 min-w-0 rounded-2xl border border-[var(--border-color)] bg-white px-3 text-sm font-semibold text-[var(--text-primary)] outline-none transition focus:border-[var(--color-primary)] focus:shadow-[0_0_0_3px_rgba(244,108,111,0.16)]"
+                    value={meetingDate}
+                    min={todayISO}
+                    onChange={(e) => setMeetingDate(e.target.value)}
+                  />
+                  <select
+                    className="h-14 min-w-0 rounded-2xl border border-[var(--border-color)] bg-white px-2 text-center text-sm font-semibold text-[var(--text-primary)] outline-none transition focus:border-[var(--color-primary)] focus:shadow-[0_0_0_3px_rgba(244,108,111,0.16)]"
+                    value={meetingPeriod}
+                    onChange={(e) => setMeetingTime12Part(e.target.value, meetingHour12, meetingMinute || '00')}
+                  >
+                    <option value="AM">오전</option>
+                    <option value="PM">오후</option>
+                  </select>
+                  <select
+                    className="h-14 min-w-0 rounded-2xl border border-[var(--border-color)] bg-white px-2 text-center text-sm font-semibold text-[var(--text-primary)] outline-none transition focus:border-[var(--color-primary)] focus:shadow-[0_0_0_3px_rgba(244,108,111,0.16)]"
+                    value={meetingHour12}
+                    onChange={(e) => setMeetingTime12Part(meetingPeriod, e.target.value, meetingMinute || '00')}
+                  >
+                    {TIME_HOURS_12.map((hour) => (
+                      <option key={hour} value={hour}>{hour}</option>
+                    ))}
+                  </select>
+                  <select
+                    className="h-14 min-w-0 rounded-2xl border border-[var(--border-color)] bg-white px-2 text-center text-sm font-semibold text-[var(--text-primary)] outline-none transition focus:border-[var(--color-primary)] focus:shadow-[0_0_0_3px_rgba(244,108,111,0.16)]"
+                    value={meetingMinute}
+                    onChange={(e) => setMeetingTime12Part(meetingPeriod, meetingHour12, e.target.value)}
+                  >
+                    <option value="" disabled>분</option>
+                    {TIME_MINUTES.map((minute) => (
+                      <option key={minute} value={minute}>{minute}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="hidden w-full min-w-0 grid-cols-[minmax(0,1fr)_74px_74px] gap-2 max-[540px]:grid">
+                  <input
+                    type="date"
+                    className="h-14 min-w-0 rounded-2xl border border-[var(--border-color)] bg-white px-3 text-sm font-semibold text-[var(--text-primary)] outline-none transition focus:border-[var(--color-primary)] focus:shadow-[0_0_0_3px_rgba(244,108,111,0.16)]"
+                    value={meetingDate}
+                    min={todayISO}
+                    onChange={(e) => setMeetingDate(e.target.value)}
+                  />
+                  <select
+                    className="h-14 min-w-0 rounded-2xl border border-[var(--border-color)] bg-white px-2 text-center text-sm font-semibold text-[var(--text-primary)] outline-none transition focus:border-[var(--color-primary)] focus:shadow-[0_0_0_3px_rgba(244,108,111,0.16)]"
+                    value={meetingHour}
+                    onChange={(e) => setMeetingTimePart(e.target.value, meetingMinute || '00')}
+                  >
+                    <option value="" disabled>시</option>
+                    {TIME_HOURS.map((hour) => (
+                      <option key={hour} value={hour}>{hour}</option>
+                    ))}
+                  </select>
+                  <select
+                    className="h-14 min-w-0 rounded-2xl border border-[var(--border-color)] bg-white px-2 text-center text-sm font-semibold text-[var(--text-primary)] outline-none transition focus:border-[var(--color-primary)] focus:shadow-[0_0_0_3px_rgba(244,108,111,0.16)]"
+                    value={meetingMinute}
+                    onChange={(e) => setMeetingTimePart(meetingHour || '12', e.target.value)}
+                  >
+                    <option value="" disabled>분</option>
+                    {TIME_MINUTES.map((minute) => (
+                      <option key={minute} value={minute}>{minute}</option>
+                    ))}
+                  </select>
+                </div>
               </div>
             </div>
 

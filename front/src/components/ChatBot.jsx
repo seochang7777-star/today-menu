@@ -254,6 +254,7 @@ export default function ChatBot() {
         className="
     chatbot-toggle-btn
   fixed bottom-7 right-2 z-[800]
+  max-[540px]:bottom-5 max-[540px]:right-5
   flex h-[68px] w-[68px] items-center justify-center
   rounded-full
   border-0

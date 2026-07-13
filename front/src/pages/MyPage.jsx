@@ -287,12 +287,28 @@ export default function MyPage() {
     ).values()
   ).filter(item => item.restaurant && item.is_liked !== false);
 
+  const R = 36
+  const circ = 2 * Math.PI * R
+  const heroOffset = circ * (1 - Math.min(mannerScore / 50, 1))
+  const mannerItems = [
+    ['파티 참여', (my_parties.length * 0.5).toFixed(1)],
+    ['후기 작성', (displayLikedLogs.length * 0.3).toFixed(1)],
+    ['약속 이행', '1.0'],
+  ]
+
   const myActivityTabs = [
     ['activity', '▣', '활동 내역'],
     ['reviews', '✎', '내가 쓴 리뷰'],
     ['favorites', '♥', '메뉴 찜 목록'],
     ['locations', '⌖', '나의 맛집 장소'],
   ];
+
+  const temperatureRanges = [
+    [20, 30, '주의 필요', 'bg-[#FC8181]/15 text-[#FC8181]', 'bg-[#FC8181]'],
+    [30, 36, '보통', 'bg-[#F6AD55]/15 text-[#F6AD55]', 'bg-[#F6AD55]'],
+    [36, 43, '따뜻해요', 'bg-[#68D391]/15 text-[#68D391]', 'bg-[#68D391]'],
+    [43, 50, '매우 따뜻해요 🔥', 'bg-[#38A169]/15 text-[#38A169]', 'bg-[#38A169]'],
+  ]
 
   return (
     <>
@@ -303,7 +319,7 @@ export default function MyPage() {
       {/* ── HERO BANNER ── */}
       <div className="mb-6 grid justify-center gap-5 lg:grid-cols-[minmax(0,740px)_300px]">
         <div className="relative h-[300px] overflow-hidden rounded-[var(--border-radius-xl)] border border-[#f5d2cb] bg-[var(--color-soft)] px-6 py-6 shadow-sm sm:px-8">
-          <div className="relative z-10 flex h-full max-w-[62%] flex-col justify-center">
+          <div className="relative z-10 flex h-full max-w-[62%] flex-col justify-center pr-4">
             <div className="mb-7 grid h-12 w-12 place-items-center rounded-full bg-[var(--color-primary)] text-lg font-black text-white shadow-sm">
               {user.nickname?.[0] ?? 'U'}
             </div>
@@ -324,7 +340,7 @@ export default function MyPage() {
           <img
             src="/img/icon/character.png"
             alt="마이페이지 캐릭터"
-            className="pointer-events-none absolute bottom-0 right-6 h-[250px] object-contain sm:right-10"
+            className="pointer-events-none absolute bottom-0 right-6 h-[250px] object-contain sm:right-10 max-[540px]:h-[200px]"
           />
         </div>
 
@@ -369,43 +385,43 @@ export default function MyPage() {
       </div>
 
       {/* ── STAT ROW ── */}
-      <div className="mx-auto mb-6 grid w-full max-w-[1060px] grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-4">
+      <div className="mx-auto mb-6 grid w-full max-w-[1060px] grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-4 max-[540px]:grid-cols-4 max-[540px]:gap-2">
         <button
           type="button"
           onClick={handleFavoriteView}
-          className="relative min-h-[112px] w-full rounded-[var(--border-radius-lg)] border border-[var(--border-color)] bg-[var(--bg-white)] px-5 py-4 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-[#FEB95C] hover:shadow-md"
+          className="relative min-h-[112px] w-full rounded-[var(--border-radius-lg)] border border-[var(--border-color)] bg-[var(--bg-white)] px-5 py-4 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-[#FEB95C] hover:shadow-md max-[540px]:min-h-[86px] max-[540px]:px-2 max-[540px]:pb-3 max-[540px]:pt-8 max-[540px]:text-center max-[540px]:[&>span:first-child]:left-1/2 max-[540px]:[&>span:first-child]:top-2 max-[540px]:[&>span:first-child]:h-6 max-[540px]:[&>span:first-child]:w-6 max-[540px]:[&>span:first-child]:-translate-x-1/2 max-[540px]:[&>span:first-child]:text-sm"
         >
           <span className="absolute left-5 top-5 grid h-10 w-10 place-items-center rounded-full bg-[#FFF5F5] text-lg text-[var(--color-primary)]">♥</span>
-          <div className="pl-14 pt-1">
+          <div className="pl-14 pt-1 max-[540px]:pl-0 max-[540px]:pt-0 max-[540px]:[&>div:first-child]:text-xl max-[540px]:[&>div:nth-child(2)]:mt-1 max-[540px]:[&>div:nth-child(2)]:truncate max-[540px]:[&>div:nth-child(2)]:text-[.68rem]">
             <div className="text-2xl font-black leading-none text-[var(--text-primary)]">{displayLikedLogs.length}</div>
             <div className="mt-2 text-[.82rem] font-bold text-[var(--text-secondary)]">찜한 메뉴</div>
-            <div className="mt-1 flex items-center justify-between text-[.70rem] font-semibold text-[var(--text-muted)]">
+            <div className="mt-1 flex items-center justify-between text-[.70rem] font-semibold text-[var(--text-muted)] max-[540px]:hidden">
               <span>총 {displayLikedLogs.length}개 찜함</span>
               <span>›</span>
             </div>
           </div>
         </button>
 
-        <div className="relative min-h-[112px] w-full rounded-[var(--border-radius-lg)] border border-[var(--border-color)] bg-[var(--bg-white)] px-5 py-4 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-[#3182CE] hover:shadow-md">
+        <div className="relative min-h-[112px] w-full rounded-[var(--border-radius-lg)] border border-[var(--border-color)] bg-[var(--bg-white)] px-5 py-4 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-[#3182CE] hover:shadow-md max-[540px]:min-h-[86px] max-[540px]:px-2 max-[540px]:pb-3 max-[540px]:pt-8 max-[540px]:text-center max-[540px]:[&>span:first-child]:left-1/2 max-[540px]:[&>span:first-child]:top-2 max-[540px]:[&>span:first-child]:h-6 max-[540px]:[&>span:first-child]:w-6 max-[540px]:[&>span:first-child]:-translate-x-1/2 max-[540px]:[&>span:first-child]:text-sm max-[540px]:[&>span:first-child_img]:h-4 max-[540px]:[&>span:first-child_img]:w-4">
           <span className="absolute left-5 top-5 grid h-10 w-10 place-items-center rounded-full bg-[#EBF5FF] text-lg text-[#3182CE]">
             <img src="/img/icon/thumb-up.png" alt="추천 활동" className="h-5 w-5 object-contain" />
           </span>
-          <div className="pl-14 pt-1">
+          <div className="pl-14 pt-1 max-[540px]:pl-0 max-[540px]:pt-0 max-[540px]:[&>div:first-child]:text-xl max-[540px]:[&>div:nth-child(2)]:mt-1 max-[540px]:[&>div:nth-child(2)]:truncate max-[540px]:[&>div:nth-child(2)]:text-[.68rem]">
             <div className="text-2xl font-black leading-none text-[var(--text-primary)]">{rec_logs.length}</div>
             <div className="mt-2 text-[.82rem] font-bold text-[var(--text-secondary)]">추천 활동</div>
-            <div className="mt-1 flex items-center justify-between text-[.70rem] font-semibold text-[var(--text-muted)]">
+            <div className="mt-1 flex items-center justify-between text-[.70rem] font-semibold text-[var(--text-muted)] max-[540px]:hidden">
               <span>최근 추천 {rec_logs.length}회</span>
               <span>›</span>
             </div>
           </div>
         </div>
 
-        <div className="relative min-h-[112px] w-full rounded-[var(--border-radius-lg)] border border-[var(--border-color)] bg-[var(--bg-white)] px-5 py-4 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-[#ff6b6b] hover:shadow-md">
+        <div className="relative min-h-[112px] w-full rounded-[var(--border-radius-lg)] border border-[var(--border-color)] bg-[var(--bg-white)] px-5 py-4 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-[#ff6b6b] hover:shadow-md max-[540px]:min-h-[86px] max-[540px]:px-2 max-[540px]:pb-3 max-[540px]:pt-8 max-[540px]:text-center max-[540px]:[&>span:first-child]:left-1/2 max-[540px]:[&>span:first-child]:top-2 max-[540px]:[&>span:first-child]:h-6 max-[540px]:[&>span:first-child]:w-6 max-[540px]:[&>span:first-child]:-translate-x-1/2 max-[540px]:[&>span:first-child]:text-sm">
           <span className="absolute left-5 top-5 grid h-10 w-10 place-items-center rounded-full bg-[#FFF5F5] text-lg text-[var(--color-danger)]">👥</span>
-          <div className="pl-14 pt-1">
+          <div className="pl-14 pt-1 max-[540px]:pl-0 max-[540px]:pt-0 max-[540px]:[&>div:first-child]:text-xl max-[540px]:[&>div:nth-child(2)]:mt-1 max-[540px]:[&>div:nth-child(2)]:truncate max-[540px]:[&>div:nth-child(2)]:text-[.68rem]">
             <div className="text-2xl font-black leading-none text-[var(--text-primary)]">{my_parties.length}</div>
             <div className="mt-2 text-[.82rem] font-bold text-[var(--text-secondary)]">매칭 기록</div>
-            <div className="mt-1 flex items-center justify-between text-[.70rem] font-semibold text-[var(--text-muted)]">
+            <div className="mt-1 flex items-center justify-between text-[.70rem] font-semibold text-[var(--text-muted)] max-[540px]:hidden">
               <span>완료된 파티 {my_parties.length}건</span>
               <span>›</span>
             </div>
@@ -414,14 +430,15 @@ export default function MyPage() {
 
         <button
           type="button"
-          className="relative min-h-[112px] w-full rounded-[var(--border-radius-lg)] border border-[var(--border-color)] bg-[var(--bg-white)] px-5 py-4 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-[#FEB95C] hover:shadow-md"
+          className="relative min-h-[112px] w-full rounded-[var(--border-radius-lg)] border border-[var(--border-color)] bg-[var(--bg-white)] px-5 py-4 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-[#FEB95C] hover:shadow-md max-[540px]:min-h-[86px] max-[540px]:px-2 max-[540px]:pb-3 max-[540px]:pt-8 max-[540px]:text-center max-[540px]:[&>span:first-child]:left-1/2 max-[540px]:[&>span:first-child]:top-2 max-[540px]:[&>span:first-child]:h-6 max-[540px]:[&>span:first-child]:w-6 max-[540px]:[&>span:first-child]:-translate-x-1/2 max-[540px]:[&>span:first-child]:text-sm"
           onClick={handleReviewView}
         >
           <span className="absolute left-5 top-5 grid h-10 w-10 place-items-center rounded-full bg-[#FFF8E6] text-lg text-[var(--color-accent)]">★</span>
-          <div className="pl-14 pt-1">
+          <div className="pl-14 pt-1 max-[540px]:pl-0 max-[540px]:pt-0 max-[540px]:[&>div:first-child]:text-xl max-[540px]:[&>div:nth-child(2)]:hidden max-[540px]:[&>div:nth-child(3)]:mt-1 max-[540px]:[&>div:nth-child(3)]:truncate max-[540px]:[&>div:nth-child(3)]:text-[.68rem]">
             <div className="text-2xl font-black leading-none text-[var(--text-primary)]">{my_reviews.length}</div>
             <div className="mt-2 text-[.82rem] font-bold text-[var(--text-secondary)]">내가 작성한 리뷰</div>
-            <div className="mt-1 flex items-center justify-between text-[.70rem] font-semibold text-[var(--text-muted)]">
+            <div className="mt-1 hidden truncate text-[.68rem] font-bold text-[var(--text-secondary)] max-[540px]:block">리뷰</div>
+            <div className="mt-1 flex items-center justify-between text-[.70rem] font-semibold text-[var(--text-muted)] max-[540px]:hidden">
               <span>리뷰 보러가기</span>
               <span>›</span>
             </div>
@@ -532,7 +549,7 @@ export default function MyPage() {
         {/* 탭 내용 - 활동 내역 */}
         {activeMyActivityTab === 'activity' && (
           <div>
-            <div className="grid grid-cols-[repeat(auto-fit,minmax(220px,250px))] gap-3">
+            <div className="grid grid-cols-[repeat(auto-fit,minmax(220px,250px))] gap-3 max-[540px]:grid-cols-[minmax(0,1fr)]">
               {rec_logs.slice(0, 3).map((log) => (
                 <div key={log.log_id ?? log.restaurant?.id ?? log.restaurant?.restaurant_id} className="flex gap-3.5 rounded-[var(--border-radius-lg)] border border-[var(--border-color)] bg-[var(--bg-white)] p-3.5">
                   <Link to={`/menu/${log.restaurant?.id ?? log.restaurant?.restaurant_id ?? log.recommended_restaurant_id}`} className="flex min-w-0 flex-1 gap-3.5 text-inherit no-underline">
@@ -718,23 +735,65 @@ export default function MyPage() {
         )}
       </div>
 
-      {/* ── 매너 모달 컴포넌트 ── */}
+      {/* 모달창 페이지 */}
       {showMannerModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 animate-fade-in">
-          <div className="w-full max-w-md rounded-xl bg-white p-6 shadow-xl">
-            <h3 className="text-xl font-black mb-4">매너 점수 안내</h3>
-            <p className="text-sm text-gray-600 mb-4 leading-relaxed">
-              점수는 매칭 참여도, 후기 작성 실적 및 가이드라인 준수 여부에 따라 종합적으로 산정됩니다. 깨끗하고 매너 있는 식사 문화를 만들어가요!
-            </p>
-            <div className="space-y-2 mb-6">
-              <div className="flex justify-between border-b pb-2 text-sm">
-                <span className="text-gray-500">현재 등급</span>
-                <span className="font-bold text-[var(--color-accent)]">따뜻한 식사 메이트</span>
-              </div>
+        <div
+          className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/35 px-4 py-8"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="manner-modal-title"
+          onClick={() => setShowMannerModal(false)}
+        >
+          <div
+            className="relative w-full max-w-[430px] rounded-[18px] bg-white p-6 shadow-[0_18px_50px_rgba(42,29,26,.18)]"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="mb-7 flex items-center justify-between gap-4">
+              <h2 id="manner-modal-title" className="text-xl font-black text-[var(--text-primary)]">
+                매너점수
+              </h2>
             </div>
-            <button type="button" onClick={() => setShowMannerModal(false)} className="w-full py-2.5 bg-gray-150 font-bold text-gray-700 rounded-lg hover:bg-gray-200 transition-colors">
-              닫기
+
+            <button
+              type="button"
+              className="absolute right-4 top-4 grid h-8 w-8 place-items-center rounded-full border-0 bg-[var(--bg-surface)] text-base font-bold text-[var(--text-muted)]"
+              aria-label="매너점수 모달 닫기"
+              onClick={() => setShowMannerModal(false)}
+            >
+              ×
             </button>
+
+            <div className="mb-3 flex w-full items-center gap-4">
+              {/* 온도 범위 안내 */}
+              <div className="mb-4 w-full rounded-[var(--border-radius-lg)] border border-[var(--border-color)] bg-[var(--bg-white)] p-5">
+                <h3 className="mb-3.5">온도 범위 안내</h3>
+                {temperatureRanges.map(([min, max, label, rangeClass, currentClass]) => (
+                  <div key={label} className="mb-2 flex items-center gap-3">
+                    <div className={`w-20 rounded-md px-2 py-[3px] text-center text-[.82rem] font-bold ${rangeClass}`}>
+                      {min}~{max}°C
+                    </div>
+                    <span className="text-[.85rem] text-[var(--text-secondary)]">{label}</span>
+                    {mannerScore >= min && mannerScore < max && (
+                      <span className={`rounded-[10px] px-2 py-0.5 text-[.75rem] font-bold text-white ${currentClass}`}>
+                        현재
+                      </span>
+                    )}
+                  </div>
+                ))}
+              </div>
+
+            </div>
+
+            <hr className="mb-6 border-0 border-t border-[var(--border-color)]" />
+
+            <div className="space-y-5">
+              {mannerItems.map(([label, val]) => (
+                <div key={label} className="flex items-center justify-between text-base">
+                  <span className="font-medium text-[var(--text-muted)]">{label}</span>
+                  <span className="font-black text-[var(--color-success)]">+{val}°</span>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       )}

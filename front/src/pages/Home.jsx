@@ -42,8 +42,8 @@ const bannerTitleClass = 'ml-5 mb-4 text-[clamp(2rem,3.4vw,2.55rem)] font-black 
 const bannerTitleAccentClass = 'mx-0.5 inline-flex translate-y-0.5'
 const bannerTextClass = 'ml-5 mb-9 text-[1.08rem] font-extrabold leading-[1.65]'
 const bannerActionsClass = 'flex flex-wrap gap-[5px]'
-const heroButtonLightClass = 'ml-5 inline-flex min-h-[44px] items-center justify-center gap-2 rounded-[12px] bg-white px-5 text-[0.94rem] font-black text-[var(--color-primary)] shadow-[var(--shadow-sm)] transition-transform hover:-translate-y-0.5'
-const heroButtonYellowClass = 'ml-3 inline-flex min-h-[44px] items-center justify-center gap-2 rounded-[12px] bg-[linear-gradient(135deg,var(--color-secondary),var(--color-accent))] px-5 text-[0.94rem] font-black text-[#4B2D07] shadow-[0_10px_18px_rgba(254,185,92,0.25)] transition-transform hover:-translate-y-0.5'
+const heroButtonLightClass = 'ml-5 inline-flex min-h-[44px] items-center justify-center gap-2 rounded-[12px] bg-white px-5 text-[0.94rem] font-black text-[var(--color-primary)] shadow-[var(--shadow-sm)] transition-transform hover:-translate-y-0.5 max-[540px]:ml-5 max-[540px]:min-h-8 max-[540px]:gap-1.5 max-[540px]:rounded-[8px] max-[540px]:px-3 max-[540px]:text-[0.74rem]'
+const heroButtonYellowClass = 'ml-3 inline-flex min-h-[44px] items-center justify-center gap-2 rounded-[12px] bg-[linear-gradient(135deg,var(--color-secondary),var(--color-accent))] px-5 text-[0.94rem] font-black text-[#4B2D07] shadow-[0_10px_18px_rgba(254,185,92,0.25)] transition-transform hover:-translate-y-0.5 max-[540px]:ml-2 max-[540px]:min-h-8 max-[540px]:gap-1.5 max-[540px]:rounded-[8px] max-[540px]:px-3 max-[540px]:text-[0.74rem]'
 
 const bannerFoodClass = 'absolute right-0 top-0 bottom-0 z-[1] h-full w-[52%] rounded-l-[999px] rounded-r-none object-cover object-center shadow-[0_18px_30px_rgba(85,34,26,0.2)] max-md:hidden xl:w-[51%]'
 
@@ -89,6 +89,9 @@ const quickAiCardClass = '[background:radial-gradient(circle_at_88%_50%,rgba(255
 const quickTitleClass = 'mb-[14px] text-[1.55rem] font-black'
 const quickTextClass = 'mb-[22px] text-[1rem] font-bold leading-[1.7] text-[#2B1D18]'
 const quickIllustClass = 'grid h-[150px] w-[150px] flex-none place-items-center rounded-full bg-white/50 text-[5.2rem] [filter:drop-shadow(0_12px_18px_rgba(116,62,38,0.16))] max-md:h-[104px] max-md:w-[104px] max-md:text-[3.6rem]'
+const nearbyTitleWrapClass = 'section-title items-center justify-between gap-3 max-[540px]:flex-row max-[540px]:items-center max-[540px]:justify-start max-[540px]:gap-2'
+const nearbyActionsClass = 'nearby-actions flex flex-wrap justify-end gap-2 max-[540px]:shrink-0 max-[540px]:justify-start max-[540px]:gap-1.5 max-[540px]:text-[0.60rem]'
+const nearbyActionButtonClass = 'inline-flex h-9 items-center justify-center gap-1.5 rounded-[10px] bg-white px-4 text-[0.70rem] font-black shadow-[var(--shadow-sm)] transition-transform hover:-translate-y-0.5 max-[540px]:h-8 max-[540px]:rounded-[8px] max-[540px]:px-2.5 max-[540px]:text-[0.60rem]'
 
 export default function Home() {
   const nearbyRef = useRef(null)
@@ -163,21 +166,21 @@ export default function Home() {
   }, [])
 
   const scrollToMapSection = () => {
-  if (!nearbyRef.current) return
-  const offset = 140
-  const top = nearbyRef.current.getBoundingClientRect().top + window.scrollY - offset
+    if (!nearbyRef.current) return
+    const offset = 140
+    const top = nearbyRef.current.getBoundingClientRect().top + window.scrollY - offset
 
 
-  window.scrollTo({
-    top,
-    behavior: 'smooth',
-  })
-}
-// 버튼을 누르자마자 사용자가 작동 여부를 인지할 수 있도록 스크롤 먼저 이동시킵니다.
+    window.scrollTo({
+      top,
+      behavior: 'smooth',
+    })
+  }
+  // 버튼을 누르자마자 사용자가 작동 여부를 인지할 수 있도록 스크롤 먼저 이동시킵니다.
   const findNearby = () => {
     if (!navigator.geolocation) return alert('위치 서비스 미지원')
     setLocStatus('loading')
-    
+
     scrollToMapSection();
 
     navigator.geolocation.getCurrentPosition(async ({ coords }) => {
@@ -218,10 +221,10 @@ export default function Home() {
   const handleOpenChatBot = (e) => {
     e.preventDefault();
 
-  const chatBtn = document.querySelector('.chatbot-toggle-btn') || 
-                  document.querySelector('#chatbot-button') || 
-                  document.querySelector('.chatbot-container button');
-                    
+    const chatBtn = document.querySelector('.chatbot-toggle-btn') ||
+      document.querySelector('#chatbot-button') ||
+      document.querySelector('.chatbot-container button');
+
     if (chatBtn) {
       chatBtn.click();
     } else {
@@ -230,249 +233,253 @@ export default function Home() {
   };
 
   return (
-    <div className="home-page">
-      <section className={heroLayoutClass}>
-        <div className={mainBannerClass}>
-          <div className={`${slideBaseClass} ${slideBackgrounds[0]} ${bannerIdx === 0 ? slideActiveClass : ''}`}>
-            <div className={bannerCopyClass}>
-              <h1 className={bannerTitleClass}>
-                HAVE A G<span className={bannerTitleAccentClass}>😍</span>OD TIME
-              </h1>
-              <p className={bannerTextClass}>
-                AI가 추천하는 오늘의 베스트 맛집
-                <br />
-                지금 당신의 취향을 찾아보세요
-              </p>
+    <main className="mx-auto w-full max-w-7xl px-4 py-6">
+      <div className="home-page">
+        <section className={heroLayoutClass}>
+          <div className={mainBannerClass}>
+            <div className={`${slideBaseClass} ${slideBackgrounds[0]} ${bannerIdx === 0 ? slideActiveClass : ''}`}>
+              <div className={bannerCopyClass}>
+                <h1 className={bannerTitleClass}>
+                  HAVE A G<span className={bannerTitleAccentClass}>😍</span>OD TIME
+                </h1>
+                <p className={bannerTextClass}>
+                  AI가 추천하는 오늘의 베스트 맛집
+                  <br />
+                  지금 당신의 취향을 찾아보세요
+                </p>
 
-              <div className={bannerActionsClass}>
-                <Link to="/menu" className={heroButtonLightClass}>추천 맛집 보기 →</Link>
-                <Link to="/game" className={heroButtonYellowClass}>랜덤 메뉴 추천 🎲</Link>
-              </div>
-            </div>
-
-            <img
-              className={bannerFoodClass}
-              src="https://images.unsplash.com/photo-1621996346565-e3dbc646d9a9?auto=format&fit=crop&w=900&q=80"
-              alt="파스타"
-            />
-          </div>
-
-          <div className={`${slideBaseClass} ${slideBackgrounds[1]} ${bannerIdx === 1 ? slideActiveClass : ''}`}>
-            <div className={bannerCopyClass}>
-              <h1 className={bannerTitleClass}>오늘의 밥친구</h1>
-              <p className={bannerTextClass}>
-                혼밥 말고 같이 먹는 즐거움
-                <br />
-                가까운 맛집에서 바로 만나요
-              </p>
-              <div className={bannerActionsClass}>
-                <Link to="/party" className={heroButtonLightClass}>밥친구 찾기 →</Link>
-                <button type="button" className={heroButtonYellowClass} onClick={findNearby}>내 주변 찾기 📍</button>
-              </div>
-            </div>
-            <img
-              className={bannerFoodClass}
-              src="https://images.unsplash.com/photo-1555939594-58d7cb561ad1?auto=format&fit=crop&w=900&q=80"
-              alt="브런치"
-            />
-          </div>
-
-          <div className={`${slideBaseClass} ${slideBackgrounds[2]} ${bannerIdx === 2 ? slideActiveClass : ''}`}>
-            <div className={bannerCopyClass}>
-              <h1 className={bannerTitleClass}>AI 메뉴 추천</h1>
-              <p className={bannerTextClass}>
-                예산, 시간, 취향을 분석해서
-                <br />
-                오늘 먹기 좋은 메뉴를 골라드려요
-              </p>
-              <div className={bannerActionsClass}>
-                <button
-                  className={heroButtonLightClass}
-                  onClick={() => {
-                    if (!user) { alert('로그인 후 이용 가능합니다.'); return }
-                    window.dispatchEvent(new CustomEvent('open-chatbot'))
-                  }}
-                >AI 추천 받기 →</button>
-              </div>
-            </div>
-            <img
-              className={bannerFoodClass}
-              src="https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&w=900&q=80"
-              alt="피자"
-            />
-          </div>
-          <button
-            onClick={() => { setBannerIdx((i) => (i + 2) % 3); clearInterval(bannerTimer.current); bannerTimer.current = setInterval(() => setBannerIdx((i) => (i + 1) % 3), 4500) }}
-            style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', zIndex: 10, background: 'rgba(0,0,0,0.20)', border: 'none', borderRadius: '50%', width: 36, height: 36, cursor: 'pointer', color: '#fff', fontSize: '1.2rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-            aria-label="이전 슬라이드"
-          >‹</button>
-          <button
-            onClick={() => { setBannerIdx((i) => (i + 1) % 3); clearInterval(bannerTimer.current); bannerTimer.current = setInterval(() => setBannerIdx((i) => (i + 1) % 3), 4500) }}
-            style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', zIndex: 10, background: 'rgba(0,0,0,0.20)', border: 'none', borderRadius: '50%', width: 36, height: 36, cursor: 'pointer', color: '#fff', fontSize: '1.2rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-            aria-label="다음 슬라이드"
-          >›</button>
-          <div className={bannerDotsClass}>
-            {[0, 1, 2].map((dot) => (
-              <span
-                key={dot}
-                onClick={() => { setBannerIdx(dot); clearInterval(bannerTimer.current); bannerTimer.current = setInterval(() => setBannerIdx((i) => (i + 1) % 3), 4500) }}
-                className={`${bannerDotClass} ${bannerIdx === dot ? bannerDotActiveClass : ''}`}
-                style={{ cursor: 'pointer' }}
-              />
-            ))}
-          </div>
-        </div>
-
-        <aside className={trendCardClass}>
-          <h4 className={trendTitleClass}>실시간 인기 검색어</h4>
-          <div className={trendListClass}>
-            {trendKeywords.map((item, i) => (
-              <Link
-                to={`/menu?q=${item.name}`}
-                className={trendItemClass}
-                key={item.name}
-                onClick={() => handleKeywordClick(item.name)}
-              >
-                <span className={trendRankClass}>{i + 1}</span>
-                <span className={trendNameClass}>{item.name}</span>
-              </Link>
-            ))}
-          </div>
-        </aside>
-      </section>
-
-      <section className={categoryGridClass}>
-        {Object.entries(CAT_ICON).map(([name, iconPath]) => (
-          <Link to={`/menu?cat=${name}`} className={categoryItemClass} key={name}>
-            <div className={categoryIconClass}>
-              <img
-                src={iconPath}
-                alt={name}
-                className="h-full w-full object-contain"
-                onError={(e) => { e.target.style.display = 'none' }}
-              />
-            </div>
-            <div className={categoryLabelClass}>{name}</div>
-          </Link>
-        ))}
-      </section>
-
-      <section className={recommendSectionClass}>
-        <div className={recommendTitleWrapClass}>
-          <span className={recommendTitleClass}>오늘의 추천 맛집</span>
-          <Link to="/menu" className={recommendMoreClass}>
-            더보기 →
-          </Link>
-        </div>
-
-        <div className={cafeteriaGridClass}>
-          {visibleRestaurants.slice(0, 4).map((r, index) => (
-            <div className="group relative transition-transform duration-200 hover:-translate-y-1" key={r.id}>
-              <Cafeteria
-                item={r}
-                to={`/menu/${r.id}`}
-                liked={Boolean(r.is_liked) || likedCafeteriaIds.has(r.id)}
-                onToggleLike={() => handleCafeteriaLike(r)}
-              />
-
-              <span
-                className={`${rankBadgeBaseClass} ${index === 1 || index === 3 ? rankBadgeAccentClass : ''
-                  }`}
-              >
-                {index + 1}
-              </span>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      <section className={quickPanelsClass}>
-      
-        {/* ⭕ 내 인생 맛집 찾기 노란색 패널을 눌러도 하단 지도로 스크롤되도록 onClick 핸들러 연동 */}
-        <div
-          className={`${quickCardBaseClass} ${quickMapCardClass} cursor-pointer`}
-          onClick={scrollToMapSection}
-        >
-          <div>
-            <h3 className={quickTitleClass}>📍 내 인생 맛집 찾기</h3>
-            <p className={quickTextClass}>
-              지금 위치를 기반으로
-              <br />
-              인생맛집을 찾아보세요
-            </p>
-            
-            <button type="button" onClick={scrollToMapSection} className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-[12px] bg-white px-6 text-[0.94rem] font-black text-[var(--color-primary)] shadow-[var(--shadow-sm)] transition-transform hover:-translate-y-0.5">
-              맛집 찾기 →
-            </button>
-          </div>
-          <div className={quickIllustClass}>📍</div>
-        </div>
-
-        <div className={`${quickCardBaseClass} ${quickAiCardClass}`}>
-          <div>
-            <h3 className={quickTitleClass}>오늘 뭐먹지?</h3>
-            <p className={quickTextClass}>
-              예산, 시간, 내 취향을 분석해서
-              <br />
-              오늘의 메뉴를 추천해드려요!
-            </p>
-            <button onClick={handleOpenChatBot} className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-[12px] bg-white px-6 text-[0.94rem] font-black text-[var(--color-primary)] shadow-[var(--shadow-sm)] transition-transform hover:-translate-y-0.5">
-              추천 받기 →
-            </button>
-          </div>
-          <div className={quickIllustClass}>🎲</div>
-        </div>
-      </section>
-
-      {user && (
-        <section ref={nearbyRef} className="nearby-section mb-[45px] mt-[11px]">
-
-          <div className="section-title">
-            <span>📍 내 주변 추천</span>
-            <div className="nearby-actions">
-              <button className="inline-flex min-h-[44px] items-center justify-center mt-[24px] mr-[15px] gap-2 rounded-[12px] bg-white px-6 text-[0.94rem] font-black text-[var(--color-primary)] shadow-[var(--shadow-sm)] transition-transform hover:-translate-y-0.5" onClick={() => setShowSearch((s) => !s)}>
-                {showSearch ? '패널 닫기' : '식당 검색/등록'}
-              </button>
-              <button className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-[12px] mb-[10px] bg-white px-6 text-[0.94rem] font-black text-[var(--color-black)] shadow-[var(--shadow-sm)] transition-transform hover:-translate-y-0.5" onClick={findNearby}>
-                {locStatus === 'loading' ? '확인 중...' : '위치 불러오기'}
-              </button>
-            </div>
-          </div>
-
-          {showSearch && (
-            <div className="search-panel">
-              <h4>카카오 식당 검색 & DB 등록</h4>
-              <RestaurantSearch
-                userLoc={userLoc}
-                onRegister={() => {
-                  if (userLoc) findNearby()
-                }}
-              />
-            </div>
-          )}
-
-          {locStatus === 'error' && <div className="empty-state">위치 권한을 허용해주세요.</div>}
-          {locStatus === 'idle' && !showSearch && <div className="empty-state">위치를 불러오면 주변 식당을 보여드려요.</div>}
-          {locStatus === 'done' && (
-            <>
-              {userLoc && (
-                <div className="map-wrap">
-                  <KakaoMap
-                    center={userLoc}
-                    markers={nearby.map((r) => ({ lat: r.latitude ?? r.lat, lng: r.longitude ?? r.lng, name: r.name, category: r.category, dist: r.dist, id: r.id }))}
-                    height="280px"
-                  />
+                <div className={bannerActionsClass}>
+                  <Link to="/menu" className={heroButtonLightClass}>추천 맛집 보기 →</Link>
+                  <Link to="/game" className={heroButtonYellowClass}>랜덤 메뉴 추천 🎲</Link>
                 </div>
-              )}
-              {nearby.length === 0 && <div className="empty-state">주변 500m 안에 식당이 없습니다.</div>}
-            </>
-          )}
-        </section>
-      )}
+              </div>
 
-      <section className={adBannerClass}>
-        <RandomBanner />
-      </section>
-    </div>
+              <img
+                className={bannerFoodClass}
+                src="https://images.unsplash.com/photo-1621996346565-e3dbc646d9a9?auto=format&fit=crop&w=900&q=80"
+                alt="파스타"
+              />
+            </div>
+
+            <div className={`${slideBaseClass} ${slideBackgrounds[1]} ${bannerIdx === 1 ? slideActiveClass : ''}`}>
+              <div className={bannerCopyClass}>
+                <h1 className={bannerTitleClass}>오늘의 밥친구</h1>
+                <p className={bannerTextClass}>
+                  혼밥 말고 같이 먹는 즐거움
+                  <br />
+                  가까운 맛집에서 바로 만나요
+                </p>
+                <div className={bannerActionsClass}>
+                  <Link to="/party" className={heroButtonLightClass}>밥친구 찾기 →</Link>
+                  <button type="button" className={heroButtonYellowClass} onClick={findNearby}>내 주변 찾기 📍</button>
+                </div>
+              </div>
+              <img
+                className={bannerFoodClass}
+                src="https://images.unsplash.com/photo-1555939594-58d7cb561ad1?auto=format&fit=crop&w=900&q=80"
+                alt="브런치"
+              />
+            </div>
+
+            <div className={`${slideBaseClass} ${slideBackgrounds[2]} ${bannerIdx === 2 ? slideActiveClass : ''}`}>
+              <div className={bannerCopyClass}>
+                <h1 className={bannerTitleClass}>AI 메뉴 추천</h1>
+                <p className={bannerTextClass}>
+                  예산, 시간, 취향을 분석해서
+                  <br />
+                  오늘 먹기 좋은 메뉴를 골라드려요
+                </p>
+                <div className={bannerActionsClass}>
+                  <button
+                    className={heroButtonLightClass}
+                    onClick={() => {
+                      if (!user) { alert('로그인 후 이용 가능합니다.'); return }
+                      window.dispatchEvent(new CustomEvent('open-chatbot'))
+                    }}
+                  >AI 추천 받기 →</button>
+                </div>
+              </div>
+              <img
+                className={bannerFoodClass}
+                src="https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&w=900&q=80"
+                alt="피자"
+              />
+            </div>
+            <button
+              onClick={() => { setBannerIdx((i) => (i + 2) % 3); clearInterval(bannerTimer.current); bannerTimer.current = setInterval(() => setBannerIdx((i) => (i + 1) % 3), 4500) }}
+              style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', zIndex: 10, background: 'rgba(0,0,0,0.20)', border: 'none', borderRadius: '50%', width: 36, height: 36, cursor: 'pointer', color: '#fff', fontSize: '1.2rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+              aria-label="이전 슬라이드"
+            >‹</button>
+            <button
+              onClick={() => { setBannerIdx((i) => (i + 1) % 3); clearInterval(bannerTimer.current); bannerTimer.current = setInterval(() => setBannerIdx((i) => (i + 1) % 3), 4500) }}
+              style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', zIndex: 10, background: 'rgba(0,0,0,0.20)', border: 'none', borderRadius: '50%', width: 36, height: 36, cursor: 'pointer', color: '#fff', fontSize: '1.2rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+              aria-label="다음 슬라이드"
+            >›</button>
+            <div className={bannerDotsClass}>
+              {[0, 1, 2].map((dot) => (
+                <span
+                  key={dot}
+                  onClick={() => { setBannerIdx(dot); clearInterval(bannerTimer.current); bannerTimer.current = setInterval(() => setBannerIdx((i) => (i + 1) % 3), 4500) }}
+                  className={`${bannerDotClass} ${bannerIdx === dot ? bannerDotActiveClass : ''}`}
+                  style={{ cursor: 'pointer' }}
+                />
+              ))}
+            </div>
+          </div>
+
+          <aside className={trendCardClass}>
+            <h4 className={trendTitleClass}>실시간 인기 검색어</h4>
+            <div className={trendListClass}>
+              {trendKeywords.map((item, i) => (
+                <Link
+                  to={`/menu?q=${item.name}`}
+                  className={trendItemClass}
+                  key={item.name}
+                  onClick={() => handleKeywordClick(item.name)}
+                >
+                  <span className={trendRankClass}>{i + 1}</span>
+                  <span className={trendNameClass}>{item.name}</span>
+                </Link>
+              ))}
+            </div>
+          </aside>
+        </section>
+
+        <section className={categoryGridClass}>
+          {Object.entries(CAT_ICON).map(([name, iconPath]) => (
+            <Link to={`/menu?cat=${name}`} className={categoryItemClass} key={name}>
+              <div className={categoryIconClass}>
+                <img
+                  src={iconPath}
+                  alt={name}
+                  className="h-full w-full object-contain"
+                  onError={(e) => { e.target.style.display = 'none' }}
+                />
+              </div>
+              <div className={categoryLabelClass}>{name}</div>
+            </Link>
+          ))}
+        </section>
+
+        <section className={recommendSectionClass}>
+          <div className={recommendTitleWrapClass}>
+            <span className={recommendTitleClass}>오늘의 추천 맛집</span>
+            <Link to="/menu" className={recommendMoreClass}>
+              더보기 →
+            </Link>
+          </div>
+
+          <div className={cafeteriaGridClass}>
+            {visibleRestaurants.slice(0, 4).map((r, index) => (
+              <div className="group relative transition-transform duration-200 hover:-translate-y-1" key={r.id}>
+                <Cafeteria
+                  item={r}
+                  to={`/menu/${r.id}`}
+                  liked={Boolean(r.is_liked) || likedCafeteriaIds.has(r.id)}
+                  onToggleLike={() => handleCafeteriaLike(r)}
+                />
+
+                <span
+                  className={`${rankBadgeBaseClass} ${index === 1 || index === 3 ? rankBadgeAccentClass : ''
+                    }`}
+                >
+                  {index + 1}
+                </span>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        <section className={quickPanelsClass}>
+
+          {/* ⭕ 내 인생 맛집 찾기 노란색 패널을 눌러도 하단 지도로 스크롤되도록 onClick 핸들러 연동 */}
+          <div
+            className={`${quickCardBaseClass} ${quickMapCardClass} cursor-pointer`}
+            onClick={scrollToMapSection}
+          >
+            <div>
+              <h3 className={quickTitleClass}>📍 내 인생 맛집 찾기</h3>
+              <p className={quickTextClass}>
+                지금 위치를 기반으로
+                <br />
+                인생맛집을 찾아보세요
+              </p>
+
+              <button type="button" onClick={scrollToMapSection} className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-[12px] bg-white px-6 text-[0.94rem] font-black text-[var(--color-primary)] shadow-[var(--shadow-sm)] transition-transform hover:-translate-y-0.5">
+                맛집 찾기 →
+              </button>
+            </div>
+            <div className={quickIllustClass}>📍</div>
+          </div>
+
+          <div className={`${quickCardBaseClass} ${quickAiCardClass}`}>
+            <div>
+              <h3 className={quickTitleClass}>오늘 뭐먹지?</h3>
+              <p className={quickTextClass}>
+                예산, 시간, 내 취향을 분석해서
+                <br />
+                오늘의 메뉴를 추천해드려요!
+              </p>
+              <button onClick={handleOpenChatBot} className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-[12px] bg-white px-6 text-[0.94rem] font-black text-[var(--color-primary)] shadow-[var(--shadow-sm)] transition-transform hover:-translate-y-0.5">
+                추천 받기 →
+              </button>
+            </div>
+            <div className={quickIllustClass}>🎲</div>
+          </div>
+        </section>
+
+        {user && (
+          <section ref={nearbyRef} className="nearby-section mb-[45px] mt-[11px]">
+
+            <div className={nearbyTitleWrapClass}>
+              <span>📍 내 주변 추천</span>
+              <div className={nearbyActionsClass}>
+                <button className={`${nearbyActionButtonClass} text-[var(--color-primary)]`} onClick={() => setShowSearch((s) => !s)}>
+                  <span className="max-[540px]:hidden">{showSearch ? '패널 닫기' : '식당 검색/등록'}</span>
+                  <span className="hidden max-[540px]:inline">{showSearch ? '닫기' : '식당 검색'}</span>
+                </button>
+                <button className={`${nearbyActionButtonClass} text-[var(--color-black)]`} onClick={findNearby}>
+                  <span className="max-[540px]:hidden">{locStatus === 'loading' ? '확인 중...' : '위치 불러오기'}</span>
+                  <span className="hidden max-[540px]:inline">{locStatus === 'loading' ? '확인중' : '위치'}</span>
+                </button>
+              </div>
+            </div>
+
+            {showSearch && (
+              <div className="search-panel">
+                <h4>카카오 식당 검색 & DB 등록</h4>
+                <RestaurantSearch
+                  userLoc={userLoc}
+                  onRegister={() => {
+                    if (userLoc) findNearby()
+                  }}
+                />
+              </div>
+            )}
+
+            {locStatus === 'error' && <div className="empty-state">위치 권한을 허용해주세요.</div>}
+            {locStatus === 'idle' && !showSearch && <div className="empty-state">위치를 불러오면 주변 식당을 보여드려요.</div>}
+            {locStatus === 'done' && (
+              <>
+                {userLoc && (
+                  <div className="map-wrap">
+                    <KakaoMap
+                      center={userLoc}
+                      markers={nearby.map((r) => ({ lat: r.latitude ?? r.lat, lng: r.longitude ?? r.lng, name: r.name, category: r.category, dist: r.dist, id: r.id }))}
+                      height="280px"
+                    />
+                  </div>
+                )}
+                {nearby.length === 0 && <div className="empty-state">주변 500m 안에 식당이 없습니다.</div>}
+              </>
+            )}
+          </section>
+        )}
+
+        <section className={adBannerClass}>
+          <RandomBanner />
+        </section>
+      </div>
+    </main>
   )
 }
