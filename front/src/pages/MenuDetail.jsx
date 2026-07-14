@@ -1,7 +1,7 @@
 import ReviewModal from '../components/ReviewModal'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { createReview, getRestaurant, getReviews, toggleFavoriteAction } from '../api/services'
+import { createReview, logRestaurantClick,getRestaurant, getReviews, toggleFavoriteAction } from '../api/services'
 import { useAuth } from '../App'
 import KakaoMap from '../components/KakaoMap'
 import RestaurantImage from '../components/RestaurantImage'
@@ -126,6 +126,10 @@ export default function MenuDetail() {
     getRestaurant(restId)
       .then(setRest)
       .catch(() => navigate('/menu'))
+
+      logRestaurantClick(restId)
+    .catch(err => console.error('조회수 기록 실패:', err))
+    
   }, [navigate, restId])
 
   useEffect(() => {

@@ -294,8 +294,8 @@ function Roulette() {
           {/* 3️⃣ 당첨 결과 출력 영역 */}
           {result && (
             <div style={{
-              width: '100%', background: 'linear-gradient(135deg,#FFF5F5,#FED7D7)',
-              border: '2px solid var(--color-primary)', borderRadius: 20, padding: '24px 28px', textAlign: 'center',
+              width: '100%', background: 'linear-gradient(135deg,#FFFFF0,#FEFCBF)',
+              border: '2px solid var(--color-accent)', borderRadius: 20, padding: '24px 28px', textAlign: 'center',
               boxSizing: 'border-box',
               boxShadow: '0 8px 24px rgba(244,108,111,.2)',
             }}>
@@ -306,7 +306,7 @@ function Roulette() {
               <MenuImage item={result} size="230px" />
 
 
-              <div style={{ fontWeight: 900, fontSize: '1.5rem', marginBottom: 4, color: 'var(--text-primary)' }}>{result.name}</div>
+              <div className="text-[1.5rem] max-[540px]:mt-2 max-[540px]:text-[1.1rem]" style={{ fontWeight: 900, marginBottom: 4, color: 'var(--text-primary)' }}>{result.name}</div>
 
               <div style={{ display: 'inline-block', background: 'rgba(244,108,111,.12)', color: 'var(--color-primary)', borderRadius: 20, padding: '3px 12px', fontSize: '.78rem', fontWeight: 700, marginBottom: 12 }}>
                 {result.category === '피자' ? '양식' : result.category}
@@ -596,14 +596,15 @@ function WorldCup({ menus }) {
         borderRadius: 20,
         overflow: 'hidden', // 라운딩 밖으로 사진 안 나가게 가둠
         padding: 0, // 패딩 제로화
-        margin: '16px 0',
-        display: 'inline-block',
-        width: '400px' // 우승 박스 전체 가로 크기 제한
+        margin: '16px auto',
+        display: 'block',
+        width: 'min(400px, calc(100% - 32px))', // 우승 박스 전체 가로 크기 제한
+        boxSizing: 'border-box'
       }}>
 
         {/* 대결창과 똑같이 깔끔하게 채워집니다 */}
         <MenuImage item={champion} />
-        <div style={{ fontWeight: 900, fontSize: '1.5rem', padding: '14px 8px 4px' }}>{champion.name}</div>
+        <div className="text-[1.5rem] max-[540px]:mt-2 max-[540px]:text-[1.1rem]" style={{ fontWeight: 900, padding: '14px 8px 4px' }}>{champion.name}</div>
         <div style={{ display: 'inline-block', background: 'rgba(244,108,111,.12)', color: 'var(--color-primary)', borderRadius: 20, padding: '3px 12px', fontSize: '.78rem', fontWeight: 700, marginBottom: 12 }}>
           {champion.category === '피자' ? '양식' : champion.category}
         </div>
@@ -611,7 +612,11 @@ function WorldCup({ menus }) {
           style={{
             fontSize: '.85rem',
             color: 'var(--text-muted)',
-            marginBottom: 16
+            margin: '0 auto 16px',
+            maxWidth: 'calc(100% - 24px)',
+            whiteSpace: 'normal',
+            wordBreak: 'keep-all',
+            boxSizing: 'border-box'
           }}
         >
           이 카테고리의 모든 메뉴를 확인해 볼까요?
@@ -629,7 +634,11 @@ function WorldCup({ menus }) {
             fontWeight: 800,
             border: 'none',
             cursor: 'pointer',
-            marginBottom: 16
+            marginBottom: 16,
+            maxWidth: 'calc(100% - 24px)',
+            whiteSpace: 'normal',
+            wordBreak: 'keep-all',
+            boxSizing: 'border-box'
           }}
         >
           {champion.category === '피자' ? '양식' : champion.category} 전체 메뉴 보러가기 →
@@ -814,7 +823,7 @@ function ScratchCard({ menus }) {
             background: 'linear-gradient(135deg,#FFFFF0,#FEFCBF)',
             borderRadius: 20,
             overflow: 'hidden',
-            border: '2px solid var(--border-color)',
+            border: '2px solid var(--color-accent)', textAlign: 'center',
             width: 300,
             margin: '0 auto 16px'
           }}>
@@ -956,14 +965,29 @@ function Ladder({ menus }) {
     const H = canvas.height
     const n = items.length
     const PAD = 36
+    const isMobile = typeof window !== 'undefined' && window.innerWidth <= 540
     const TOP = 52
-    const BOT = H - 52
+    const BOT = isMobile ? H - 38 : H - 52
     const step = (W - PAD * 2) / (n - 1)
+    const topButtonRadius = isMobile ? 21 : 14
+    const topButtonFontSize = isMobile ? 18 : 12
+    const bottomFontSize = isMobile ? 17 : 11
+    const bottomResultFontSize = isMobile ? 18 : 12
+    const bottomTextY = isMobile ? BOT + 24 : BOT + 20
 
     ctx.clearRect(0, 0, W, H)
 
     const xOf = (col) => PAD + col * step
-    const yOf = (row) => ladder.yPositions[row] ?? (TOP + (row + 1) * (BOT - TOP) / (NUM_ROWS + 1))
+    const yOf = (row) => {
+      const baseY = ladder.yPositions[row] ?? (TOP + (row + 1) * (BOT - TOP) / (NUM_ROWS + 1))
+
+      if (!isMobile) return baseY
+
+      const sourceTop = 52
+      const sourceBot = 420 - 52
+      const ratio = (baseY - sourceTop) / (sourceBot - sourceTop)
+      return TOP + ratio * (BOT - TOP)
+    }
 
     // 세로줄
     for (let i = 0; i < n; i++) {
@@ -1013,26 +1037,26 @@ function Ladder({ menus }) {
     for (let i = 0; i < n; i++) {
       const hl = highlightPath && highlightPath[0].col === i
       ctx.beginPath()
-      ctx.arc(xOf(i), TOP - 14, 14, 0, 2 * Math.PI)
+      ctx.arc(xOf(i), TOP - 14, topButtonRadius, 0, 2 * Math.PI)
       ctx.fillStyle = hl ? COLORS[i % COLORS.length] : '#F3E7DD'
       ctx.fill()
       ctx.fillStyle = hl ? '#fff' : '#7A5C52'
-      ctx.font = 'bold 12px sans-serif'
+      ctx.font = `bold ${topButtonFontSize}px sans-serif`
       ctx.textAlign = 'center'
-      ctx.fillText(i + 1, xOf(i), TOP - 10)
+      ctx.fillText(i + 1, xOf(i), isMobile ? TOP - 8 : TOP - 10)
     }
 
     // 하단 메뉴명
     for (let i = 0; i < n; i++) {
       const isRes = highlightPath && highlightPath[highlightPath.length - 1].col === i
       ctx.fillStyle = isRes ? COLORS[highlightPath[0].col % COLORS.length] : '#5E4A44'
-      ctx.font = `bold ${isRes ? 12 : 11}px sans-serif`
+      ctx.font = `bold ${isRes ? bottomResultFontSize : bottomFontSize}px sans-serif`
       ctx.textAlign = 'center'
       const label =
-        items[i].name.length > 5
-          ? items[i].name.slice(0, 5) + '…'
+        items[i].name.length > 4
+          ? items[i].name.slice(0, 4) + '...'
           : items[i].name;
-      ctx.fillText(label, xOf(i), BOT + 20)
+      ctx.fillText(label, xOf(i), bottomTextY)
     }
   }, [items, ladder])
 
@@ -1176,7 +1200,7 @@ function Ladder({ menus }) {
       {/* 사다리 캔버스 */}
       {items.length >= 2 ? (
         <>
-          <canvas ref={canvasRef} width={540} height={400}
+          <canvas ref={canvasRef} width={540} height={typeof window !== 'undefined' && window.innerWidth <= 540 ? 600 : 400}
             style={{ width: '100%', borderRadius: 12, border: '1px solid var(--border-color)', background: '#FFFDF7', cursor: 'pointer' }}
             onClick={(e) => {
               const canvas = canvasRef.current
@@ -1206,7 +1230,7 @@ function Ladder({ menus }) {
           {result && (
             <div
               style={{
-                background: 'linear-gradient(135deg,#FFF5F5,#FED7D7)',
+                background: 'linear-gradient(135deg,#FFFFF0,#FEFCBF)',
                 border: `2px solid ${COLORS[result.topIdx % COLORS.length]}`,
                 borderRadius: 20,
                 overflow: 'hidden',
@@ -1306,6 +1330,11 @@ const TABS = [
   { id: 'ladder', label: '🪜 사다리', desc: '사다리타기' },
 ]
 
+const splitTabLabel = (label) => {
+  const [icon, ...text] = label.split(' ')
+  return { icon, text: text.join(' ') }
+}
+
 export default function Game() {
   const [activeTab, setActiveTab] = useState('roulette')
   const [menus, setMenus] = useState([])
@@ -1320,8 +1349,9 @@ export default function Game() {
 
   return (
     <div className="game-wrap" style={{ maxWidth: 640 }}>
-      <div style={{ marginLeft: -20 }}>
+      <div className="max-[540px]:!ml-0 max-[540px]:text-center" style={{ marginLeft: -20 }}>
         <h1
+          className="max-[540px]:justify-center"
           style={{
             fontSize: '1.5rem',
             fontWeight: 800,
@@ -1334,6 +1364,7 @@ export default function Game() {
           <img
             src="/img/icon/logo.png"
             alt="오늘 뭐먹지?"
+            className="max-[540px]:!ml-0"
             style={{
               height: 38,
               width: 38,
@@ -1349,6 +1380,7 @@ export default function Game() {
         </h1>
 
         <p
+          className="max-[540px]:!ml-0"
           style={{
             color: 'var(--text-muted)',
             fontSize: '.88rem',
@@ -1363,7 +1395,9 @@ export default function Game() {
 
       {/* 탭 */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 8, marginBottom: 24 }}>
-        {TABS.map(({ id, label, desc }) => (
+        {TABS.map(({ id, label, desc }) => {
+          const { icon, text } = splitTabLabel(label)
+          return (
           <button key={id} onClick={() => setActiveTab(id)}
             style={{
               border: `2px solid ${activeTab === id ? 'var(--color-primary)' : 'var(--border-color)'}`,
@@ -1371,10 +1405,15 @@ export default function Game() {
               background: activeTab === id ? '#FFF5F5' : 'var(--bg-white)',
               transition: 'all .15s',
             }}>
-            <div style={{ fontSize: '.95rem', fontWeight: 800 }}>{label}</div>
-            <div style={{ fontSize: '.68rem', color: 'var(--text-muted)', marginTop: 2 }}>{desc}</div>
+            <div className="hidden max-[540px]:flex max-[540px]:flex-col max-[540px]:items-center max-[540px]:gap-1" style={{ fontWeight: 800 }}>
+              <span className="leading-none" style={{ fontSize: '1.1rem' }}>{icon}</span>
+              <span className="leading-tight" style={{ fontSize: '.72rem' }}>{text}</span>
+            </div>
+            <div className="max-[540px]:hidden" style={{ fontSize: '.95rem', fontWeight: 800 }}>{label}</div>
+            <div className="max-[540px]:hidden" style={{ fontSize: '.68rem', color: 'var(--text-muted)', marginTop: 2 }}>{desc}</div>
           </button>
-        ))}
+          )
+        })}
       </div>
 
       {/* 게임 카드 */}

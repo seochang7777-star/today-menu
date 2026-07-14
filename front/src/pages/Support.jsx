@@ -215,7 +215,7 @@ export default function Support() {
           <div className="relative">
             <input
               type="text"
-              placeholder="찾는 단어를 입력하면 아래 리스트가 실시간으로 필터링됩니다..."
+              placeholder="검색어를 입력하세요"
               value={searchQuery}
 
               onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }} // 검색 시 첫 페이징으로 이동하여 에러 방어
@@ -275,7 +275,7 @@ export default function Support() {
                     onClick={() => setActiveFaq(item)}
                     className="bg-white hover:bg-[var(--bg-surface)] p-5 rounded-[24px] min-h-[100px] flex items-center justify-center text-center cursor-pointer transition-all border border-[var(--border-color)] shadow-sm hover:shadow-md group"
                   >
-                    <p className="text-xs font-bold text-[var(--text-primary)] group-hover:text-[var(--text-primary)] line-clamp-3">
+                    <p className="text-sm font-bold text-[var(--text-primary)] group-hover:text-[var(--text-primary)] line-clamp-3">
                       Q. {item.q}
                     </p>
                   </div>

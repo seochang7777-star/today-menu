@@ -55,6 +55,19 @@ class Restaurant(db.Model):
     image_url   = db.Column(db.String(500), nullable=True)
     image_index = db.Column(db.Integer, default=1)
 
+class RestaurantClickLog(db.Model):
+    __tablename__ = "restaurant_click_logs"
+
+    click_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    restaurant_id = db.Column(
+        db.Integer,
+        db.ForeignKey("restaurants.restaurant_id"),
+        nullable=False
+    )
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    restaurant = db.relationship("Restaurant", backref="click_logs")
+
 
 class Party(db.Model):
     __tablename__ = 'parties'

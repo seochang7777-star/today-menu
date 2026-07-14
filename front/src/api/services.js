@@ -66,8 +66,24 @@ export async function getTrending() {
   return data
 }
 
+
 export async function deleteRestaurant(restId) {
   const { data } = await api.delete(`/api/menu/${restId}`)
+  return data
+}
+
+export async function logRestaurantClick(restId) {
+  const { data } = await api.post(`/api/menu/${restId}/click`)
+  return data
+}
+
+export async function getTrendingClicks() {
+  const { data } = await api.get('/api/menu/trending/clicks')
+  return data
+}
+
+export async function getRealtimeTrending() {
+  const { data } = await api.get('/api/menu/trending/realtime')
   return data
 }
 

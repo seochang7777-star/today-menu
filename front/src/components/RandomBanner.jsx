@@ -3,10 +3,10 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../App'; 
 
 const BANNERS = [
-  { img: '/img/banner/banner5.png', type: 'chatbot' },
-  { img: '/img/banner/banner2.png', link: '/party' },
-  { img: '/img/banner/banner3.png', link: '/game' },
-  { img: '/img/banner/banner4.png', link: '/menu' },
+  { img: '/img/banner/banner5.png', mobileImg: '/img/banner/banner5_1.png', type: 'chatbot' },
+  { img: '/img/banner/banner2.png', mobileImg: '/img/banner/banner2_1.png', link: '/party' },
+  { img: '/img/banner/banner3.png', mobileImg: '/img/banner/banner3_1.png', link: '/game' },
+  { img: '/img/banner/banner4.png', mobileImg: '/img/banner/banner4_1.png', link: '/menu' },
 ];
 
 export default function RandomBanner() {
@@ -38,13 +38,18 @@ export default function RandomBanner() {
   return (
     <div 
       onClick={handleBannerClick} 
-      className="block h-full w-full overflow-hidden rounded-2xl bg-white shadow-lg transition-transform hover:scale-[1.01] cursor-pointer"
+      className="block w-full overflow-hidden rounded-2xl bg-white shadow-lg transition-transform hover:scale-[1.01] cursor-pointer"
     >
-      <img
+      <picture className="block w-full">
+        {banner.mobileImg && (
+          <source media="(max-width: 540px)" srcSet={banner.mobileImg} />
+        )}
+        <img
         src={banner.img}
         alt="랜덤 배너"
-        className="h-full w-full object-contain object-center"
-      />
+        className="block h-auto w-full"
+        />
+      </picture>
     </div>
   );
 }

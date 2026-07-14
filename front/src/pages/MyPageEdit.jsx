@@ -244,9 +244,9 @@ export default function MyPageEdit() {
               />
             </Link>
 
-            <div className="grid items-end gap-2 pt-8 md:grid-cols-[1fr_230px] md:pt-0">
-              <div className="ml-20 pb-10 text-center md:text-left">
-                <h2 className="inline-flex items-center justify-center gap-2 text-[1.7rem] font-black text-[var(--text-primary)] sm:text-[2rem]">
+            <div className="grid items-end gap-2 pt-8 md:grid-cols-[1fr_230px] md:pt-0 max-[540px]:pt-16">
+              <div className="ml-20 pb-10 text-center md:text-left max-[540px]:ml-0 max-[540px]:pb-3 max-[540px]:text-center">
+                <h2 className="inline-flex items-center justify-center gap-2 text-[1.7rem] font-black text-[var(--text-primary)] sm:text-[2rem] max-[540px]:justify-start">
                   <span className="grid h-10 w-10 place-items-center rounded-2xl bg-whites">
                     <img
                       src="/img/icon/edit2.png"
@@ -257,7 +257,7 @@ export default function MyPageEdit() {
                   <span>프로필 수정</span>
                 </h2>
 
-                <p className="ml-15 mt-1 text-[0.9rem] font-medium text-[var(--text-muted)]">
+                <p className="ml-15 mt-1 text-[0.9rem] font-medium text-[var(--text-muted)] max-[540px]:ml-0">
                   회원 정보를 수정하고 나만의 취향을 관리해보세요!
                 </p>
               </div>
@@ -269,17 +269,17 @@ export default function MyPageEdit() {
             </div>
           </div>
 
-          <section className="rounded-[22px] border border-[var(--border-color)] bg-[#fffdf9] p-5 sm:p-6">
+          <section className="overflow-hidden rounded-[22px] border border-[var(--border-color)] bg-[#fffdf9] p-5 sm:p-6">
             <div className="mb-5 flex items-center justify-between gap-3">
               <div>
                 <h3 className="text-lg font-extrabold text-[var(--text-primary)]">기본 정보</h3>
               </div>
             </div>
 
-            <div className="grid gap-5 lg:grid-cols-2">
-              <div className="space-y-5">
+            <div className="grid min-w-0 gap-5 lg:grid-cols-2">
+              <div className="min-w-0 space-y-5">
                 {/* 닉네임 */}
-                <div>
+                <div className="min-w-0">
                   <label className="mb-2 block text-sm font-bold text-[var(--text-secondary)]">닉네임</label>
                   <input
                     type="text"
@@ -291,15 +291,15 @@ export default function MyPageEdit() {
                 </div>
 
                 {/* 주소지 */}
-                <div>
+                <div className="min-w-0">
                   <label className="mb-2 block text-sm font-bold text-[var(--text-secondary)]">
                     주소지
                   </label>
 
-                  <div className="flex gap-2">
+                  <div className="flex min-w-0 gap-2 max-[540px]:flex-col">
                     <input
                       type="text"
-                      className="h-12 flex-1 rounded-2xl border border-[var(--border-color)] bg-white px-4 text-[0.95rem] outline-none transition"
+                      className="h-12 min-w-0 flex-1 rounded-2xl border border-[var(--border-color)] bg-white px-4 text-[0.95rem] outline-none transition max-[540px]:box-border max-[540px]:w-full max-[540px]:flex-none"
                       placeholder="주소 검색 버튼을 눌러주세요"
                       value={form.address}
                       readOnly
@@ -310,7 +310,7 @@ export default function MyPageEdit() {
                     <button
                       type="button"
                       onClick={handleAddressSearch}
-                      className="h-12 flex-shrink-0 rounded-2xl border border-[#FAD0D1] bg-[#FEEDEC] px-5 text-sm font-extrabold text-[var(--color-primary)] transition hover:border-[var(--color-primary)] hover:bg-[var(--color-primary)] hover:text-white"
+                      className="h-12 flex-shrink-0 rounded-2xl border border-[#FAD0D1] bg-[#FEEDEC] px-5 text-sm font-extrabold text-[var(--color-primary)] transition hover:border-[var(--color-primary)] hover:bg-[var(--color-primary)] hover:text-white max-[540px]:w-full max-[540px]:active:border-[var(--color-primary)] max-[540px]:active:bg-[var(--color-primary)] max-[540px]:active:text-white"
                     >
                       🔍 주소 검색
                     </button>
@@ -318,7 +318,7 @@ export default function MyPageEdit() {
 
                   {/* 🔥 [수정 부분] 단순 텍스트를 정돈된 테두리 칸(Box) 레이아웃으로 변경 */}
                   {form.address && (
-                    <div className="mt-3 flex items-center gap-2 rounded-2xl border border-[var(--border-color)] bg-white p-3.5 text-[0.93rem] text-[var(--text-primary)] shadow-sm">
+                    <div className="mt-3 flex min-w-0 items-center gap-2 rounded-2xl border border-[var(--border-color)] bg-white p-3.5 text-[0.93rem] text-[var(--text-primary)] shadow-sm">
                       <span className="text-base flex-shrink-0">📍</span>
                       <span className="font-semibold text-[var(--text-secondary)] flex-shrink-0">선택된 주소:</span>
                       <span className="truncate font-medium">{form.address}</span>
@@ -327,11 +327,11 @@ export default function MyPageEdit() {
                 </div>
               </div>
 
-              <div className="space-y-5">
+              <div className="min-w-0 space-y-5">
                 {/* 성별 */}
-                <div>
+                <div className="min-w-0">
                   <label className="mb-2 block text-sm font-bold text-[var(--text-secondary)]">성별</label>
-                  <div className="grid grid-cols-2 gap-4 sm:grid-cols-4 lg:grid-cols-2 xl:grid-cols-4">
+                  <div className="grid min-w-0 grid-cols-2 gap-4 sm:grid-cols-4 lg:grid-cols-2 xl:grid-cols-4">
                     {['미설정', '남성', '여성', '기타'].map((g) => (
                       <button
                         type="button"
@@ -349,7 +349,7 @@ export default function MyPageEdit() {
                 </div>
 
                 {/* 알러지 */}
-                <div>
+                <div className="min-w-0">
                   <label className="mb-2 block text-sm font-bold text-[var(--text-secondary)]">
                     알러지 / 제외 재료
                     <span className="font-normal text-[var(--text-muted)]"> (쉼표로 구분)</span>
@@ -394,16 +394,16 @@ export default function MyPageEdit() {
                   </button>
                 ))}
               </div>
-              <div className="mb-3 flex gap-2">
+              <div className="mb-3 flex gap-2 max-[540px]:flex-col">
                 <input
                   type="text"
-                  className="h-12 w-[700px] min-w-0 rounded-2xl border border-[var(--border-color)] bg-white px-4 text-[0.95rem] outline-none transition placeholder:text-[var(--text-light)] focus:border-[var(--color-primary)] focus:shadow-[0_0_0_3px_rgba(244,108,111,0.16)]"
+                  className="h-12 w-[700px] min-w-0 rounded-2xl border border-[var(--border-color)] bg-white px-4 text-[0.95rem] outline-none transition placeholder:text-[var(--text-light)] focus:border-[var(--color-primary)] focus:shadow-[0_0_0_3px_rgba(244,108,111,0.16)] max-[540px]:w-full"
                   placeholder="직접 입력 후 Enter"
                   value={inputLike}
                   onChange={(e) => setInputLike(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddLike())}
                 />
-                <button type="button" className="h-12 flex-shrink-0 rounded-2xl border border-[#FAD0D1] bg-[#FEEDEC] ml-3 px-5 text-sm font-extrabold text-[var(--color-primary)] transition hover:border-[var(--color-primary)] hover:bg-[var(--color-primary)] hover:text-white" onClick={handleAddLike}>
+                <button type="button" className="h-12 flex-shrink-0 rounded-2xl border border-[#FAD0D1] bg-[#FEEDEC] ml-3 px-5 text-sm font-extrabold text-[var(--color-primary)] transition hover:border-[var(--color-primary)] hover:bg-[var(--color-primary)] hover:text-white max-[540px]:ml-0 max-[540px]:w-full" onClick={handleAddLike}>
                   추가
                 </button>
               </div>
@@ -455,16 +455,16 @@ export default function MyPageEdit() {
                   </button>
                 ))}
               </div>
-              <div className="mb-3 flex gap-2">
+              <div className="mb-3 flex gap-2 max-[540px]:flex-col">
                 <input
                   type="text"
-                  className="h-12 w-[700px] min-w-0 rounded-2xl border border-[var(--border-color)] bg-white px-4 text-[0.95rem] outline-none transition placeholder:text-[var(--text-light)] focus:border-[var(--color-primary)] focus:shadow-[0_0_0_3px_rgba(244,108,111,0.16)]"
+                  className="h-12 w-[700px] min-w-0 rounded-2xl border border-[var(--border-color)] bg-white px-4 text-[0.95rem] outline-none transition placeholder:text-[var(--text-light)] focus:border-[var(--color-primary)] focus:shadow-[0_0_0_3px_rgba(244,108,111,0.16)] max-[540px]:w-full"
                   placeholder="직접 입력 후 Enter"
                   value={inputDislike}
                   onChange={(e) => setInputDislike(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddDislike())}
                 />
-                <button type="button" className="h-12 flex-shrink-0 rounded-2xl border border-[#FAD0D1] bg-[#FEEDEC] ml-3 px-5 text-sm font-extrabold text-[var(--color-primary)] transition hover:border-[var(--color-primary)] hover:bg-[var(--color-primary)] hover:text-white" onClick={handleAddDislike}>
+                <button type="button" className="h-12 flex-shrink-0 rounded-2xl border border-[#FAD0D1] bg-[#FEEDEC] ml-3 px-5 text-sm font-extrabold text-[var(--color-primary)] transition hover:border-[var(--color-primary)] hover:bg-[var(--color-primary)] hover:text-white max-[540px]:ml-0 max-[540px]:w-full" onClick={handleAddDislike}>
                   추가
                 </button>
               </div>

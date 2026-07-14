@@ -5,6 +5,15 @@ from datetime import datetime, timedelta, timezone
 from functools import wraps
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy import func
+from .models import (
+    Restaurant,
+    Menu,
+    Category,
+    RecommendationLog,
+    Favorite,
+    SearchLog,
+    RestaurantClickLog,
+)
 
 from flask import Blueprint, request, jsonify, send_from_directory
 from flask_jwt_extended import (
@@ -220,6 +229,31 @@ def log_search_keyword():
         db.session.rollback()
         return jsonify({"error": "백엔드 저장 실패", "details": str(e)}), 500
 
+@menu_bp.route('/<int:rest_id>/click', methods=['POST'])
+def log_restaurant_click(rest_id):
+    try:
+        # 식당 존재 여부 확인
+        restaurant = Restaurant.query.get(rest_id)
+        if not restaurant:
+            return jsonify({"error": "식당을 찾을 수 없습니다."}), 404
+
+        # 조회 로그 저장
+        click_log = RestaurantClickLog(
+            restaurant_id=rest_id,
+            created_at=datetime.now(timezone.utc)
+        )
+
+        db.session.add(click_log)
+        db.session.commit()
+
+        return jsonify({"message": "조회수 기록 완료"}), 201
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({
+            "error": "조회수 저장 실패",
+            "details": str(e)
+        }), 500
 
 @menu_bp.route('/trending/keywords', methods=['GET'])
 def get_realtime_trending_keywords():
@@ -238,7 +272,7 @@ def get_realtime_trending_keywords():
                 func.count(SearchLog.log_id).desc(),
                 func.max(SearchLog.created_at).desc()
             )
-            .limit(8)
+            .limit(10)
             .all()
         )
         
@@ -246,6 +280,180 @@ def get_realtime_trending_keywords():
         return jsonify({'items': results}), 200
     except Exception as e:
         return jsonify({"error": "백엔드 조회 실패", "details": str(e)}), 500
+    
+@menu_bp.route('/trending/realtime', methods=['GET'])
+def get_realtime_trending():
+    try:
+        from sqlalchemy import func
+
+        # ==========================
+        # 1. 검색량 집계 (최근 1시간)
+        # ==========================
+        one_hour_ago = datetime.now(timezone.utc) - timedelta(hours=1)
+
+        search_data = (
+            db.session.query(
+                SearchLog.keyword.label('name'),
+                func.count(SearchLog.log_id).label('search_count')
+            )
+            .filter(
+                SearchLog.created_at >= one_hour_ago
+            )
+            .group_by(SearchLog.keyword)
+            .all()
+        )
+
+
+        # ==========================
+        # 2. 클릭수 집계 (최근 1시간)
+        # ==========================
+        click_data = (
+            db.session.query(
+                Restaurant.name.label('name'),
+                func.count(RestaurantClickLog.click_id).label('click_count')
+            )
+            .join(
+                RestaurantClickLog,
+                Restaurant.restaurant_id == RestaurantClickLog.restaurant_id
+            )
+            .filter(
+                RestaurantClickLog.created_at >= one_hour_ago
+            )
+            .group_by(Restaurant.name)
+            .all()
+        )
+
+
+        # ==========================
+        # 3. 찜수 집계
+        # ==========================
+        like_data = (
+            db.session.query(
+                Restaurant.name.label('name'),
+                func.count(RecommendationLog.log_id).label('like_count')
+            )   
+            .join(
+                RecommendationLog,
+                Restaurant.restaurant_id == RecommendationLog.recommended_restaurant_id
+            )
+            .filter(
+                RecommendationLog.is_liked == True
+            )
+            .group_by(Restaurant.name)
+            .all()
+        )
+
+
+        # ==========================
+        # 4. 데이터 합치기
+        # ==========================
+        ranking = {}
+
+
+        for row in search_data:
+            ranking[row.name] = {
+                "name": row.name,
+                "search": row.search_count,
+                "click": 0,
+                "like": 0
+            }
+
+
+        for row in click_data:
+            if row.name not in ranking:
+                ranking[row.name] = {
+                    "name": row.name,
+                    "search": 0,
+                    "click": row.click_count,
+                    "like": 0
+                }
+            else:
+                ranking[row.name]["click"] = row.click_count
+
+
+        for row in like_data:
+            if row.name not in ranking:
+                ranking[row.name] = {
+                    "name": row.name,
+                    "search": 0,
+                    "click": 0,
+                    "like": row.like_count
+                }
+            else:
+                ranking[row.name]["like"] = row.like_count
+
+
+        # ==========================
+        # 5. 정렬
+        # 검색량 → 클릭 → 찜
+        # ==========================
+        result = sorted(
+            ranking.values(),
+            key=lambda x: (
+                x["search"] + x["click"] + x["like"],
+                x["search"],
+                x["click"],
+                x["like"]
+            ),
+            reverse=True
+        )[:8]
+
+
+        return jsonify({
+            "items": result
+        }), 200
+
+
+    except Exception as e:
+        return jsonify({
+            "error": "실시간 인기 데이터 조회 실패",
+            "details": str(e)
+        }), 500
+
+@menu_bp.route('/trending/clicks', methods=['GET'])
+def get_restaurant_click_trending():
+    try:
+        from sqlalchemy import func
+
+        # 최근 1시간 데이터만 집계
+        one_hour_ago = datetime.now(timezone.utc) - timedelta(hours=1)
+
+        trending_clicks = (
+            db.session.query(
+                Restaurant.name,
+                func.count(RestaurantClickLog.click_id).label('click_count')
+            )
+            .join(
+                RestaurantClickLog,
+                Restaurant.restaurant_id == RestaurantClickLog.restaurant_id
+            )
+            .filter(
+                RestaurantClickLog.created_at >= one_hour_ago
+            )
+            .group_by(Restaurant.restaurant_id)
+            .order_by(
+                func.count(RestaurantClickLog.click_id).desc()
+            )
+            .limit(10)
+            .all()
+        )
+
+        results = [
+            {
+                "name": row.name,
+                "count": row.click_count
+            }
+            for row in trending_clicks
+        ]
+
+        return jsonify({"items": results}), 200
+
+    except Exception as e:
+        return jsonify({
+            "error": "클릭 데이터 조회 실패",
+            "details": str(e)
+        }), 500
+    
 
 # ══════════════════════════════════════════════════════════════════════════════
 # AUTH

@@ -33,11 +33,16 @@ export default function AdminPage() {
       </p>
 
       {/* 탭 */}
-      <div style={{ display: 'flex', gap: 8, marginBottom: 24, flexWrap: 'wrap' }}>
+      <div
+        className="mb-6 flex flex-wrap gap-2 max-[540px]:grid max-[540px]:grid-cols-2"
+      >
         {TABS.map(t => (
-          <button key={t.id} onClick={() => setTab(t.id)}
+          <button
+            key={t.id}
+            onClick={() => setTab(t.id)}
+            className="px-[18px] py-2 text-[.88rem] max-[540px]:w-full max-[540px]:px-2 max-[540px]:text-center max-[540px]:text-[.8rem]"
             style={{
-              padding: '8px 18px', borderRadius: 8, fontWeight: 700, fontSize: '.88rem',
+              borderRadius: 8, fontWeight: 700,
               border: '1px solid var(--border-color)', cursor: 'pointer',
               background: tab === t.id ? 'var(--color-primary)' : 'var(--bg-white)',
               color: tab === t.id ? '#fff' : 'var(--text-primary)',
@@ -63,9 +68,18 @@ function UserManager() {
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
   const [page, setPage] = useState(1)
+  const [isCompactPagination, setIsCompactPagination] = useState(
+    () => typeof window !== 'undefined' && window.innerWidth <= 540
+  )
 
   useEffect(() => { load() }, [])
   useEffect(() => { setPage(1) }, [search])
+  useEffect(() => {
+    const handleResize = () => setIsCompactPagination(window.innerWidth <= 540)
+    handleResize()
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
 
   const load = async () => {
     setLoading(true)
@@ -90,6 +104,12 @@ function UserManager() {
   )
   const totalPages = Math.ceil(filtered.length / PAGE_SIZE)
   const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
+  const visiblePageCount = Math.min(isCompactPagination ? 3 : 5, totalPages)
+  const visiblePageStart = Math.min(
+    Math.max(1, page - Math.floor(visiblePageCount / 2)),
+    Math.max(1, totalPages - visiblePageCount + 1)
+  )
+  const visiblePages = Array.from({ length: visiblePageCount }, (_, i) => visiblePageStart + i)
 
   return (
     <div>
@@ -151,7 +171,7 @@ function UserManager() {
 
           {/* 페이지네이션 */}
           {totalPages > 1 && (
-            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 6, marginTop: 16 }}>
+            <div className="flex flex-wrap items-center justify-center" style={{ gap: 6, marginTop: 16 }}>
               <button
                 onClick={() => setPage(1)} disabled={page === 1}
                 style={{ padding: '5px 10px', border: '1px solid var(--border-color)', borderRadius: 6, background: 'var(--bg-white)', cursor: page === 1 ? 'default' : 'pointer', opacity: page === 1 ? 0.4 : 1, fontSize: '.82rem' }}>
@@ -162,24 +182,17 @@ function UserManager() {
                 style={{ padding: '5px 10px', border: '1px solid var(--border-color)', borderRadius: 6, background: 'var(--bg-white)', cursor: page === 1 ? 'default' : 'pointer', opacity: page === 1 ? 0.4 : 1, fontSize: '.82rem' }}>
                 ‹
               </button>
-              {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                let p
-                if (totalPages <= 5) p = i + 1
-                else if (page <= 3) p = i + 1
-                else if (page >= totalPages - 2) p = totalPages - 4 + i
-                else p = page - 2 + i
-                return (
-                  <button key={p} onClick={() => setPage(p)}
-                    style={{
-                      padding: '5px 12px', border: '1px solid var(--border-color)', borderRadius: 6,
-                      background: page === p ? 'var(--color-primary)' : 'var(--bg-white)',
-                      color: page === p ? '#fff' : 'var(--text-primary)',
-                      cursor: 'pointer', fontWeight: page === p ? 700 : 400, fontSize: '.82rem'
-                    }}>
-                    {p}
-                  </button>
-                )
-              })}
+              {visiblePages.map((p) => (
+                <button key={p} onClick={() => setPage(p)}
+                  style={{
+                    padding: '5px 12px', border: '1px solid var(--border-color)', borderRadius: 6,
+                    background: page === p ? 'var(--color-primary)' : 'var(--bg-white)',
+                    color: page === p ? '#fff' : 'var(--text-primary)',
+                    cursor: 'pointer', fontWeight: page === p ? 700 : 400, fontSize: '.82rem'
+                  }}>
+                  {p}
+                </button>
+              ))}
               <button
                 onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages}
                 style={{ padding: '5px 10px', border: '1px solid var(--border-color)', borderRadius: 6, background: 'var(--bg-white)', cursor: page === totalPages ? 'default' : 'pointer', opacity: page === totalPages ? 0.4 : 1, fontSize: '.82rem' }}>
@@ -190,7 +203,7 @@ function UserManager() {
                 style={{ padding: '5px 10px', border: '1px solid var(--border-color)', borderRadius: 6, background: 'var(--bg-white)', cursor: page === totalPages ? 'default' : 'pointer', opacity: page === totalPages ? 0.4 : 1, fontSize: '.82rem' }}>
                 »
               </button>
-              <span style={{ fontSize: '.82rem', color: 'var(--text-muted)', marginLeft: 4 }}>
+              <span className="max-[540px]:mt-1 max-[540px]:basis-full max-[540px]:text-center" style={{ fontSize: '.82rem', color: 'var(--text-muted)', marginLeft: 4 }}>
                 {page} / {totalPages} 페이지 ({filtered.length}명)
               </span>
             </div>
@@ -258,7 +271,7 @@ function RestaurantManager() {
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, flexWrap: 'wrap', gap: 8 }}>
         <h2 style={{ fontWeight: 900 }}>식당 목록 ({totalCount.toLocaleString()}개)</h2>
-        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+        <div className="flex flex-wrap gap-2 max-[540px]:grid max-[540px]:w-full max-[540px]:grid-cols-[110px_minmax(0,1fr)]">
           {/* 카테고리 드롭다운 */}
           <select value={catFilter} onChange={e => { setCatFilter(e.target.value); setPage(1) }}
             className="form-control" style={{ width: 110, fontSize: '.85rem' }}>
@@ -266,8 +279,9 @@ function RestaurantManager() {
           </select>
           <input placeholder="식당명 검색" value={search}
             onChange={e => setSearch(e.target.value)}
-            className="form-control" style={{ width: 180, fontSize: '.85rem' }} />
+            className="form-control w-[180px] max-[540px]:w-full" style={{ fontSize: '.85rem' }} />
           <button onClick={() => setShowForm(!showForm)}
+            className="max-[540px]:col-span-2 max-[540px]:w-full"
             style={{ padding: '8px 16px', background: 'var(--color-primary)', color: '#fff', border: 'none', borderRadius: 8, cursor: 'pointer', fontWeight: 700, fontSize: '.85rem' }}>
             {showForm ? '취소' : '+ 식당 등록'}
           </button>
@@ -306,8 +320,8 @@ function RestaurantManager() {
             <label className="form-label">경도</label>
             <input className="form-control" type="number" step="any" value={form.longitude} onChange={e => setForm({ ...form, longitude: e.target.value })} />
           </div>
-          <div style={{ gridColumn: '1/-1', display: 'flex', justifyContent: 'flex-end' }}>
-            <button type="submit" style={{ padding: '9px 24px', background: 'var(--color-primary)', color: '#fff', border: 'none', borderRadius: 8, cursor: 'pointer', fontWeight: 700 }}>등록</button>
+          <div className="max-[540px]:w-full" style={{ gridColumn: '1/-1', display: 'flex', justifyContent: 'flex-end' }}>
+            <button type="submit" className="max-[540px]:w-full" style={{ padding: '9px 24px', background: 'var(--color-primary)', color: '#fff', border: 'none', borderRadius: 8, cursor: 'pointer', fontWeight: 700 }}>등록</button>
           </div>
         </form>
       )}
@@ -748,8 +762,17 @@ function ReviewManager() {
   const [total, setTotal] = useState(0)
   const [search, setSearch] = useState('')
   const [searchQ, setSearchQ] = useState('')
+  const [isCompactPagination, setIsCompactPagination] = useState(
+    () => typeof window !== 'undefined' && window.innerWidth <= 540
+  )
 
   useEffect(() => { load(1, '') }, [])
+  useEffect(() => {
+    const handleResize = () => setIsCompactPagination(window.innerWidth <= 540)
+    handleResize()
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
 
   const load = async (p = page, q = searchQ) => {
     setLoading(true)
@@ -780,6 +803,12 @@ function ReviewManager() {
   }
 
   const totalPages = Math.ceil(total / PAGE_SIZE)
+  const visiblePageCount = Math.min(isCompactPagination ? 3 : 5, totalPages)
+  const visiblePageStart = Math.min(
+    Math.max(1, page - Math.floor(visiblePageCount / 2)),
+    Math.max(1, totalPages - visiblePageCount + 1)
+  )
+  const visiblePages = Array.from({ length: visiblePageCount }, (_, i) => visiblePageStart + i)
 
   const STARS = (n) => '★'.repeat(n) + '☆'.repeat(5 - n)
 
@@ -846,29 +875,22 @@ function ReviewManager() {
 
           {/* 페이지네이션 */}
           {totalPages > 1 && (
-            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 6, marginTop: 16 }}>
+            <div className="flex flex-wrap items-center justify-center" style={{ gap: 6, marginTop: 16 }}>
               <button onClick={() => load(1)} disabled={page === 1}
                 style={{ padding: '5px 10px', border: '1px solid var(--border-color)', borderRadius: 6, background: 'var(--bg-white)', cursor: page === 1 ? 'default' : 'pointer', opacity: page === 1 ? 0.4 : 1, fontSize: '.82rem' }}>«</button>
               <button onClick={() => load(page - 1)} disabled={page === 1}
                 style={{ padding: '5px 10px', border: '1px solid var(--border-color)', borderRadius: 6, background: 'var(--bg-white)', cursor: page === 1 ? 'default' : 'pointer', opacity: page === 1 ? 0.4 : 1, fontSize: '.82rem' }}>‹</button>
-              {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                let p
-                if (totalPages <= 5) p = i + 1
-                else if (page <= 3) p = i + 1
-                else if (page >= totalPages - 2) p = totalPages - 4 + i
-                else p = page - 2 + i
-                return (
-                  <button key={p} onClick={() => load(p)}
-                    style={{ padding: '5px 12px', border: '1px solid var(--border-color)', borderRadius: 6, background: page === p ? 'var(--color-primary)' : 'var(--bg-white)', color: page === p ? '#fff' : 'var(--text-primary)', cursor: 'pointer', fontWeight: page === p ? 700 : 400, fontSize: '.82rem' }}>
-                    {p}
-                  </button>
-                )
-              })}
+              {visiblePages.map((p) => (
+                <button key={p} onClick={() => load(p)}
+                  style={{ padding: '5px 12px', border: '1px solid var(--border-color)', borderRadius: 6, background: page === p ? 'var(--color-primary)' : 'var(--bg-white)', color: page === p ? '#fff' : 'var(--text-primary)', cursor: 'pointer', fontWeight: page === p ? 700 : 400, fontSize: '.82rem' }}>
+                  {p}
+                </button>
+              ))}
               <button onClick={() => load(page + 1)} disabled={page === totalPages}
                 style={{ padding: '5px 10px', border: '1px solid var(--border-color)', borderRadius: 6, background: 'var(--bg-white)', cursor: page === totalPages ? 'default' : 'pointer', opacity: page === totalPages ? 0.4 : 1, fontSize: '.82rem' }}>›</button>
               <button onClick={() => load(totalPages)} disabled={page === totalPages}
                 style={{ padding: '5px 10px', border: '1px solid var(--border-color)', borderRadius: 6, background: 'var(--bg-white)', cursor: page === totalPages ? 'default' : 'pointer', opacity: page === totalPages ? 0.4 : 1, fontSize: '.82rem' }}>»</button>
-              <span style={{ fontSize: '.82rem', color: 'var(--text-muted)', marginLeft: 4 }}>
+              <span className="max-[540px]:mt-1 max-[540px]:basis-full max-[540px]:text-center" style={{ fontSize: '.82rem', color: 'var(--text-muted)', marginLeft: 4 }}>
                 {page} / {totalPages} 페이지
               </span>
             </div>

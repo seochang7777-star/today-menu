@@ -17,73 +17,78 @@ export default function Footer() {
 
         {/* 브랜드 */}
         <div className="col-span-2 lg:col-span-1">
-  <div className="flex flex-col items-center justify-center gap-3 mb-2 lg:items-start lg:gap-0 lg:mb-4">
+          <div className="flex flex-col items-center justify-center gap-3 mb-2 lg:items-start  lg:mb-4">
 
-  <img
-    src="/img/icon/logo_title.png"
-    alt="오늘 뭐먹지?"
-    className="w-32 shrink-0 object-contain"
-    onError={(e) => { e.target.style.display = 'none' }}
-  />
+            <Link to="/">
+              <img
+                src="/img/icon/logo_title.png"
+                alt="오늘 뭐먹지?"
+                className="w-40 -translate-y-2 object-contain cursor-pointer"
+                onError={(e) => { e.target.style.display = 'none' }}
+              />
+            </Link>
 
-  <p className={footerTextClass}>
-    AI가 추천하는
-    오늘의 베스트 맛집
-  </p>
+            <p className={footerTextClass}>
+              AI가 추천하는
+              <br className="hidden lg:block" />
+              <span className="ml-1">
+                오늘의 베스트 맛집
+              </span>
+            </p>
 
-</div>
+          </div>
 
-  <div className={socialRowClass}>
-  </div>
-</div>
+          <div className={socialRowClass}>
+          </div>
+        </div>
 
 
         {/* 서비스 */}
         <div className="col-span-2 lg:col-span-1 flex justify-center lg:block gap-4 lg:gap-0">
 
-  <h4 className={`${footerHeadingClass} hidden lg:block`}>
-    서비스
-  </h4>
+          <h4 className={`${footerHeadingClass} hidden lg:block`}>
+            서비스
+          </h4>
 
-  <div className="flex flex-wrap justify-center gap-x-3 gap-y-0 lg:block">
+          <div className="flex flex-wrap justify-center gap-x-3 gap-y-0 lg:block">
 
-    <Link className={footerLinkClass} to="/company">
-      소개
-    </Link>
+            <Link className={footerLinkClass} to="/company">
+              소개
+            </Link>
 
-    <Link className={footerLinkClass} to="/terms" state={{ defaultTab: 'terms' }}>
-      이용안내
-    </Link>
+            <Link className={footerLinkClass} to="/terms" state={{ defaultTab: 'terms' }}>
+              이용안내
+            </Link>
 
-    <Link className={footerLinkClass} to="/terms" state={{ defaultTab: 'privacy' }}>
-      개인정보처리방침
-    </Link>
+            <Link className={footerLinkClass} to="/terms" state={{ defaultTab: 'privacy' }}>
+              개인정보처리방침
+            </Link>
 
-  </div>
+          </div>
 
-</div>
+        </div>
 
 
         {/* 고객지원 */}
         <div className="col-span-2 lg:col-span-1 flex justify-center lg:block">
 
-  <h4 className={`${footerHeadingClass} hidden lg:block`}>
-    고객지원
-  </h4>
+          <h4 className={`${footerHeadingClass} hidden lg:block`}>
+            고객지원
+          </h4>
 
-  <div className="flex flex-wrap justify-center gap-x-3 gap-y-0 lg:block">
+          <div className="flex flex-wrap justify-center gap-x-3 gap-y-0 lg:block">
 
-    <Link className={footerLinkClass} to="/notice">
-      공지사항
-    </Link>
+            <Link className={footerLinkClass} to="/notice">
+              공지사항
+            </Link>
 
-    <Link className={footerLinkClass} to="/support">
-      고객센터
-    </Link>
+            <Link className={footerLinkClass} to="/support">
+              고객센터
+            </Link>
 
-  </div>
+          </div>
 
-</div>
+        </div>
 
 
         {/* 앱 다운로드 */}

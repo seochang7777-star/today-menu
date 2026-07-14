@@ -17,7 +17,7 @@ const CAT_ICON = {
   술집: './img/category/beer.webp'
 }
 const CATEGORIES = ['전체','한식','일식','중식','양식','분식','치킨','카페','술집']
-const adBannerClass = 'w-full overflow-hidden rounded-[12px] bg-white max-md:h-[70px]'
+const adBannerClass = 'w-full overflow-hidden rounded-[12px] bg-white max-md:h-[70px] max-[540px]:mt-2 max-[540px]:mb-0 max-[540px]:h-[110px]'
 const categoryButtonBaseClass = 'flex cursor-pointer items-center justify-center gap-0 whitespace-nowrap rounded-full bg-[var(--bg-white)] px-3 py-2 text-[0.85rem] font-bold text-black shadow-sm transition-all duration-150 hover:scale-105 hover:bg-[var(--color-secondary)] hover:shadow-[0_4px_12px_rgba(0,0,0,0.12)]'
 const categoryButtonActiveClass = 'scale-105 bg-[var(--color-secondary)] shadow-[0_4px_12px_rgba(0,0,0,0.12)]'
 
@@ -106,7 +106,7 @@ export default function Menu() {
 
   const pageNums = () => {
     const total = pagination.pages
-    const visibleCount = isMobilePagination ? 5 : 10
+    const visibleCount = isMobilePagination ? 3 : 10
     if (total <= visibleCount) return Array.from({ length: total }, (_, i) => i + 1)
     const cur = pagination.page
     const before = Math.floor((visibleCount - 1) / 2)
@@ -118,7 +118,7 @@ export default function Menu() {
 
   return (
     <>
-    <main className="mx-auto w-full max-w-7xl px-4 py-6">
+    <main className="mx-auto w-full max-w-7xl px-4 py-6 max-[540px]:pb-0">
       <h1 className="mb-6 text-[1.55rem] font-black">맛집찾기</h1>
 
       <section className={adBannerClass}>

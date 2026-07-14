@@ -297,10 +297,10 @@ export default function MyPage() {
   ]
 
   const myActivityTabs = [
-    ['activity', '▣', '활동 내역'],
-    ['reviews', '✎', '내가 쓴 리뷰'],
-    ['favorites', '♥', '메뉴 찜 목록'],
-    ['locations', '⌖', '나의 맛집 장소'],
+    ['activity', '▣', '활동 내역', '활동'],
+    ['reviews', '✎', '내가 쓴 리뷰', '리뷰'],
+    ['favorites', '♥', '메뉴 찜 목록', '찜'],
+    ['locations', '⌖', '나의 맛집 장소', '맛집장소'],
   ];
 
   const temperatureRanges = [
@@ -526,21 +526,22 @@ export default function MyPage() {
 
       {/* ── 나의 활동 탭 ── */}
       <div ref={activityTabsRef} id="my-activity-tabs" className="mx-auto mb-4 scroll-mt-28 rounded-[var(--border-radius-lg)] border border-[var(--border-color)] bg-[var(--bg-white)] p-5 shadow-sm w-full max-w-[1060px]">
-        <div className="mb-6 grid grid-cols-2 border-b border-[var(--border-color)] sm:grid-cols-4">
-          {myActivityTabs.map(([tabKey, icon, label]) => {
+        <div className="mb-6 grid grid-cols-4 border-b border-[var(--border-color)]">
+          {myActivityTabs.map(([tabKey, icon, label, mobileLabel = label]) => {
             const isActive = activeMyActivityTab === tabKey
             return (
               <button
                 key={tabKey}
                 type="button"
                 onClick={() => setActiveMyActivityTab(tabKey)}
-                className={`flex items-center justify-center gap-2 border-b-2 px-3 py-4 text-[.9rem] font-black transition ${isActive
+                className={`flex items-center justify-center gap-2 border-b-2 px-3 py-4 text-[.9rem] font-black transition max-[540px]:gap-1 max-[540px]:px-1 max-[540px]:py-3 max-[540px]:text-[.68rem] ${isActive
                   ? 'border-[var(--color-primary)] text-[var(--color-primary)]'
                   : 'border-transparent text-[var(--text-secondary)] hover:text-[var(--color-primary)]'
                   }`}
               >
-                <span className="text-base leading-none">{icon}</span>
-                <span>{label}</span>
+                <span className="text-base leading-none max-[540px]:text-sm">{icon}</span>
+                <span className="truncate max-[540px]:hidden">{label}</span>
+                <span className="hidden truncate max-[540px]:inline">{mobileLabel}</span>
               </button>
             )
           })}
@@ -549,7 +550,7 @@ export default function MyPage() {
         {/* 탭 내용 - 활동 내역 */}
         {activeMyActivityTab === 'activity' && (
           <div>
-            <div className="grid grid-cols-[repeat(auto-fit,minmax(220px,250px))] gap-3 max-[540px]:grid-cols-[minmax(0,1fr)]">
+            <div className="grid grid-cols-[repeat(auto-fit,minmax(220px,1fr))] gap-3 max-[540px]:grid-cols-[minmax(0,1fr)]">
               {rec_logs.slice(0, 3).map((log) => (
                 <div key={log.log_id ?? log.restaurant?.id ?? log.restaurant?.restaurant_id} className="flex gap-3.5 rounded-[var(--border-radius-lg)] border border-[var(--border-color)] bg-[var(--bg-white)] p-3.5">
                   <Link to={`/menu/${log.restaurant?.id ?? log.restaurant?.restaurant_id ?? log.recommended_restaurant_id}`} className="flex min-w-0 flex-1 gap-3.5 text-inherit no-underline">
