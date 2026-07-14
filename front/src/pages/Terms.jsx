@@ -25,17 +25,9 @@ export default function Terms() {
 
   const data     = tab === "terms" ? termsContent : privacyContent
   const subTitle = tab === "terms" ? "today-menu 서비스 이용약관" : "개인정보 처리방침"
-  const pageTitle = tab === "terms" ? "이용약관" : "개인정보처리방침"
 
   return (
     <div className="flex justify-center flex-wrap w-full min-h-screen bg-white font-sans antialiased text-gray-900 pb-40">
-
-      {/* 타이틀 */}
-      <div className="w-full py-20 text-center">
-        <h1 className="text-4xl font-black tracking-tight text-black">
-          {fromFooter ? pageTitle : '약관 안내'}
-        </h1>
-      </div>
 
       {/* 탭 — Footer에서 직접 진입한 경우 숨김 */}
       {!fromFooter && (
