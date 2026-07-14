@@ -77,8 +77,20 @@ export default function Login() {
     if (!window.Kakao.isInitialized()) window.Kakao.init(kakaoKey)
 
     setSocialLoading('kakao')
+
+    // 팝업을 그냥 닫은 경우 success/fail 둘 다 호출되지 않는 카카오 SDK 특성 방어:
+    // 메인 창으로 포커스가 돌아오면, 일정 시간 내에 로그인이 안 끝났을 경우 자동으로 상태를 푼다.
+    let settled = false
+    const clearStuckState = () => {
+      setTimeout(() => {
+        if (!settled) setSocialLoading('')
+      }, 800)
+    }
+    window.addEventListener('focus', clearStuckState, { once: true })
+
     window.Kakao.Auth.login({
       success: async (authObj) => {
+        settled = true
         try {
           const data = await kakaoLogin(authObj.access_token)
           ctxLogin(data); navigate('/')
@@ -86,7 +98,7 @@ export default function Login() {
           setError(err.response?.data?.message ?? '카카오 로그인에 실패했습니다.')
         } finally { setSocialLoading('') }
       },
-      fail: () => { setError('카카오 로그인이 취소되었습니다.'); setSocialLoading('') },
+      fail: () => { settled = true; setError('카카오 로그인이 취소되었습니다.'); setSocialLoading('') },
     })
   }
 
