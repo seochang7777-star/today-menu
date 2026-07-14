@@ -12,6 +12,11 @@ const NAV_LINKS = [
   { to: '/game', label: '게임찾기' },
 ]
 
+const MOBILE_NAV_LINKS = [
+  ...NAV_LINKS,
+  { to: '/mypage', label: '마이페이지' },
+]
+
 const pageContainer = 'container'
 const headerIconLink = 'inline-flex min-w-[35px] flex-col items-center justify-center gap-[5px] border-0 bg-transparent text-[0.78rem] font-black leading-none text-[#161211]'
 const navLinkBase = 'flex h-full min-w-[110px] items-center justify-center rounded-b-lg px-[18px] text-[0.94rem] font-extrabold text-[#191210] transition duration-200 hover:bg-[linear-gradient(135deg,var(--color-primary),#F98385)] hover:text-white'
@@ -189,7 +194,7 @@ export default function Header() {
             )}
 
             <div className="flex-1 py-2">
-              {NAV_LINKS.map(({ to, label }) => (
+              {MOBILE_NAV_LINKS.map(({ to, label }) => (
                 <Link
                   key={to}
                   to={to}

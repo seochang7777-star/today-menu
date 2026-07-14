@@ -477,7 +477,7 @@ export default function ChatBot() {
                   </div>
                 )}
                 {m.role === 'assistant' && m.restaurants?.length > 0 && (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6, margin: '6px 0 8px 4px' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6, margin: '6px 0 8px 4px', width: '82%', maxWidth: '82%' }}>
                     {m.restaurants.map((r) => (
                       <Link
                         key={r.id}
@@ -485,6 +485,7 @@ export default function ChatBot() {
                         onClick={() => setOpen(false)}
                         style={{
                           display: 'flex', alignItems: 'center', gap: 10,
+                          width: '100%', boxSizing: 'border-box',
                           padding: '8px 12px',
                           background: 'var(--bg-white)',
                           border: '1.5px solid var(--color-primary)',
