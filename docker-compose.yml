@@ -1,0 +1,41 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: todaymenu
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: todaymenu
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U todaymenu"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build: ./back
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    env_file:
+      - ./back/.env
+    environment:
+      DATABASE_URL: postgresql://todaymenu:${DB_PASSWORD}@db:5432/todaymenu
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  pgdata:

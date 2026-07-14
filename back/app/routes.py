@@ -27,7 +27,7 @@ from app.models import (  # noqa
 
     User, Restaurant, Party, PartyMember,
     ChatMessage, RecommendationLog, MannerVote, StatusEnum, RoleEnum,
-    Report, Inquiry, Review, Favorite, Notice, Menu, Category, SavedLocation, SearchLog, SavedLocation
+    Report, Inquiry, Review, Favorite, Notice, Menu, Category, SavedLocation, SearchLog
 )
 
 # ── 블루프린트 ────────────────────────────────────────────────────────────────
@@ -1158,18 +1158,6 @@ def manual_close_party(party_id):
     db.session.commit()
     return jsonify(serialize_party(party, user_id)), 200
 
-@party_bp.route('/<int:party_id>/status', methods=['PATCH'])
-@admin_required
-def update_party_status(party_id):
-    party  = Party.query.get_or_404(party_id)
-    status = request.get_json().get('status', '')
-    try:
-        party.status = StatusEnum[status]
-    except KeyError:
-        return jsonify({'message': '유효하지 않은 상태값입니다.'}), 400
-    db.session.commit()
-    return jsonify(serialize_party(party))
-
 @party_bp.route('/<int:party_id>/kick/<int:target_user_id>', methods=['DELETE'])
 @jwt_login_required
 def kick_member(party_id, target_user_id):
@@ -1560,10 +1548,12 @@ def _build_user_context(user_id):
     wishlist = ', '.join(liked_rests) or '없음'
 
 
-    saved_locs = ', '.join([loc.get('name', '') for loc in (user.saved_locations or [])]) or '없음'
+    from app.models import SavedLocation as _SavedLoc
+    _user_saved_locs = _SavedLoc.query.filter_by(user_id=user_id).all()
+    saved_locs = ', '.join([loc.name for loc in _user_saved_locs]) or '없음'
     saved_locs_detail = '; '.join([
-        f"{loc.get('name','')}({loc.get('address','')})"
-        for loc in (user.saved_locations or [])
+        f"{loc.name}({loc.address})"
+        for loc in _user_saved_locs
     ]) or '없음'
     address = user.address or '없음'
 
@@ -2661,47 +2651,3 @@ def get_my_favorites():
                 'image':      getattr(f.restaurant, 'image', None),
             })
     return jsonify(result), 200
-
-
-# ── saved-locations API ────────────────────────────────────────────────────────
-
-# 장소 목록 가져오기
-@api_bp.route('/saved-locations', methods=['GET'])
-@jwt_login_required
-def get_locations():
-    user_id = get_jwt_identity() 
-    locs = SavedLocation.query.filter_by(user_id=user_id).all()
-    return jsonify([loc.to_dict() for loc in locs])
-
-# 장소 추가하기
-@api_bp.route('/saved-locations', methods=['POST'])
-@jwt_login_required
-def add_location():
-    user_id = get_jwt_identity()
-
-    count = SavedLocation.query.filter_by(user_id=user_id).count()
-    if count >= 3:
-        return jsonify({"msg": "장소는 최대 3개까지 저장 가능합니다."}), 400
-        
-    data = request.json
-
-    new_loc = SavedLocation(
-        user_id=user_id, 
-        name=data.get('name'), 
-        address=data.get('address')
-    )
-    
-    db.session.add(new_loc)
-    db.session.commit()
-    
-    return jsonify(new_loc.to_dict()), 201
-
-# 장소 삭제하기
-@api_bp.route('/saved-locations/<int:loc_id>', methods=['DELETE'])
-@jwt_login_required
-def delete_location(loc_id):
-    user_id = get_jwt_identity()
-    loc = SavedLocation.query.filter_by(id=loc_id, user_id=user_id).first_or_404()
-    db.session.delete(loc)
-    db.session.commit()
-    return '', 204
