@@ -237,7 +237,7 @@ export default function Party() {
                     to={`/party/${p.party_id}`}
                     className="px-4 py-1.5 bg-[#FFF5F5] hover:bg-[#FFEAE6] text-[#FF5A5A] text-xs font-black rounded-lg border border-[#FFE2E2] transition-colors flex items-center gap-0.5"
                   >
-                    자세히 보기 <span className="text-[10px]">→</span>
+                    자세히 보기 <span className='pl-1 pr-0'>›</span>
                   </Link>
                 </div>
               </div>

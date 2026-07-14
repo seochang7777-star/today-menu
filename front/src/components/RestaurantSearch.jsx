@@ -36,7 +36,7 @@ export default function RestaurantSearch({ userLoc, onRegister }) {
       const updated = exists
         ? keywords.map(k => k.name === kw ? { ...k, count: k.count + 1 } : k)
         : [...keywords, { name: kw, count: 1 }]
-      const sorted = updated.sort((a, b) => b.count - a.count || Math.random() - 0.5).slice(0, 8)
+      const sorted = updated.sort((a, b) => b.count - a.count || Math.random() - 0.5).slice(0, 7)
       localStorage.setItem('trendKeywords', JSON.stringify(sorted))
     } catch {}
 

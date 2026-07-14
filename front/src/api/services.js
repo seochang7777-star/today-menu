@@ -61,6 +61,11 @@ export async function getRandomMenus(count = 64, cat = '전체') {
   return data.items ?? []
 }
 
+export async function getAllMenus() {
+  const { data } = await api.get('/api/menu/all')
+  return data.items ?? []
+}
+
 export async function getTrending() {
   const { data } = await api.get('/api/menu/trending')
   return data

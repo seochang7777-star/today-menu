@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { Link } from 'react-router-dom'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../App'
-import { getRandomMenus } from '../api/services'
+import { getAllMenus, getRandomMenus } from '../api/services'
 
 // ── 카테고리 아이콘 (룰렛 시각용 & 결과 출력용 통일) ───────────────────────────
 const CAT_ICON = {
@@ -46,12 +46,115 @@ const CategoryIcon = ({ category, size = '3rem', style }) => {
 }
 
 // 카테고리 선택 목록
-const CATEGORIES = ['전체', '한식', '일식', '중식', '양식', '분식', '치킨', '카페']
+const CATEGORIES = ['전체', '한식', '일식', '중식', '양식', '분식', '치킨', '카페', '술']
 
 
 // ── 💡 [공통 추가] 모든 확장자(.jpg, .png, .webp) 대응 만능 이미지 컴포넌트 ──
 // 파일 최상단에 두었기 때문에 Roulette, WorldCup 등 파일 내 모든 곳에서 공유 가능합니다.
-const MenuImage = ({ item, size = '100%' }) => {
+const normalizeMenuName = (name) =>
+  String(name ?? '').replace(/\s+/g, '').toLowerCase()
+
+const SIMILAR_MENU_GROUPS = [
+  {
+    triggers: ['깐풍기', '깐풍새우', '라조기', '유린기', '깐쇼새우'],
+    candidates: ['탕수육', '사천탕수육', '꿔바로우', '깐풍기', '깐풍새우', '라조기', '유린기'],
+  },
+  {
+    triggers: ['해물짬뽕', '홍합짬뽕', '굴짬뽕', '삼선짬뽕', '차돌짬뽕', '짬뽕'],
+    candidates: ['짬뽕', '삼선짬뽕', '차돌짬뽕', '홍합짬뽕', '굴짬뽕'],
+  },
+  {
+    triggers: ['유니짜장', '고추짜장', '해물짜장', '사천짜장', '짜장'],
+    candidates: ['짜장면', '간짜장', '쟁반짜장', '사천짜장'],
+  },
+  {
+    triggers: ['치즈돈까스', '등심돈까스', '왕돈까스', '돈까스', '돈가스'],
+    candidates: ['돈가스', '치즈돈가스'],
+  },
+  {
+    triggers: ['마늘치킨', '간장치킨', '양념치킨', '크리스피치킨', '후라이드치킨', '치킨'],
+    candidates: ['후라이드치킨', '양념치킨', '간장치킨', '마늘치킨', '핫크리스피'],
+  },
+]
+
+const CATEGORY_MENU_FALLBACKS = [
+  {
+    category: '중식',
+    keywords: ['중식', '중국', '짜장', '짬뽕', '탕수', '깐풍', '마라', '볶음밥', '새우', '딤섬', '만두'],
+    candidates: ['짜장면', '짬뽕', '탕수육', '볶음밥', '마라탕'],
+  },
+  {
+    category: '한식',
+    keywords: ['찌개', '국밥', '불고기', '비빔밥', '김치', '제육', '갈비', '한식'],
+    candidates: ['김치찌개', '된장찌개', '비빔밥', '제육볶음', '불고기'],
+  },
+  {
+    category: '일식',
+    keywords: ['초밥', '스시', '라멘', '우동', '돈까스', '돈가스', '가츠', '일식'],
+    candidates: ['초밥', '돈가스', '라멘', '우동'],
+  },
+  {
+    category: '양식',
+    keywords: ['파스타', '스테이크', '리조또', '필라프', '양식'],
+    candidates: ['토마토파스타', '크림파스타', '스테이크', '리조또'],
+  },
+  {
+    category: '분식',
+    keywords: ['떡볶이', '김밥', '순대', '라면', '튀김', '분식'],
+    candidates: ['떡볶이', '김밥', '라면', '순대'],
+  },
+  {
+    category: '치킨',
+    keywords: ['치킨', '닭', '파닭', '콤보'],
+    candidates: ['후라이드치킨', '양념치킨', '간장치킨'],
+  },
+]
+
+const findMenuByNames = (menus, names) => {
+  const wantedNames = names.map(normalizeMenuName)
+  return menus.find((menu) => wantedNames.includes(normalizeMenuName(menu.name)))
+}
+
+const findBestMenuMatch = (input, menus) => {
+  const inputName = normalizeMenuName(input)
+  if (!inputName) return null
+
+  const exactMatch = menus.find((menu) => normalizeMenuName(menu.name) === inputName)
+  if (exactMatch) return exactMatch
+
+  const containedMatch = menus
+    .filter((menu) => {
+      const menuName = normalizeMenuName(menu.name)
+      return menuName && (inputName.includes(menuName) || menuName.includes(inputName))
+    })
+    .sort((a, b) => normalizeMenuName(b.name).length - normalizeMenuName(a.name).length)[0]
+  if (containedMatch) return containedMatch
+
+  const similarGroup = SIMILAR_MENU_GROUPS.find((group) =>
+    [...group.triggers, ...group.candidates].some((name) => {
+      const keyword = normalizeMenuName(name)
+      return inputName.includes(keyword) || keyword.includes(inputName)
+    })
+  )
+  if (similarGroup) {
+    const groupMatch = findMenuByNames(menus, similarGroup.candidates)
+    if (groupMatch) return groupMatch
+  }
+
+  const categoryFallback = CATEGORY_MENU_FALLBACKS.find((fallback) =>
+    fallback.keywords.some((keyword) => inputName.includes(normalizeMenuName(keyword)))
+  )
+  if (categoryFallback) {
+    return (
+      findMenuByNames(menus, categoryFallback.candidates) ||
+      menus.find((menu) => menu.category === categoryFallback.category)
+    )
+  }
+
+  return null
+}
+
+const MenuImage = ({ item, size = '100%', height = 160, objectFit = 'cover' }) => {
   const extensions = ['jpg', 'png', 'webp', 'jpeg'];
   const [extIndex, setExtIndex] = useState(0);
   const [imgSrc, setImgSrc] = useState(`/img/menus/${item.id}.${extensions[0]}`);
@@ -79,6 +182,7 @@ const MenuImage = ({ item, size = '100%' }) => {
       width: size,
       height: '160px', // 💡 [핵심] 이미지 상자의 세로 높이를 160px로 절대 고정!
       margin: '0 auto',
+      height,
       background: '#f8fafc',
       display: 'flex',
       alignItems: 'center',
@@ -91,7 +195,7 @@ const MenuImage = ({ item, size = '100%' }) => {
           src={imgSrc}
           alt={item.name}
           // 💡 height: '100%'와 objectFit: 'cover' 덕분에 사진이 찌그러지지 않고 고정된 160px 안에 이쁘게 꽉 찹니다.
-          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+          style={{ width: '100%', height: '100%', objectFit }}
           onError={handleError}
 
         />
@@ -443,23 +547,26 @@ function TwentyQ({ menus }) {
       )}
       {step === 10 && guess && (
         <div style={{ textAlign: 'center' }}>
-          <div style={{ fontSize: '2.5rem', marginBottom: 8 }}>🎯</div>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 8px', width: 80, height: 80 }}>
+            <img src="/img/icon/light.png" alt="과녁" style={{ width: 90, height: 90, objectFit: 'contain', display: 'block' }} />
+          </div>
           <div style={{ fontWeight: 900, fontSize: '1.2rem', marginBottom: 16 }}>AI의 추천 메뉴는...</div>
           <div
             style={{
+              width: 'min(100%, 500px)',
+              margin: '0 auto 16px',
               background: 'linear-gradient(135deg,#FFFFF0,#FEFCBF)',
               borderRadius: 20,
               overflow: 'hidden',
               padding: 0,
-              marginBottom: 16,
               border: '3px solid var(--color-accent)',
             }}
           >
-            <MenuImage item={guess} />
+            <MenuImage item={guess} size="100%" height={300} />
 
             <div style={{ padding: '18px 20px' }}>
               <div style={{ fontSize: '2.5rem', marginBottom: 8 }}>
-                <CategoryIcon category={guess.category} size="2.5rem" />
+                <CategoryIcon category={guess.category} size="4rem" />
               </div>
 
               <div style={{ fontWeight: 900, fontSize: '1.4rem', marginBottom: 4 }}>
@@ -511,7 +618,7 @@ function TwentyQ({ menus }) {
 
             </div>
           )}
-          <button className="btn btn-secondary" onClick={reset}>🔄 다시하기</button>
+          <button className="mx-auto inline-flex items-center justify-center gap-0.5 px-4 py-1.5 bg-[#FFF5F5] hover:bg-[#FFEAE6] text-[#FF5A5A] text-xs font-black rounded-lg border border-[#FFE2E2] transition-colors" onClick={reset}>다시하기</button>
         </div>
       )}
     </div>
@@ -875,7 +982,7 @@ function ScratchCard({ menus }) {
         </div>
       )}
       <button onClick={initCard}
-        style={{ padding: '10px 32px', borderRadius: 50, border: 'none', background: 'var(--bg-surface)', color: 'var(--color-accent)', fontWeight: 700, cursor: 'pointer', fontSize: '.9rem' }}>
+        style={{ padding: '10px 32px', borderRadius: 50, border: 'none', background: 'var(--bg-surface)', color: 'var(--text-primary)', fontWeight: 700, cursor: 'pointer', fontSize: '.9rem' }}>
         🎟️ 새 복권 뽑기
       </button>
     </div>
@@ -885,7 +992,7 @@ function ScratchCard({ menus }) {
 // ══════════════════════════════════════════════════════════════════════════════
 // 게임 5 — 사다리타기
 // ══════════════════════════════════════════════════════════════════════════════
-function Ladder({ menus }) {
+function Ladder({ menus, allMenus = [] }) {
   const MAX = 6
   const NUM_ROWS = 10
   const COLORS = ['#E53E3E', '#DD6B20', '#F6AD55', '#38A169', '#3182CE', '#6B46C1']
@@ -1066,14 +1173,17 @@ function Ladder({ menus }) {
   const addItem = () => {
     const v = inputVal.trim()
     if (!v || items.length >= MAX) return
-    const matchedMenu = menus.find(
-      m => m.name.trim().toLowerCase() === v.trim().toLowerCase()
-    );
+    const matchSourceMenus = allMenus.length ? allMenus : menus
+    const matchedMenu = findBestMenuMatch(v, matchSourceMenus)
 
 
     const next = [
       ...items,
-      matchedMenu ?? {
+      matchedMenu ? {
+        ...matchedMenu,
+        name: v,
+        imageSourceName: matchedMenu.name,
+      } : {
         id: null,
         name: v,
         category: '직접입력'
@@ -1138,7 +1248,7 @@ function Ladder({ menus }) {
 
       {/* 메뉴 입력 영역 */}
       <div>
-        <div style={{ fontSize: '.82rem', fontWeight: 700, color: 'var(--text-muted)', marginBottom: 8 }}>
+        <div style={{ fontSize: '.89rem', fontWeight: 700, color: 'var(--text-secondary)', marginBottom: 6 }}>
           메뉴 목록 ({items.length}/{MAX}) — 최소 2개 이상 필요
         </div>
 
@@ -1147,7 +1257,7 @@ function Ladder({ menus }) {
           {items.map((item, i) => (
             <span key={i} style={{
               background: COLORS[i % COLORS.length], color: '#fff',
-              borderRadius: 20, padding: '4px 12px', fontSize: '.82rem', fontWeight: 700,
+              borderRadius: 20, padding: '4px 12px', fontSize: '.79rem', fontWeight: 700,
               display: 'flex', alignItems: 'center', gap: 6,
             }}>
 
@@ -1190,8 +1300,8 @@ function Ladder({ menus }) {
           </button>
           {items.length >= 2 && (
             <button onClick={regenerate}
-              style={{ padding: '8px 16px', borderRadius: 8, border: '1.5px solid var(--border-color)', background: 'var(--bg-white)', color: 'var(--text-secondary)', fontWeight: 700, cursor: 'pointer', fontSize: '.85rem' }}>
-              🔀 사다리 재생성
+              className='inline-flex min-h-[44px] items-center justify-center mt-[12px] mr-[15px] gap-2 rounded-[12px] bg-[var(--bg-surface)] px-6 text-[0.94rem] font-black text-[var(--text-primary)] shadow-[var(--shadow-sm)] transition-transform hover:-translate-y-0.5 hover:bg-[var(--color-accent)]'>
+              사다리 재생성
             </button>
           )}
         </div>
@@ -1239,7 +1349,7 @@ function Ladder({ menus }) {
               }}
             >
               {resultMenu && (
-                <MenuImage item={resultMenu} />
+                <MenuImage item={resultMenu} height={300} />
               )}
 
               <div style={{ padding: '16px 20px' }}>
@@ -1327,7 +1437,7 @@ const TABS = [
   { id: 'twentyq', label: '🕵️ 스무고개', desc: '예/아니오로 맞추기' },
   { id: 'worldcup', label: '🏆 월드컵', desc: '32개 토너먼트' },
   { id: 'scratch', label: '🎟️ 뽑기', desc: '긁어서 메뉴 확인' },
-  { id: 'ladder', label: '🪜 사다리', desc: '사다리타기' },
+  { id: 'ladder', label: '🪜 사다리', desc: '사다리 타기' },
 ]
 
 const splitTabLabel = (label) => {
@@ -1338,11 +1448,18 @@ const splitTabLabel = (label) => {
 export default function Game() {
   const [activeTab, setActiveTab] = useState('roulette')
   const [menus, setMenus] = useState([])
+  const [allMenus, setAllMenus] = useState([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    getRandomMenus(64)
-      .then(setMenus)
+    Promise.all([
+      getRandomMenus(64),
+      getAllMenus().catch(() => []),
+    ])
+      .then(([randomMenus, menuCatalog]) => {
+        setMenus(randomMenus)
+        setAllMenus(menuCatalog)
+      })
       .catch(() => { })
       .finally(() => setLoading(false))
   }, [])
@@ -1428,7 +1545,7 @@ export default function Game() {
             {activeTab === 'twentyq' && <TwentyQ menus={menus} />}
             {activeTab === 'worldcup' && <WorldCup menus={menus} />}
             {activeTab === 'scratch' && <ScratchCard menus={menus} />}
-            {activeTab === 'ladder' && <Ladder menus={menus} />}
+            {activeTab === 'ladder' && <Ladder menus={menus} allMenus={allMenus} />}
           </>
         )}
       </div>

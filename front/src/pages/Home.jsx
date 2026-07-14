@@ -7,6 +7,11 @@ import RestaurantSearch from '../components/RestaurantSearch'
 import Cafeteria from '../components/Cafeteria'
 import RandomBanner from '../components/RandomBanner'
 import api from '../api/axiosInstance'
+import { Swiper, SwiperSlide } from 'swiper/react'
+import 'swiper/css'
+import 'swiper/css/pagination'
+import { Pagination } from 'swiper/modules'
+
 
 const adBannerClass =
    'w-full overflow-hidden rounded-[12px] bg-white max-md:h-[70px] max-[540px]:mt-2 max-[540px]:mb-0 max-[540px]:h-[110px]'
@@ -42,10 +47,10 @@ const bannerTitleClass = 'ml-5 mb-4 text-[clamp(2rem,3.4vw,2.55rem)] font-black 
 const bannerTitleAccentClass = 'mx-0.5 inline-flex translate-y-0.5'
 const bannerTextClass = 'ml-5 mb-9 text-[1.08rem] font-extrabold leading-[1.65]'
 const bannerActionsClass = 'flex flex-wrap gap-[5px]'
-const heroButtonLightClass = 'ml-5 inline-flex min-h-[44px] items-center justify-center gap-2 rounded-[12px] bg-white px-5 text-[0.94rem] font-black text-[var(--color-primary)] shadow-[var(--shadow-sm)] transition-transform hover:-translate-y-0.5 max-[540px]:ml-5 max-[540px]:min-h-8 max-[540px]:gap-1.5 max-[540px]:rounded-[8px] max-[540px]:px-3 max-[540px]:text-[0.74rem]'
-const heroButtonYellowClass = 'ml-3 inline-flex min-h-[44px] items-center justify-center gap-2 rounded-[12px] bg-[linear-gradient(135deg,var(--color-secondary),var(--color-accent))] px-5 text-[0.94rem] font-black text-[#4B2D07] shadow-[0_10px_18px_rgba(254,185,92,0.25)] transition-transform hover:-translate-y-0.5 max-[540px]:ml-2 max-[540px]:min-h-8 max-[540px]:gap-1.5 max-[540px]:rounded-[8px] max-[540px]:px-3 max-[540px]:text-[0.74rem]'
+const heroButtonLightClass = 'ml-5 inline-flex min-h-[44px] items-center justify-center gap-2 rounded-[12px] bg-white px-4 text-[0.94rem] font-black text-[var(--color-primary)] shadow-[var(--shadow-sm)] transition-transform hover:-translate-y-0.5 max-[540px]:ml-5 max-[540px]:min-h-8 max-[540px]:gap-1.5 max-[540px]:rounded-[8px] max-[540px]:px-3 max-[540px]:text-[0.74rem]'
+const heroButtonYellowClass = 'ml-3 inline-flex min-h-[44px] items-center justify-center gap-2 rounded-[12px] bg-[linear-gradient(135deg,var(--color-secondary),var(--color-accent))] px-3 text-[0.94rem] font-black text-[#4B2D07] shadow-[0_10px_18px_rgba(254,185,92,0.25)] transition-transform hover:-translate-y-0.5 max-[540px]:ml-2 max-[540px]:min-h-8 max-[540px]:gap-1.5 max-[540px]:rounded-[8px] max-[540px]:px-3 max-[540px]:text-[0.74rem]'
 
-const pinkButtonClass='ml-3 inline-flex min-h-[44px] items-center justify-center gap-2 rounded-[12px] bg-[linear-gradient(135deg,#f8888a,var(--color-primary))] px-5 text-[0.94rem] font-bold text-[#ffff] shadow-[0_10px_18px_rgba(254,185,92,0.25)] transition-transform hover:-translate-y-0.5 max-[540px]:ml-2 max-[540px]:min-h-8 max-[540px]:gap-1.5 max-[540px]:rounded-[8px] max-[540px]:px-3 max-[540px]:text-[0.74rem]'
+const pinkButtonClass='ml-3 inline-flex min-h-[44px] items-center justify-center gap-2 rounded-[12px] bg-[linear-gradient(135deg,#f8888a,var(--color-primary))] px-3 text-[0.94rem] font-bold text-[#ffff] shadow-[0_10px_18px_rgba(254,185,92,0.25)] transition-transform hover:-translate-y-0.5 max-[540px]:ml-2 max-[540px]:min-h-8 max-[540px]:gap-1.5 max-[540px]:rounded-[8px] max-[540px]:px-3 max-[540px]:text-[0.74rem]'
 
 const bannerFoodClass = 'absolute right-0 top-0 bottom-0 z-[1] h-full w-[52%] rounded-l-[999px] rounded-r-none object-cover object-center shadow-[0_18px_30px_rgba(85,34,26,0.2)] max-md:hidden xl:w-[51%]'
 
@@ -54,7 +59,7 @@ const bannerDotsClass = 'absolute bottom-[17px] left-1/2 z-[3] flex -translate-x
 const bannerDotClass = 'h-3 w-3 rounded-full border-2 border-white'
 const bannerDotActiveClass = 'bg-white'
 const trendCardClass = 'h-[400px] overflow-hidden rounded-[10px] border border-[var(--border-color)] bg-white px-5 py-6 shadow-[0_8px_22px_rgba(42,29,26,0.08)] max-md:h-auto'
-const trendTitleClass = 'mb-[14px] text-[1.05rem] font-black text-[var(--text-primary)]'
+const trendTitleClass = 'mb-[30px] text-[1.05rem] font-black text-[var(--text-primary)]'
 const trendListClass = 'flex flex-col gap-[18px]'
 const trendItemClass = 'flex items-center gap-2.5 text-[0.9rem] font-medium'
 const trendRankClass = 'w-5 font-black text-[#ff5f24]'
@@ -94,6 +99,14 @@ const quickIllustClass = 'grid h-[150px] w-[150px] flex-none place-items-center 
 const nearbyTitleWrapClass = 'section-title items-center justify-between gap-3 max-[540px]:flex-row max-[540px]:items-center max-[540px]:justify-start max-[540px]:gap-2'
 const nearbyActionsClass = 'nearby-actions flex flex-wrap justify-end gap-2 max-[540px]:shrink-0 max-[540px]:justify-start max-[540px]:gap-1.5 max-[540px]:text-[0.60rem]'
 const nearbyActionButtonClass = 'inline-flex h-9 items-center justify-center gap-1.5 rounded-[10px] bg-white px-4 text-[0.70rem] font-black shadow-[var(--shadow-sm)] transition-transform hover:-translate-y-0.5 max-[540px]:h-8 max-[540px]:rounded-[8px] max-[540px]:px-2.5 max-[540px]:text-[0.60rem]'
+const DESKTOP_TREND_KEYWORD_LIMIT = 7
+const MOBILE_TREND_KEYWORD_LIMIT = 9
+const TREND_KEYWORDS_PER_SLIDE = 3
+
+const chunkItems = (items, size) =>
+  Array.from({ length: Math.ceil(items.length / size) }, (_, index) =>
+    items.slice(index * size, index * size + size)
+  )
 
 export default function Home() {
   const nearbyRef = useRef(null)
@@ -235,6 +248,9 @@ export default function Home() {
       alert('챗봇 창은 화면 우측 하단의 아이콘을 통해서도 상시 이용하실 수 있습니다!');
     }
   };
+  const desktopTrendKeywords = trendKeywords.slice(0, DESKTOP_TREND_KEYWORD_LIMIT)
+  const mobileTrendKeywords = trendKeywords.slice(0, MOBILE_TREND_KEYWORD_LIMIT)
+  const trendKeywordSlides = chunkItems(mobileTrendKeywords, TREND_KEYWORDS_PER_SLIDE)
 
   return (
 
@@ -256,8 +272,8 @@ export default function Home() {
                 </p>
 
                 <div className={bannerActionsClass}>
-                  <Link to="/menu" className={heroButtonLightClass}>추천 맛집 보기 →</Link>
-                  <Link to="/game" className={pinkButtonClass}>랜덤 메뉴 추천 🎲</Link>
+                  <Link to="/menu" className={heroButtonLightClass}>추천 맛집 보기 <span>›</span></Link>
+                  <Link to="/game" className={pinkButtonClass}>랜덤 메뉴 추천 <span>›</span></Link>
                 </div>
               </div>
 
@@ -277,8 +293,8 @@ export default function Home() {
                   가까운 맛집에서 바로 만나요
                 </p>
                 <div className={bannerActionsClass}>
-                  <Link to="/party" className={heroButtonLightClass}>밥친구 찾기 →</Link>
-                  <button type="button" className={heroButtonYellowClass} onClick={findNearby}>내 주변 찾기 📍</button>
+                  <Link to="/party" className={heroButtonLightClass}>밥친구 찾기<span>›</span></Link>
+                  <button type="button" className={heroButtonYellowClass} onClick={findNearby}>내 주변 찾기 <span>›</span></button>
                 </div>
               </div>
               <img
@@ -303,7 +319,7 @@ export default function Home() {
                       if (!user) { alert('로그인 후 이용 가능합니다.'); return }
                       window.dispatchEvent(new CustomEvent('open-chatbot'))
                     }}
-                  >AI 추천 받기 →</button>
+                  ><span>AI 추천 받기</span><span>›</span></button>
                 </div>
               </div>
               <img
@@ -335,9 +351,10 @@ export default function Home() {
           </div>
 
           <aside className={trendCardClass}>
-            <h4 className={trendTitleClass}>실시간 인기 키워드</h4>
-            <div className={trendListClass}>
-              {trendKeywords.map((item, i) => (
+            <h4 className={trendTitleClass}>🔥 실시간 인기 키워드</h4>
+            
+            <div className={`${trendListClass} max-md:hidden`}>
+              {desktopTrendKeywords.map((item, i) => (
                 <Link
                   to={`/menu?q=${item.name}`}
                   className={trendItemClass}
@@ -348,6 +365,32 @@ export default function Home() {
                   <span className={trendNameClass}>{item.name}</span>
                 </Link>
               ))}
+            </div>
+
+            <div className="hidden max-md:block">
+              <Swiper pagination={true} modules={[Pagination]} className="pb-8">
+                {trendKeywordSlides.map((slideItems, slideIndex) => (
+                  <SwiperSlide key={`trend-slide-${slideIndex}`}>
+                    <div className="flex flex-col gap-[14px] pb-7">
+                      {slideItems.map((item, itemIndex) => {
+                        const rank = slideIndex * TREND_KEYWORDS_PER_SLIDE + itemIndex + 1
+
+                        return (
+                          <Link
+                            to={`/menu?q=${item.name}`}
+                            className={trendItemClass}
+                            key={item.name}
+                            onClick={() => handleKeywordClick(item.name)}
+                          >
+                            <span className={trendRankClass}>{rank}</span>
+                            <span className={trendNameClass}>{item.name}</span>
+                          </Link>
+                        )
+                      })}
+                    </div>
+                  </SwiperSlide>
+                ))}
+              </Swiper>
             </div>
           </aside>
         </section>
@@ -413,7 +456,7 @@ export default function Home() {
               </p>
 
               <button type="button" onClick={scrollToMapSection} className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-[12px] bg-white px-6 text-[0.94rem] font-black text-[var(--color-primary)] shadow-[var(--shadow-sm)] transition-transform hover:-translate-y-0.5">
-                맛집 찾기 →
+                맛집 찾기 <span>›</span>
               </button>
             </div>
             <div className={quickIllustClass}>📍</div>
@@ -428,7 +471,7 @@ export default function Home() {
                 오늘의 메뉴를 추천해드려요!
               </p>
               <button onClick={handleOpenChatBot} className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-[12px] bg-white px-6 text-[0.94rem] font-black text-[var(--color-primary)] shadow-[var(--shadow-sm)] transition-transform hover:-translate-y-0.5">
-                추천 받기 →
+                추천 받기 <span>›</span>
               </button>
             </div>
             <div className={quickIllustClass}>🎲</div>

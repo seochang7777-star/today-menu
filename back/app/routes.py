@@ -396,7 +396,7 @@ def get_realtime_trending():
                 x["like"]
             ),
             reverse=True
-        )[:8]
+        )[:9]
 
 
         return jsonify({
@@ -934,6 +934,26 @@ def random_menus():
 
 
 # ══════════════════════════════════════════════════════════════════════════════
+@menu_bp.route('/all', methods=['GET'])
+def all_menus():
+    items = (
+        db.session.query(Menu, Category)
+        .join(Category, Menu.category_id == Category.id)
+        .order_by(Menu.id.asc())
+        .all()
+    )
+
+    result = []
+    for menu, category in items:
+        result.append({
+            'id':       menu.id,
+            'name':     menu.menu_name,
+            'category': category.name,
+        })
+
+    return jsonify({'items': result}), 200
+
+
 # PARTY
 # ══════════════════════════════════════════════════════════════════════════════
 @party_bp.route('/', methods=['GET'])
