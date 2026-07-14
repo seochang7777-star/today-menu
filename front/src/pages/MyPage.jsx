@@ -312,10 +312,6 @@ export default function MyPage() {
 
   return (
     <>
-      <div className="mb-5">
-        <h1 className="mb-2 text-3xl font-black text-[var(--text-primary)] text-center">마이페이지</h1>
-      </div>
-
       {/* ── HERO BANNER ── */}
       <div className="mb-6 grid justify-center gap-5 lg:grid-cols-[minmax(0,740px)_300px]">
         <div className="relative h-[300px] overflow-hidden rounded-[var(--border-radius-xl)] border border-[#f5d2cb] bg-[var(--color-soft)] px-6 py-6 shadow-sm sm:px-8">
