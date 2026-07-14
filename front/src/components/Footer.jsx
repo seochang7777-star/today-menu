@@ -30,7 +30,7 @@ export default function Footer() {
 
             <p className={footerTextClass}>
               AI가 추천하는
-              <br className="hidden lg:block" />
+              <br />
               <span className="ml-1">
                 오늘의 베스트 맛집
               </span>
