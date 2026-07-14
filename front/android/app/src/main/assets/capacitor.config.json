@@ -1,0 +1,28 @@
+{
+	"appId": "com.todaymenu.app",
+	"appName": "오늘 뭐먹지",
+	"webDir": "dist",
+	"server": {
+		"androidScheme": "https",
+		"cleartext": true,
+		"allowNavigation": [
+			"today-menu-backend.onrender.com",
+			"*.kakao.com",
+			"*.kakaocorp.com",
+			"dapi.kakao.com",
+			"*.naver.com"
+		]
+	},
+	"android": {
+		"allowMixedContent": true,
+		"captureInput": true,
+		"webContentsDebuggingEnabled": true
+	},
+	"plugins": {
+		"SplashScreen": {
+			"launchShowDuration": 2000,
+			"backgroundColor": "#F46C6F",
+			"showSpinner": false
+		}
+	}
+}

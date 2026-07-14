@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>오늘의 메뉴</title>
+
+    <!-- PWA 메타태그 -->
+    <meta name="description" content="AI 기반 오늘의 메뉴 추천 서비스" />
+    <meta name="theme-color" content="#F46C6F" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="오늘메뉴" />
+    <link rel="manifest" href="/manifest.json" />
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🍽️</text></svg>" />
+    <link rel="apple-touch-icon" href="/img/icons/icon-192x192.png" />
+
+    <!-- 카카오맵 SDK (autoload=false 필수) -->
+    <script type="text/javascript"
+      src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=074ab0b682d82aa7fa0767cf0e9ac77f&libraries=services&autoload=false">
+    </script>
+
+    <!-- 카카오 로그인 SDK -->
+    <script src="https://developers.kakao.com/sdk/js/kakao.js"></script>
+
+    <!-- 네이버 로그인 SDK -->
+    <script type="text/javascript"
+      src="https://static.nid.naver.com/js/naveridlogin_js_sdk_2.0.2.js" charset="utf-8">
+    </script>
+
+    <!-- Service Worker 등록 -->
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js')
+            .then(reg => console.log('[SW] 등록:', reg.scope))
+            .catch(err => console.warn('[SW] 실패:', err))
+        })
+      }
+    </script>
+    <script type="module" crossorigin src="/assets/index-DReSQ1NN.js"></script>
+    <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-QTnfLwEv.js">
+    <link rel="modulepreload" crossorigin href="/assets/vendor-CN6fNzLU.js">
+    <link rel="modulepreload" crossorigin href="/assets/axios-DeoP3Jk6.js">
+    <link rel="modulepreload" crossorigin href="/assets/socket-DWbYxwoO.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-ZvXKc6HP.css">
+  </head>
+  <body>
+    <div id="root"></div>
+  </body>
+</html>
