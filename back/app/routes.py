@@ -886,7 +886,29 @@ def get_restaurant(rest_id):
         .filter(RecommendationLog.recommended_restaurant_id == rest_id, 
                 RecommendationLog.is_liked == True)\
         .scalar() or 0
-    return jsonify(serialize_restaurant(rest, like_count=raw_count))
+
+    viewer_id = None
+    auth_header = request.headers.get('Authorization', '')
+    if auth_header.startswith('Bearer '):
+        try:
+            from flask_jwt_extended import decode_token
+            token_data = decode_token(auth_header.split(' ')[1])
+            viewer_id  = int(token_data['sub'])
+        except Exception:
+            pass
+
+    is_liked = False
+    log_id = None
+    if viewer_id:
+        log = RecommendationLog.query.filter_by(
+            user_id=viewer_id,
+            recommended_restaurant_id=rest_id
+        ).first()
+        if log:
+            is_liked = getattr(log, 'is_liked', True)
+            log_id = log.log_id
+
+    return jsonify(serialize_restaurant(rest, like_count=raw_count, is_liked=is_liked, log_id=log_id))
 
 
 @menu_bp.route('/', methods=['POST'])
@@ -1313,10 +1335,14 @@ def cancel_party(party_id):
 def mypage():
     user_id    = int(get_jwt_identity())
     user       = User.query.get_or_404(user_id)
+    # 알림(10분/5분 전) 기능이 이 목록을 그대로 사용하므로, 단순 '최근 생성순'이 아니라
+    # '아직 안 끝난 파티 + 곧 시작할 순서'를 우선해서 5개를 골라야 알림이 누락되지 않는다.
     my_parties = Party.query.join(PartyMember)\
                             .filter(PartyMember.user_id == user_id)\
-                            .filter(Party.status != StatusEnum.CANCELLED)\
-                            .order_by(Party.created_at.desc()).limit(5).all()
+                            .order_by(
+                                (Party.status == StatusEnum.COMPLETED).asc(),
+                                Party.meeting_time.asc(),
+                            ).limit(5).all()
     rec_logs   = RecommendationLog.query.filter_by(user_id=user_id)\
                                         .order_by(RecommendationLog.log_id.desc()).limit(10).all()
     liked_logs = RecommendationLog.query.filter_by(user_id=user_id, is_liked=True).all()

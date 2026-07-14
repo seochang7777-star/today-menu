@@ -15,6 +15,8 @@ export default function Party() {
 
   const [allParties, setAllParties] = useState([])
   const [loading, setLoading] = useState(false)
+  const [page, setPage] = useState(1)
+  const PAGE_SIZE = 5
 
   // 페이지 로드 시 전체 데이터 단 1회 요청
   useEffect(() => {
@@ -26,6 +28,11 @@ export default function Party() {
     .catch(() => setAllParties([]))
     .finally(() => setLoading(false))
 }, [status])
+
+  // 탭/검색어가 바뀌면 1페이지로 초기화
+  useEffect(() => {
+    setPage(1)
+  }, [status, q])
 
   const pct = (p) => Math.min(Math.round((p.member_count / p.max_people) * 100), 100)
 
@@ -50,6 +57,10 @@ export default function Party() {
         .some((value) => value.toLowerCase().includes(keyword))
     )
   })
+
+  const totalPages = Math.max(1, Math.ceil(filteredParties.length / PAGE_SIZE))
+  const pagedParties = filteredParties.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
+
   const joinedParties = allParties.filter((p) => {
     if (!user) return false
 
@@ -171,7 +182,7 @@ export default function Party() {
         </div>
       ) : (
         <div className="divide-y divide-gray-100">
-          {filteredParties.map((p) => (
+          {pagedParties.map((p) => (
             <div 
               key={p.party_id} 
               className="p-4 hover:bg-gray-50/60 transition-colors flex flex-col md:flex-row gap-5"
@@ -244,6 +255,41 @@ export default function Party() {
 
             </div>
           ))}
+        </div>
+      )}
+
+      {!loading && filteredParties.length > PAGE_SIZE && (
+        <div className="flex items-center justify-center gap-1.5 py-6">
+          <button
+            type="button"
+            onClick={() => setPage((p) => Math.max(1, p - 1))}
+            disabled={page === 1}
+            className="h-8 min-w-8 rounded-lg border border-gray-200 px-2 text-xs font-bold text-gray-500 disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            이전
+          </button>
+          {Array.from({ length: totalPages }, (_, i) => i + 1).map((n) => (
+            <button
+              key={n}
+              type="button"
+              onClick={() => setPage(n)}
+              className={`h-8 min-w-8 rounded-lg px-2 text-xs font-bold transition-colors ${
+                n === page
+                  ? 'bg-[#FF5A5A] text-white'
+                  : 'border border-gray-200 text-gray-500 hover:bg-gray-50'
+              }`}
+            >
+              {n}
+            </button>
+          ))}
+          <button
+            type="button"
+            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+            disabled={page === totalPages}
+            className="h-8 min-w-8 rounded-lg border border-gray-200 px-2 text-xs font-bold text-gray-500 disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            다음
+          </button>
         </div>
       )}
       </div>

@@ -382,7 +382,6 @@ export default function PartyDetail() {
   const tabs = [
     { key: 'info', label: '파티 정보' },
     ...(isMember ? [{ key: 'chat', label: `채팅 ${messages.length > 0 ? `(${messages.length})` : ''}` }] : []),
-    { key: 'review', label: '리뷰' },
   ]
 
   return (
@@ -645,39 +644,6 @@ export default function PartyDetail() {
                 ) : (
                   <p style={{ textAlign: 'center', color: 'var(--text-muted)', fontSize: '.88rem' }}>채팅은 파티 참여 후 이용 가능합니다</p>
                 )}
-              </div>
-            )}
-
-            {/* 리뷰 탭 */}
-            {activeTab === 'review' && (
-              <div className="rounded-[10px] border border-[#FFC8C4] bg-white p-8">
-                <div className="mb-4 flex items-center justify-between">
-                  <h3 className="flex items-center gap-2 text-xl font-black text-[#221517]">
-                    <span className="text-2xl">
-                      <img className='mr-1' src='/img/icon/edit.png' />
-                    </span>
-                    리뷰
-                  </h3>
-                  <span className="text-[0.82rem] text-[var(--text-muted)]">총 {reviews.length}개</span>
-                </div>
-                {reviews.length === 0 ? (
-                  <p style={{ color: 'var(--text-muted)', fontSize: '.9rem', textAlign: 'center', padding: '16px 0' }}>아직 리뷰가 없습니다</p>
-                ) : (
-                  reviews.map((rev, i) => (
-                    <div key={rev.review_id || i} className="party-review-card">
-                      <div className="party-reviewer-avatar">{(rev.nickname || '?')[0]}</div>
-                      <div style={{ flex: 1 }}>
-                        <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 4 }}>
-                          <span style={{ fontWeight: 700, fontSize: '.88rem' }}>{rev.nickname || '익명'}</span>
-                          <span style={{ color: 'var(--color-accent)', fontSize: '.82rem' }}>{'★'.repeat(Math.round(rev.rating || 0))}</span>
-                        </div>
-                        <p style={{ fontSize: '.85rem', color: 'var(--text-secondary)', lineHeight: 1.6 }}>{rev.content}</p>
-                        <span style={{ fontSize: '.75rem', color: 'var(--text-muted)' }}>{rev.created_at}</span>
-                      </div>
-                    </div>
-                  ))
-                )}
-              
               </div>
             )}
 

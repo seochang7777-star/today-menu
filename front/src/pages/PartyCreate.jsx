@@ -39,8 +39,10 @@ export default function PartyCreate() {
       alert('약속 일시를 선택해주세요.')
       return
     }
-    if (new Date(form.meeting_time) < new Date()) {
-      alert('현재 시간 이후로 약속 일시를 선택해주세요.')
+
+    if (new Date(form.meeting_time) <= new Date()) {
+      alert('약속 일시는 현재 시간 이후로 설정해주세요.')
+
       return
     }
     setLoading(true)
@@ -318,6 +320,11 @@ export default function PartyCreate() {
                   </select>
                 </div>
               </div>
+              {form.meeting_time && new Date(form.meeting_time) <= new Date() && (
+                <p className="mt-2 text-sm font-semibold text-[var(--color-danger)]">
+                  약속 일시는 현재 시간 이후로 선택해주세요.
+                </p>
+              )}
             </div>
 
             <div className="mb-10">

@@ -1,7 +1,7 @@
 import ReviewModal from '../components/ReviewModal'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { createReview, logRestaurantClick,getRestaurant, getReviews, toggleFavoriteAction } from '../api/services'
+import { createReview, logRestaurantClick, getRestaurant, getReviews, toggleLike, createLikeLog } from '../api/services'
 import { useAuth } from '../App'
 import KakaoMap from '../components/KakaoMap'
 import RestaurantImage from '../components/RestaurantImage'
@@ -72,7 +72,8 @@ export default function MenuDetail() {
   }
 
   const previousLiked = rest.is_liked;
-  
+  const previousLogId = rest.log_id;
+
   // 1. UI 낙관적 업데이트
   setRest(prev => ({
     ...prev,
@@ -81,13 +82,13 @@ export default function MenuDetail() {
   }));
 
   try {
-    // 2. list를 []로, setter를 빈 함수로 전달
-    await toggleFavoriteAction({
-      id: rest.id,
-      list: [], 
-      setter: () => {}, 
-      type: 'restaurant'
-    });
+    if (previousLogId) {
+      const res = await toggleLike(previousLogId)
+      setRest(prev => ({ ...prev, is_liked: res.liked }))
+    } else {
+      const res = await createLikeLog(rest.id)
+      setRest(prev => ({ ...prev, is_liked: true, log_id: res.log_id }))
+    }
   } catch (error) {
     // 3. 실패 시 롤백
     setRest(prev => ({
@@ -479,4 +480,3 @@ export default function MenuDetail() {
     </>
   )
 }
-

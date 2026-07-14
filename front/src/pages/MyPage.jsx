@@ -112,6 +112,8 @@ export default function MyPage() {
 
   useEffect(() => {
     if (!showMannerModal) return
+    // 모달을 열 때마다 최신 매너온도를 다시 불러온다 (다른 페이지에서 투표로 변동됐을 수 있으므로)
+    loadPageData()
     const handleKeyDown = (e) => {
       if (e.key === 'Escape') setShowMannerModal(false)
     }

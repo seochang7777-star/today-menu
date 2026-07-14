@@ -14,6 +14,22 @@ import { Pagination } from 'swiper/modules'
 
 
 const adBannerClass =
+   'w-full overflow-hidden rounded-[12px] bg-white max-[540px]:mt-2 max-[540px]:mb-0'import { useState, useEffect, useRef } from 'react'
+import { Link } from 'react-router-dom'
+import { createLikeLog, toggleLike, getNearby, getRestaurants, getTrending, getMyFavorites, getTrendingClicks, getRealtimeTrending } from '../api/services'
+import { useAuth } from '../App'
+import KakaoMap from '../components/KakaoMap'
+import RestaurantSearch from '../components/RestaurantSearch'
+import Cafeteria from '../components/Cafeteria'
+import RandomBanner from '../components/RandomBanner'
+import api from '../api/axiosInstance'
+import { Swiper, SwiperSlide } from 'swiper/react'
+import 'swiper/css'
+import 'swiper/css/pagination'
+import { Pagination } from 'swiper/modules'
+
+
+const adBannerClass =
    'w-full overflow-hidden rounded-[12px] bg-white max-[540px]:mt-2 max-[540px]:mb-0'
 const adBannerLinkClass = 'block h-full w-full'
 const adBannerImageClass =
@@ -219,7 +235,7 @@ export default function Home() {
   const visibleRestaurants = trending.length ? trending : []
 
 
-  const handleCafeteriaLike = (r) => {
+  const handleCafeteriaLike = async (r) => {
     const isLiked = Boolean(r.is_liked) || likedCafeteriaIds.has(r.id)
     setLikedCafeteriaIds(prev => {
       const next = new Set(prev)
@@ -227,12 +243,17 @@ export default function Home() {
       else next.add(r.id)
       return next
     })
-    toggleFavoriteAction({
-      id: r.id,
-      list: trending,
-      setter: setTrending,
-      type: 'restaurant'
-    });
+    try {
+      if (r.log_id) {
+        const res = await toggleLike(r.log_id)
+        setTrending((prev) => prev.map((item) => item.id === r.id ? { ...item, is_liked: res.liked } : item))
+      } else {
+        const res = await createLikeLog(r.id)
+        setTrending((prev) => prev.map((item) => item.id === r.id ? { ...item, is_liked: true, log_id: res.log_id } : item))
+      }
+    } catch (err) {
+      console.error('찜하기 실패:', err)
+    }
   };
 
   const handleOpenChatBot = (e) => {
