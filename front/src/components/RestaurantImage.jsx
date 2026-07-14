@@ -108,7 +108,6 @@ const IMAGE_RULES = [
       '/img/food_category/한식/한식15.jpg',
       '/img/food_category/한식/한식16.jpg',
       '/img/food_category/한식/한식17.jpg',
-      '/img/food_category/한식/한식18.jpg',
     ]
   },
   {

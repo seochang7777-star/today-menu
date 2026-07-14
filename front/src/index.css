@@ -526,6 +526,7 @@ button {
 .chat-header { background: var(--color-primary); color: #fff; padding: 13px 16px; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; }
 .chat-body { flex: 1;
   overflow-y: auto;
+  overflow-x: hidden;
   padding: 12px;
   display: flex;
   flex-direction: column;

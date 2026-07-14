@@ -46,7 +46,7 @@ const CategoryIcon = ({ category, size = '3rem', style }) => {
 }
 
 // 카테고리 선택 목록
-const CATEGORIES = ['전체', '한식', '일식', '중식', '양식', '분식', '치킨', '카페', '술']
+const CATEGORIES = ['전체', '한식', '일식', '중식', '양식', '분식', '치킨', '카페', '술집']
 
 
 // ── 💡 [공통 추가] 모든 확장자(.jpg, .png, .webp) 대응 만능 이미지 컴포넌트 ──
@@ -1248,7 +1248,7 @@ function Ladder({ menus, allMenus = [] }) {
 
       {/* 메뉴 입력 영역 */}
       <div>
-        <div style={{ fontSize: '.89rem', fontWeight: 700, color: 'var(--text-secondary)', marginBottom: 6 }}>
+        <div style={{ fontSize: '.89rem', fontWeight: 700, color: 'var(--text-secondary)', marginBottom: 15 }}>
           메뉴 목록 ({items.length}/{MAX}) — 최소 2개 이상 필요
         </div>
 
