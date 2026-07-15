@@ -146,50 +146,57 @@
 ## 화면 구성
 
 ### 홈 화면
-![홈 화면](./docs/screenshots/home.jpeg)
+![홈 화면](./docs/screenshots/Home.png) | ![홈(모바일)](./docs/screenshots/mobile_Home.png) |
 
 ### 로그인 / 회원가입
 | 로그인 | 회원가입 |
 |---|---|
 | ![로그인](./docs/screenshots/login.jpeg) | ![회원가입](./docs/screenshots/register.jpeg) |
+| ![로그인(모바일)](./docs/screenshots/login_m.png) | ![회원가입(모바일)](./docs/screenshots/register_m.png) |
 
 ### 메뉴 목록 / 상세
 | 메뉴 목록 | 메뉴 상세 + 리뷰 |
 |---|---|
-| ![메뉴 목록](./docs/screenshots/menu.jpeg) | ![메뉴 상세](./docs/screenshots/menu_detail.jpeg) |
+| ![메뉴 목록](./docs/screenshots/Menu.png) | ![메뉴 상세](./docs/screenshots/MenuDetail.png) |
+| ![메뉴 목록(모바일)](./docs/screenshots/mobile_menu.png) | ![메뉴 목록(모바일)](./docs/screenshots/mobile_menuDetail.png) |
 
 ### 파티
 | 파티 목록 | 파티 상세 + 채팅 |
 |---|---|
-| ![파티 목록](./docs/screenshots/party.jpeg) | ![파티 상세](./docs/screenshots/party_detail.jpeg) |
+| ![파티 목록](./docs/screenshots/party.png) | ![파티 상세](./docs/screenshots/party_detail.png) |
+| ![파티 목록(모바일)](./docs/screenshots/party_m.png) | ![파티 상세](./docs/screenshots/party_detail_m.png) |
 
 ### AI 챗봇
 | 메뉴 추천 | Q & A |
 |---|---|
-| ![챗봇 추천](./docs/screenshots/chatbot1.png) | ![챗봇 QnA](./docs/screenshots/chatbot2.png) |
+| ![챗봇 추천](./docs/screenshots/chatbot_rec(2).png) | ![챗봇 QnA 1](./docs/screenshots/chatbot_qna1.png)<br><br>![챗봇 QnA 2](./docs/screenshots/chatbot_qna2.png) | ![챗봇 추천(모바일)](./docs/screenshots/mobile_menu.png) |
 
 ### 마이페이지
 | 마이페이지 | 프로필 수정 |
 |---|---|
-| ![마이페이지](./docs/screenshots/mypage.jpeg) | ![프로필수정](./docs/screenshots/mypageedit.jpeg) |
+| ![마이페이지](./docs/screenshots/mypage.png) | ![프로필수정](./docs/screenshots/mypageedit.png) |
+| ![마이페이지(모바일)](./docs/screenshots/mypage_m.png) | ![프로필수정(모바일)](./docs/screenshots/mypageedit_m.png) |
 
 ### 게임
 | 룰렛 | 월드컵 |
 |---|---|
-| ![룰렛](./docs/screenshots/game_roulette.jpeg) | ![월드컵](./docs/screenshots/game_worldcup.jpeg) |
+| ![룰렛](./docs/screenshots/game_roulette(1).png) | ![월드컵](./docs/screenshots/game_worldcup1.png) |
+| ![룰렛(모바일)](./docs/screenshots/mobile_rullet.png) | ![월드컵(모바일)](./docs/screenshots/mobile_worldcup.png) |
 
 | 스무고개 | 뽑기 |
 |---|---|
-| ![스무고개](./docs/screenshots/game_twentyq.jpeg) | ![뽑기](./docs/screenshots/game_scratch.jpeg) |
+| ![스무고개](./docs/screenshots/game_20tree.png) | ![뽑기](./docs/screenshots/game_ticket.png) |
+| ![스무고개(모바일)](./docs/screenshots/mobile_20tree.png) | ![뽑기(모바일)](./docs/screenshots/mobile_game_ticket.png) |
 
 | 사다리 |
 |---|
-| ![사다리](./docs/screenshots/game_sd.jpeg) |
+| ![사다리](./docs/screenshots/gmae_ladder.png) | ![사다리(모바일)](./docs/screenshots/mobile_ladder.png) |
 
 ### 고객센터 / 관리자
 | 고객센터 | 관리자 |
 |---|---|
 | ![고객센터](./docs/screenshots/support.jpeg) | ![관리자](./docs/screenshots/admin.jpeg) |
+| ![고객센터(모바일)](./docs/screenshots/support_m.png) | ![관리자(모바일)](./docs/screenshots/admin_m.png) |
 
 ---
 

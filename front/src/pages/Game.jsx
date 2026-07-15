@@ -46,7 +46,7 @@ const CategoryIcon = ({ category, size = '3rem', style }) => {
 }
 
 // 카테고리 선택 목록
-const CATEGORIES = ['전체', '한식', '일식', '중식', '양식', '분식', '치킨', '카페', '술']
+const CATEGORIES = ['전체', '한식', '일식', '중식', '양식', '분식', '치킨', '카페', '술집']
 
 
 // ── 💡 [공통 추가] 모든 확장자(.jpg, .png, .webp) 대응 만능 이미지 컴포넌트 ──
@@ -1248,7 +1248,7 @@ function Ladder({ menus, allMenus = [] }) {
 
       {/* 메뉴 입력 영역 */}
       <div>
-        <div style={{ fontSize: '.89rem', fontWeight: 700, color: 'var(--text-secondary)', marginBottom: 6 }}>
+        <div style={{ fontSize: '.89rem', fontWeight: 700, color: 'var(--text-secondary)', marginBottom: 15 }}>
           메뉴 목록 ({items.length}/{MAX}) — 최소 2개 이상 필요
         </div>
 
@@ -1295,12 +1295,12 @@ function Ladder({ menus, allMenus = [] }) {
         {/* 버튼 */}
         <div style={{ display: 'flex', gap: 8 }}>
           <button onClick={loadRandom} disabled={fetching}
-            style={{ padding: '8px 16px', borderRadius: 8, border: '1.5px solid var(--color-primary)', background: '#FFF5F5', color: 'var(--color-primary)', fontWeight: 700, cursor: 'pointer', fontSize: '.85rem' }}>
+            style={{ padding: '10px 18px', borderRadius: 8, border: '1.5px solid var(--color-primary)', background: '#FFF5F5', color: 'var(--color-primary)', fontWeight: 700, cursor: 'pointer', fontSize: '.85rem', minHeight: 44 }}>
             {fetching ? '...' : '🎲 랜덤 메뉴'}
           </button>
           {items.length >= 2 && (
             <button onClick={regenerate}
-              className='inline-flex min-h-[44px] items-center justify-center mt-[12px] mr-[15px] gap-2 rounded-[12px] bg-[var(--bg-surface)] px-6 text-[0.94rem] font-black text-[var(--text-primary)] shadow-[var(--shadow-sm)] transition-transform hover:-translate-y-0.5 hover:bg-[var(--color-accent)]'>
+              style={{ padding: '10px 18px', borderRadius: 8, border: '1.5px solid var(--color-primary)', background: 'var(--bg-surface)', color: 'var(--text-primary)', fontWeight: 700, cursor: 'pointer', fontSize: '.85rem', minHeight: 44 }}>
               사다리 재생성
             </button>
           )}

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { login, kakaoLogin, naverLogin as naverLoginAPI } from '../api/services'
 import { useAuth } from '../App'
@@ -10,6 +10,7 @@ export default function Login() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const [socialLoading, setSocialLoading] = useState('')  // 'kakao' | 'naver' | ''
+  const kakaoLoginStartedAt = useRef(0)
 
   // ── 네이버 SDK 초기화 ─────────────────────────────────────────────────────
   // SDK가 #naverIdLogin div에 버튼을 렌더링하지만 우리는 커스텀 버튼 사용
@@ -55,6 +56,33 @@ export default function Login() {
     }
   }, [])
 
+  useEffect(() => {
+    if (socialLoading !== 'kakao') return
+
+    const resetKakaoLoading = () => {
+      if (Date.now() - kakaoLoginStartedAt.current < 1000) return
+      setSocialLoading('')
+      setError('카카오 로그인이 취소되었습니다.')
+    }
+
+    const handleFocus = () => {
+      setTimeout(resetKakaoLoading, 300)
+    }
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') handleFocus()
+    }
+    const timeout = setTimeout(resetKakaoLoading, 60000)
+
+    window.addEventListener('focus', handleFocus)
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+
+    return () => {
+      clearTimeout(timeout)
+      window.removeEventListener('focus', handleFocus)
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
+    }
+  }, [socialLoading])
+
   // ── 일반 로그인 ───────────────────────────────────────────────────────────
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -77,8 +105,21 @@ export default function Login() {
     if (!window.Kakao.isInitialized()) window.Kakao.init(kakaoKey)
 
     setSocialLoading('kakao')
+
+
+    // 팝업을 그냥 닫은 경우 success/fail 둘 다 호출되지 않는 카카오 SDK 특성 방어:
+    // 메인 창으로 포커스가 돌아오면, 일정 시간 내에 로그인이 안 끝났을 경우 자동으로 상태를 푼다.
+    let settled = false
+    const clearStuckState = () => {
+      setTimeout(() => {
+        if (!settled) setSocialLoading('')
+      }, 800)
+    }
+    window.addEventListener('focus', clearStuckState, { once: true })
+
     window.Kakao.Auth.login({
       success: async (authObj) => {
+        settled = true
         try {
           const data = await kakaoLogin(authObj.access_token)
           ctxLogin(data); navigate('/')
@@ -86,7 +127,7 @@ export default function Login() {
           setError(err.response?.data?.message ?? '카카오 로그인에 실패했습니다.')
         } finally { setSocialLoading('') }
       },
-      fail: () => { setError('카카오 로그인이 취소되었습니다.'); setSocialLoading('') },
+      fail: () => { settled = true; setError('카카오 로그인이 취소되었습니다.'); setSocialLoading('') },
     })
   }
 

@@ -190,7 +190,7 @@ export default function PartyNotification() {
   return (
     <div style={{ position: 'relative' }}>
       {/* 알림 버튼 */}
-      <button onClick={() => setShow(!show)} className={`${headerIconLink} group mr-1 max-md:hidden`}>
+      <button onClick={() => setShow(!show)} className={`${headerIconLink} group mr-1`}>
         <div style={{ position: 'relative' }}>
           <img src="/img/icon/alarm.png" className="h-[28px] w-[28px] object-contain" alt="alarm" onError={(e) => { e.target.style.display = 'none' }} />
           {unreadCount > 0 && (

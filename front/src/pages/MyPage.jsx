@@ -112,6 +112,8 @@ export default function MyPage() {
 
   useEffect(() => {
     if (!showMannerModal) return
+    // 모달을 열 때마다 최신 매너온도를 다시 불러온다 (다른 페이지에서 투표로 변동됐을 수 있으므로)
+    loadPageData()
     const handleKeyDown = (e) => {
       if (e.key === 'Escape') setShowMannerModal(false)
     }
@@ -256,6 +258,7 @@ export default function MyPage() {
   )
 
   const { user = {}, my_parties = [], rec_logs = [], liked_logs: apiLikedLogs = [], my_reviews = [] } = data || {};
+  const visibleMyParties = my_parties.filter((party) => party.status !== 'CANCELLED');
 
   const likes = processTags(user.preferences?.likes);
   const dislikes = processTags(user.preferences?.dislikes);
@@ -291,7 +294,7 @@ export default function MyPage() {
   const circ = 2 * Math.PI * R
   const heroOffset = circ * (1 - Math.min(mannerScore / 50, 1))
   const mannerItems = [
-    ['파티 참여', (my_parties.length * 0.5).toFixed(1)],
+    ['파티 참여', (visibleMyParties.length * 0.5).toFixed(1)],
     ['후기 작성', (displayLikedLogs.length * 0.3).toFixed(1)],
     ['약속 이행', '1.0'],
   ]
@@ -312,10 +315,6 @@ export default function MyPage() {
 
   return (
     <>
-      <div className="mb-5">
-        <h1 className="mb-2 text-3xl font-black text-[var(--text-primary)] text-center">마이페이지</h1>
-      </div>
-
       {/* ── HERO BANNER ── */}
       <div className="mb-6 grid justify-center gap-5 lg:grid-cols-[minmax(0,740px)_300px]">
         <div className="relative h-[300px] overflow-hidden rounded-[var(--border-radius-xl)] border border-[#f5d2cb] bg-[var(--color-soft)] px-6 py-6 shadow-sm sm:px-8">
@@ -397,7 +396,6 @@ export default function MyPage() {
             <div className="mt-2 text-[.82rem] font-bold text-[var(--text-secondary)]">찜한 메뉴</div>
             <div className="mt-1 flex items-center justify-between text-[.70rem] font-semibold text-[var(--text-muted)] max-[540px]:hidden">
               <span>총 {displayLikedLogs.length}개 찜함</span>
-              <span>›</span>
             </div>
           </div>
         </button>
@@ -411,22 +409,26 @@ export default function MyPage() {
             <div className="mt-2 text-[.82rem] font-bold text-[var(--text-secondary)]">추천 활동</div>
             <div className="mt-1 flex items-center justify-between text-[.70rem] font-semibold text-[var(--text-muted)] max-[540px]:hidden">
               <span>최근 추천 {rec_logs.length}회</span>
-              <span>›</span>
             </div>
           </div>
         </div>
 
-        <div className="relative min-h-[112px] w-full rounded-[var(--border-radius-lg)] border border-[var(--border-color)] bg-[var(--bg-white)] px-5 py-4 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-[#ff6b6b] hover:shadow-md max-[540px]:min-h-[86px] max-[540px]:px-2 max-[540px]:pb-3 max-[540px]:pt-8 max-[540px]:text-center max-[540px]:[&>span:first-child]:left-1/2 max-[540px]:[&>span:first-child]:top-2 max-[540px]:[&>span:first-child]:h-6 max-[540px]:[&>span:first-child]:w-6 max-[540px]:[&>span:first-child]:-translate-x-1/2 max-[540px]:[&>span:first-child]:text-sm">
+        <button
+          type="button"
+          className="relative min-h-[112px] w-full rounded-[var(--border-radius-lg)] border border-[var(--border-color)] bg-[var(--bg-white)] px-5 py-4 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-[#ff6b6b] hover:shadow-md max-[540px]:min-h-[86px] max-[540px]:px-2 max-[540px]:pb-3 max-[540px]:pt-8 max-[540px]:text-center max-[540px]:[&>span:first-child]:left-1/2 max-[540px]:[&>span:first-child]:top-2 max-[540px]:[&>span:first-child]:h-6 max-[540px]:[&>span:first-child]:w-6 max-[540px]:[&>span:first-child]:-translate-x-1/2 max-[540px]:[&>span:first-child]:text-sm"
+          onClick={() => navigate('/party')}
+        >
           <span className="absolute left-5 top-5 grid h-10 w-10 place-items-center rounded-full bg-[#FFF5F5] text-lg text-[var(--color-danger)]">👥</span>
           <div className="pl-14 pt-1 max-[540px]:pl-0 max-[540px]:pt-0 max-[540px]:[&>div:first-child]:text-xl max-[540px]:[&>div:nth-child(2)]:mt-1 max-[540px]:[&>div:nth-child(2)]:truncate max-[540px]:[&>div:nth-child(2)]:text-[.68rem]">
-            <div className="text-2xl font-black leading-none text-[var(--text-primary)]">{my_parties.length}</div>
+            <div className="text-2xl font-black leading-none text-[var(--text-primary)]">{visibleMyParties.length}</div>
             <div className="mt-2 text-[.82rem] font-bold text-[var(--text-secondary)]">매칭 기록</div>
             <div className="mt-1 flex items-center justify-between text-[.70rem] font-semibold text-[var(--text-muted)] max-[540px]:hidden">
+
               <span>완료된 파티 {my_parties.length}건</span>
-              <span>›</span>
+
             </div>
           </div>
-        </div>
+        </button>
 
         <button
           type="button"
@@ -440,7 +442,6 @@ export default function MyPage() {
             <div className="mt-1 hidden truncate text-[.68rem] font-bold text-[var(--text-secondary)] max-[540px]:block">리뷰</div>
             <div className="mt-1 flex items-center justify-between text-[.70rem] font-semibold text-[var(--text-muted)] max-[540px]:hidden">
               <span>리뷰 보러가기</span>
-              <span>›</span>
             </div>
           </div>
         </button>
@@ -573,7 +574,7 @@ export default function MyPage() {
                   </button>
                 </div>
               ))}
-              {my_parties.slice(0, 2).map((p) => (
+              {visibleMyParties.slice(0, 2).map((p) => (
                 <Link to={`/party/${p.party_id}?tab=chat`} key={p.party_id} className="flex gap-3.5 rounded-[var(--border-radius-lg)] border border-[var(--border-color)] bg-[var(--bg-white)] p-3.5 text-inherit no-underline">
                   <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#F0FFF4] text-[1.1rem]">👥</div>
                   <div className="min-w-0 flex-1">

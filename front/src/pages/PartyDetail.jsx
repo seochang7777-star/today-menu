@@ -382,7 +382,6 @@ export default function PartyDetail() {
   const tabs = [
     { key: 'info', label: '파티 정보' },
     ...(isMember ? [{ key: 'chat', label: `채팅 ${messages.length > 0 ? `(${messages.length})` : ''}` }] : []),
-    { key: 'review', label: '리뷰' },
   ]
 
   return (
@@ -648,39 +647,6 @@ export default function PartyDetail() {
               </div>
             )}
 
-            {/* 리뷰 탭 */}
-            {activeTab === 'review' && (
-              <div className="rounded-[10px] border border-[#FFC8C4] bg-white p-8">
-                <div className="mb-4 flex items-center justify-between">
-                  <h3 className="flex items-center gap-2 text-xl font-black text-[#221517]">
-                    <span className="text-2xl">
-                      <img className='mr-1' src='/img/icon/edit.png' />
-                    </span>
-                    리뷰
-                  </h3>
-                  <span className="text-[0.82rem] text-[var(--text-muted)]">총 {reviews.length}개</span>
-                </div>
-                {reviews.length === 0 ? (
-                  <p style={{ color: 'var(--text-muted)', fontSize: '.9rem', textAlign: 'center', padding: '16px 0' }}>아직 리뷰가 없습니다</p>
-                ) : (
-                  reviews.map((rev, i) => (
-                    <div key={rev.review_id || i} className="party-review-card">
-                      <div className="party-reviewer-avatar">{(rev.nickname || '?')[0]}</div>
-                      <div style={{ flex: 1 }}>
-                        <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 4 }}>
-                          <span style={{ fontWeight: 700, fontSize: '.88rem' }}>{rev.nickname || '익명'}</span>
-                          <span style={{ color: 'var(--color-accent)', fontSize: '.82rem' }}>{'★'.repeat(Math.round(rev.rating || 0))}</span>
-                        </div>
-                        <p style={{ fontSize: '.85rem', color: 'var(--text-secondary)', lineHeight: 1.6 }}>{rev.content}</p>
-                        <span style={{ fontSize: '.75rem', color: 'var(--text-muted)' }}>{rev.created_at}</span>
-                      </div>
-                    </div>
-                  ))
-                )}
-              
-              </div>
-            )}
-
             {/* ── 사이드 컬럼 ── */}
           </main>
           <aside className="order-1 space-y-4 max-[540px]:order-2">
@@ -699,7 +665,7 @@ export default function PartyDetail() {
               </div>
 
               {/* 호스트 전용: 파티 종료 */}
-              {party.is_host && party.status === 'CLOSED' && (
+              {isHost && party.status === 'CLOSED' && (
                 <button
                   onClick={handleFinishParty}
                   disabled={!canCloseOrFinishParty}
@@ -710,7 +676,7 @@ export default function PartyDetail() {
               )}
 
               {/* 호스트 전용: 파티 취소 */}
-              {party.is_host && party.status !== 'COMPLETED' && (
+              {isHost && party.status !== 'COMPLETED' && (
                 <button
                   onClick={handleCancelParty}
                   className="w-full rounded-[8px] bg-[var(--color-primary)] mb-3 px-4 py-3 font-black text-white transition hover:bg-[var(--color-primary-dark)]"
@@ -719,7 +685,7 @@ export default function PartyDetail() {
                 </button>
               )}
 
-              {party.is_host && (
+              {isHost && (
                 <button
                   onClick={handleToggleStatus}
                   disabled={isCompleted || (party.status === 'RECRUITING' && !canCloseOrFinishParty) || (party.status === 'CLOSED' && !canReopenParty)}
@@ -804,7 +770,7 @@ export default function PartyDetail() {
 
                   <div className="flex flex-wrap items-center justify-end gap-1">
                     {/* 호스트가 타인 강퇴 */}
-                    {user && party.is_host && !m.is_host && (
+                    {user && isHost && !m.is_host && (
                       <button
                         onClick={() => {
                           if (isCompleted) return;
@@ -829,7 +795,7 @@ export default function PartyDetail() {
 
 
                     {/* 일반 참여자 본인 탈퇴 버튼 */}
-                    {user && !party.is_host && m.user?.user_id === user.user_id && (
+                    {user && !isHost && m.user?.user_id === user.user_id && (
                       <button
                         onClick={handleLeaveParty}
                         disabled={isCompleted}
@@ -841,7 +807,7 @@ export default function PartyDetail() {
                     )}
 
                     {/* 호스트 본인 행 — 파티 중단(취소) 버튼 */}
-                    {user && party.is_host && m.user?.user_id === user.user_id && party.status !== 'COMPLETED' && (
+                    {user && isHost && m.user?.user_id === user.user_id && party.status !== 'COMPLETED' && (
                       <button
                         onClick={() => {
                           // 파티원(본인 포함)이 1명 초과일 때(즉, 다른 사람이 있을 때) 경고

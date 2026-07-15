@@ -10,7 +10,11 @@ const NAV_LINKS = [
   { to: '/menu', label: '맛집 찾기' },
   { to: '/party', label: '밥친구' },
   { to: '/game', label: '게임찾기' },
-  {to: '/mypage', label: '마이페이지'},
+]
+
+const MOBILE_NAV_LINKS = [
+  ...NAV_LINKS,
+  { to: '/mypage', label: '마이페이지' },
 ]
 
 const pageContainer = 'container'
@@ -190,7 +194,7 @@ export default function Header() {
             )}
 
             <div className="flex-1 py-2">
-              {NAV_LINKS.map(({ to, label }) => (
+              {MOBILE_NAV_LINKS.map(({ to, label }) => (
                 <Link
                   key={to}
                   to={to}

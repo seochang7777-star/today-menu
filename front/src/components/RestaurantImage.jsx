@@ -104,11 +104,10 @@ const IMAGE_RULES = [
     category: '한식',
     keywords: ['고기', '숯불', '삼겹살'],
     images: [
-      '/img/food_category/한식/한식12.jpg',
+      '/img/food_category/한식/한식12.png',
       '/img/food_category/한식/한식15.jpg',
       '/img/food_category/한식/한식16.jpg',
       '/img/food_category/한식/한식17.jpg',
-      '/img/food_category/한식/한식18.jpg',
     ]
   },
   {

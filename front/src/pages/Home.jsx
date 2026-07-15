@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
-import { createLikeLog, getNearby, getRestaurants, getTrending, toggleFavorite, getMyFavorites, toggleFavoriteAction,  getTrendingClicks, getRealtimeTrending  } from '../api/services'
+import { createLikeLog, toggleLike, getNearby, getRestaurants, getTrending, getTrendingClicks, getRealtimeTrending } from '../api/services'
 import { useAuth } from '../App'
 import KakaoMap from '../components/KakaoMap'
 import RestaurantSearch from '../components/RestaurantSearch'
@@ -148,24 +148,16 @@ export default function Home() {
 
   // 🔄 4. 기존 데이터 로드 useEffect (원형을 완전히 유지하되 가짜 랭킹 연산만 걷어냄)
   useEffect(() => {
-    const favPromise = user ? getMyFavorites().catch(() => []) : Promise.resolve([]);
-
-    Promise.all([
-      getTrending(),
-      favPromise
-    ]).then(([d, favData]) => {
-      const favIds = new Set((favData || []).map(f => String(f.id)));
-      setLikedCafeteriaIds(favIds);
-
+    getTrending().then((d) => {
       const rawItems = d.items || [];
 
-      // 기존 맛집 랭킹 렌더링 세팅 (100% 원형 유지)
+      // 기존 맛집 랭킹 렌더링 세팅 (백엔드가 RecommendationLog 기준으로 계산해 준 is_liked를 그대로 사용)
       setTrending(rawItems.map(r => ({
         ...r,
         id: String(r.id),
         image: r.image || r.image_url || '',
-        is_liked: favIds.has(String(r.id))
       })));
+      setLikedCafeteriaIds(new Set(rawItems.filter(r => r.is_liked).map(r => String(r.id))));
 
       // 🌟 [개편 구역]: 로컬스토리지 파싱 및 카테고리 누적 연산(mergedMap) 껍데기 로직을
       // 완벽하게 청소하고, 백엔드가 제공하는 진짜 순수 데이터를 로드하도록 직접 이어 붙입니다.
@@ -219,7 +211,7 @@ export default function Home() {
   const visibleRestaurants = trending.length ? trending : []
 
 
-  const handleCafeteriaLike = (r) => {
+  const handleCafeteriaLike = async (r) => {
     const isLiked = Boolean(r.is_liked) || likedCafeteriaIds.has(r.id)
     setLikedCafeteriaIds(prev => {
       const next = new Set(prev)
@@ -227,12 +219,17 @@ export default function Home() {
       else next.add(r.id)
       return next
     })
-    toggleFavoriteAction({
-      id: r.id,
-      list: trending,
-      setter: setTrending,
-      type: 'restaurant'
-    });
+    try {
+      if (r.log_id) {
+        const res = await toggleLike(r.log_id)
+        setTrending((prev) => prev.map((item) => item.id === r.id ? { ...item, is_liked: res.liked } : item))
+      } else {
+        const res = await createLikeLog(r.id)
+        setTrending((prev) => prev.map((item) => item.id === r.id ? { ...item, is_liked: true, log_id: res.log_id } : item))
+      }
+    } catch (err) {
+      console.error('찜하기 실패:', err)
+    }
   };
 
   const handleOpenChatBot = (e) => {

@@ -194,10 +194,15 @@ export default function Notice() {
         <div className="bg-white border border-[var(--border-color)] rounded-[var(--border-radius-lg)] p-7">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
             <button
+              type="button"
               onClick={() => setSelectedId(null)}
-              className="text-[.85rem] text-[var(--text-muted)] font-bold flex items-center gap-1 hover:text-[var(--text-primary)] transition-colors bg-transparent border-0"
+              aria-label="목록으로 이동"
+              className="transition hover:scale-110"
             >
-              ← 목록으로
+              <img
+                src="/img/icon/arrow_left.png" alt="뒤로가기"
+                className="h-8 w-8"
+              />
             </button>
             {isAdmin && selected.isDB && (
               <button
