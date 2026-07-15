@@ -204,6 +204,12 @@
 
 ---
 
+## 앱 다운로드 (APK)
+
+[안드로이드 앱 다운로드](https://drive.google.com/file/d/1xPIW8D1hX-F16lWGzJXEHSGDv9KB1p20/view?usp=drive_link)
+
+> Play 스토어 미출시 앱이라 설치 시 "출처를 알 수 없는 앱" 경고가 뜰 수 있습니다. 설정에서 허용 후 설치해주세요.
+
 ## 기술 스택
 
 ### Frontend
@@ -447,3 +453,5 @@ npx cap open android   # Android Studio에서 Run 또는 Build → Generate APKs
 ## 라이선스
 
 MIT License © 2026 오늘뭐먹지팀
+
+
