@@ -1,12 +1,10 @@
-version: '3.8'
-
 services:
   db:
     image: postgres:15
     restart: unless-stopped
     environment:
       POSTGRES_USER: todaymenu
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-mypassword123}
       POSTGRES_DB: todaymenu
     volumes:
       - pgdata:/var/lib/postgresql/data
@@ -23,10 +21,15 @@ services:
     restart: unless-stopped
     ports:
       - "5000:5000"
-    env_file:
-      - ./back/.env
     environment:
-      DATABASE_URL: postgresql://todaymenu:${DB_PASSWORD}@db:5432/todaymenu
+      DATABASE_URL: postgresql://todaymenu:${DB_PASSWORD:-mypassword123}@db:5432/todaymenu
+      SECRET_KEY: ${SECRET_KEY:-todaymenu-secret-2026}
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY:-todaymenu-jwt-2026}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      KAKAO_REST_API_KEY: ${KAKAO_REST_API_KEY:-}
+      NAVER_CLIENT_ID: ${NAVER_CLIENT_ID:-}
+      NAVER_CLIENT_SECRET: ${NAVER_CLIENT_SECRET:-}
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-http://localhost:5173}
     depends_on:
       db:
         condition: service_healthy
